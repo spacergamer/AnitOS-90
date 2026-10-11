@@ -1,4 +1,4 @@
-# AnitOS — Light Fade Dice Rooms
+# AnitOS - Light Fade Dice Rooms
 
 ## Rodar localmente
 Requer Node.js 20+. No terminal, dentro desta pasta:
