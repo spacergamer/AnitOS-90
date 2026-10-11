@@ -20,6 +20,7 @@ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 let rateChecks=0;
 let persistQueue=Promise.resolve();
 
+app.use("/img",express.static(path.join(__dirname,"img")));
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
 
