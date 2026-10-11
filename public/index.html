@@ -33,8 +33,8 @@ body::after{z-index:9999;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,
  background:var(--win-bg);border-top:2px solid var(--win-border-light);border-left:2px solid var(--win-border-light);
  border-right:2px solid var(--win-border-darker);border-bottom:2px solid var(--win-border-darker);
 }
-.top{padding:2px;display:flex;justify-content:space-between;align-items:stretch;gap:10px;margin-bottom:0}
-.top>div:first-child{min-width:0;flex:1;align-self:stretch;display:flex;flex-direction:column}
+.top{padding:0;display:flex;justify-content:space-between;align-items:stretch;gap:10px;margin-bottom:0;background:transparent;border:0;box-shadow:none}
+.top>div:first-child{min-width:0;flex:1;align-self:stretch;display:flex;flex-direction:column;padding:2px;background:var(--win-bg);border-top:2px solid var(--win-border-light);border-left:2px solid var(--win-border-light);border-right:2px solid var(--win-border-darker);border-bottom:2px solid var(--win-border-darker);box-shadow:inset -1px -1px 0 var(--win-border-dark),inset 1px 1px 0 #dfdfdf}
 .brand{color:var(--title-blue);font-weight:700;letter-spacing:.04em}
 .top .brand{display:block;width:100%;flex:1;background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:3px 7px;text-shadow:1px 1px #000}
 .tiny,.muted,.foot{font-size:18px}
@@ -80,7 +80,7 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 .copyright{padding:5px 10px;background:var(--title-blue);color:#fff;font-size:17px;text-shadow:1px 1px #000}
 .hidden{display:none!important}
 @media(max-width:700px){
- .wrap{padding:10px}.top{gap:8px;flex-wrap:wrap}.top>div{min-width:0}.top>div:first-child{flex:1 1 55%}.top .status{flex:0 1 auto}
+ .wrap{padding:10px}.top{gap:8px;flex-wrap:wrap}.top>div{min-width:0}.top>div:first-child{flex:1 1 55%}.top .status{flex:0 1 auto;min-width:190px}
  .grid,.roomgrid{grid-template-columns:minmax(0,1fr)}.panel{padding:2px}
  .hero{padding:18px 4px}.hero h1{font-size:clamp(38px,12vw,56px)}
  #room .roomtop{align-items:flex-start}.session-details{align-items:flex-start}.session-actions{align-items:flex-start}.event{gap:6px;padding:6px}.event .d{min-width:28px}.result{font-size:23px}
