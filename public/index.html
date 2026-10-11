@@ -315,7 +315,7 @@ function showRollFocus(r){
  if(rollFocusTimer){clearTimeout(rollFocusTimer);rollFocusTimer=null}
  const run=++rollFocusRun;
  const dice=Array.isArray(r.dice)?r.dice:[{sides:r.sides,total:r.total}];
- subtitle.textContent=(r.name||"Rolagem")+" — "+r.playerName;
+ subtitle.textContent=(r.name||r.playerName||"Rolagem")+" — "+[...new Set(dice.map(die=>"D"+die.sides))].join(" + ");
  results.replaceChildren();
  const boxes=dice.map(die=>{
   const box=document.createElement("div");box.className="roll-focus-die rolling";box.textContent="…";box.setAttribute("aria-label","D"+die.sides);results.append(box);return {box,die};
