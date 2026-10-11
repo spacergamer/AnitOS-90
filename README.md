@@ -25,6 +25,3 @@ O banco guarda salas, jogadores, tokens de recuperação e até 100 rolagens por
 - Resultado calculado no servidor via `crypto.randomInt`
 - Encerrar sala como administrador; se o administrador sair, outro jogador é promovido
 - Reconexão de sessão por token temporário, sem contas ou senhas
-
-## Limitações
-Quando `DATABASE_URL` não estiver configurado, as salas e rolagens ficam na memória e desaparecem quando o servidor reinicia. Os limites de frequência também ficam na memória e não substituem proteção de infraestrutura contra ataques distribuídos (DDoS). Esta é uma proteção básica para o protótipo, não uma solução completa de alta segurança.
