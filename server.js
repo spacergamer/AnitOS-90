@@ -38,13 +38,14 @@ function state(r){
   players:[...r.players.values()].map(p=>({
    id:p.id,name:p.name,admin:p.admin,connected:p.connected
   })),
-  rolls:r.rolls.slice(0,100)
+  rolls:r.rolls.slice(0,100),
+  chat:Array.isArray(r.chat)?r.chat.slice(-100):[]
  };
 }
 function sync(r){io.to(r.code).emit("room:state",state(r))}
 function snapshot(){
  return [...rooms.values()].map(r=>({
-  code:r.code,title:r.title,rolls:r.rolls,bannedNames:[...(r.bannedNames||[])],
+  code:r.code,title:r.title,rolls:r.rolls,chat:Array.isArray(r.chat)?r.chat.slice(-100):[],bannedNames:[...(r.bannedNames||[])],
   players:[...r.players.values()].map(p=>({
    id:p.id,recoveryToken:p.recoveryToken,name:p.name,admin:p.admin,connected:p.connected
   }))
@@ -64,7 +65,7 @@ async function initializePersistence(){
  if(Array.isArray(saved)){
   for(const data of saved){
    if(!data||typeof data.code!=="string"||!Array.isArray(data.players))continue;
-   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[],bannedNames:new Set(Array.isArray(data.bannedNames)?data.bannedNames:[])};
+   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[],chat:Array.isArray(data.chat)?data.chat.slice(-100):[],bannedNames:new Set(Array.isArray(data.bannedNames)?data.bannedNames:[])};
    for(const old of data.players){
     if(!old||typeof old.id!=="string"||typeof old.recoveryToken!=="string")continue;
     const p={id:old.id,recoveryToken:old.recoveryToken,name:name(old.name),admin:Boolean(old.admin),connected:false,socketId:null,resumeTimer:null,resumeExpiresAt:Date.now()+RESUME_WINDOW_MS};
@@ -164,6 +165,7 @@ io.on("connection",s=>{
    title:String(p?.title||"Sessão sem título").trim().slice(0,36)||"Sessão sem título",
    players:new Map(),
    rolls:[],
+   chat:[],
    bannedNames:new Set()
   };
   const player={
@@ -244,6 +246,30 @@ io.on("connection",s=>{
   r.rolls=r.rolls.slice(0,100);
   io.to(r.code).emit("dice:rolled",roll);
   persistState();
+ });
+ s.on("chat:send",p=>{
+  if(!allowEvent(s,"chat:send",8,10_000))return;
+  const r=rooms.get(s.data.roomCode),pl=r?.players.get(s.data.playerId);
+  if(!r||!pl||!pl.connected||pl.socketId!==s.id)return error(s,"Entre em uma sala antes de conversar.");
+  const text=String(p?.text||"").trim().slice(0,240);
+  if(!text)return;
+  r.chat=Array.isArray(r.chat)?r.chat:[];
+  const message={id:randomBytes(8).toString("hex"),playerName:pl.name,text,time:new Date().toISOString()};
+  r.chat.push(message);r.chat=r.chat.slice(-100);
+  io.to(r.code).emit("chat:message",message);
+  persistState();
+ });
+ s.on("chat:delete",p=>{
+  if(!allowEvent(s,"chat:delete",20,10_000))return;
+  const r=rooms.get(s.data.roomCode),pl=r?.players.get(s.data.playerId);
+  if(!r||!pl)return error(s,"Entre em uma sala antes de moderar o chat.");
+  if(!pl.admin)return error(s,"Só o administrador pode apagar mensagens do chat.");
+  const id=String(p?.id||"");
+  if(!Array.isArray(r.chat))r.chat=[];
+  const index=r.chat.findIndex(item=>item.id===id);
+  if(index<0)return error(s,"Essa mensagem não existe mais.");
+  r.chat.splice(index,1);
+  sync(r);persistState();
  });
  s.on("roll:delete",p=>{
   if(!allowEvent(s,"roll:delete",20,10_000))return;
