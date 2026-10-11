@@ -153,6 +153,7 @@ function expireDisconnectedPlayer(r,p){
 }
 
 io.on("connection",s=>{
+ s.on("system:ping",(_sentAt,ack)=>{if(typeof ack==="function")ack(Date.now())});
  s.on("room:create",p=>{
   if(!allowEvent(s,"room:create",3,60_000)||!allowEvent(s,"room:create",10,60_000,"ip"))return;
   if(rooms.size>=MAX_ROOMS)return error(s,"O servidor atingiu o limite de salas. Tente novamente mais tarde.");
