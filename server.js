@@ -231,16 +231,13 @@ io.on("connection",s=>{
   if(!r||!pl||!pl.connected||pl.socketId!==s.id)return error(s,"Entre em uma sala antes de rolar.");
   const requested=Array.isArray(p?.dice)?p.dice:[p?.sides];
   if(!requested.length||requested.length>20||requested.some(v=>!DICE.has(Number(v))))return error(s,"Escolha entre 1 e 20 dados válidos.");
-  const m=Number(p?.modifier||0);
-  if(!Number.isFinite(m))return error(s,"Modificador inválido.");
-  const mod=Math.max(-999,Math.min(999,Math.trunc(m)));
-  const dice=requested.map(sides=>{const natural=randomInt(1,Number(sides)+1);return {sides:Number(sides),natural,total:natural+mod,modifier:mod}});
+  const dice=requested.map(sides=>{const natural=randomInt(1,Number(sides)+1);return {sides:Number(sides),natural,total:natural,modifier:0}});
   const first=dice[0];
   const roll={
    id:randomBytes(8).toString("hex"),
    name:name(p?.character,pl.name),
    playerName:pl.name,
-   sides:first.sides,natural:first.natural,modifier:mod,total:first.total,dice,
+   sides:first.sides,natural:first.natural,modifier:0,total:first.total,dice,
    time:new Date().toISOString()
   };
   r.rolls.unshift(roll);
