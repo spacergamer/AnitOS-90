@@ -374,7 +374,11 @@ $("dice").onclick=e=>{
 };
 $("clearDice").onclick=()=>{dicePool=[];renderPool()};
 $("roll").onclick=()=>{
- if(!socket.connected||!room||isResuming||!dicePool.length)return;
+ if(!socket.connected||!room||isResuming||isRolling||!dicePool.length)return;
+ isRolling=true;
+ updateRollButton();
+ if(rollUnlockTimer)clearTimeout(rollUnlockTimer);
+ rollUnlockTimer=setTimeout(unlockRoll,4200);
  socket.emit("dice:roll",{dice:[...dicePool],character:$("character").value});
 };
 $("chatForm").onsubmit=e=>{e.preventDefault();const text=$("chatInput").value.trim();if(!text)return;if(!socket.connected||!room)return msg("roomMsg","Conecte-se a uma sala para enviar mensagens.");socket.emit("chat:send",{text});$("chatInput").value=""};
@@ -431,6 +435,7 @@ socket.on("chat:message",m=>{if(room)addChatMessage(m,true)});
 socket.on("room:banned",m=>{saveToken("");room=null;playerId=null;returnToLobby(m)});
 socket.on("app:error",m=>{
  if(isResuming){isResuming=false;renderStatus();updateRollButton()}
+ if(isRolling)unlockRoll();
  msg(room?"roomMsg":"lobbyMsg",m);
 });
 socket.on("room:resume:failed",m=>{
