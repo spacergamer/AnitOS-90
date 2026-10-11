@@ -115,19 +115,17 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 
 (()=> {
 const $=id=>document.getElementById(id),socket=io();
-let room=null,sides=4,playerId=null,resumeToken="",isResuming=false,pingStart=0,pingMs=null,engineBound=false;
+let room=null,sides=4,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null;
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
 function msg(id,t){$(id).textContent=t||""}
 function renderStatus(){
  if(!socket.connected){$("status").textContent="Desconectado";return}
- $("status").textContent=pingMs===null?"Conectado · ping -- ms":"Conectado · ping "+pingMs+" ms";
+ $("status").textContent=pingMs===null?"Conectado · medindo ping...":"Conectado · ping "+pingMs+" ms";
 }
-function bindPing(){
- const engine=socket.io.engine;
- if(!engine||engineBound)return;
- engineBound=true;
- engine.on("ping",()=>{pingStart=Date.now()});
- engine.on("pong",()=>{if(pingStart)pingMs=Date.now()-pingStart;renderStatus()});
+function measurePing(){
+ if(!socket.connected)return;
+ const sentAt=Date.now();
+ socket.emit("system:ping",sentAt,()=>{pingMs=Date.now()-sentAt;renderStatus()});
 }
 function saveToken(token){
  resumeToken=token||"";
@@ -212,8 +210,9 @@ $("close").onclick=()=>{
  if(confirm("Encerrar a sala para todos?")&&socket.connected)socket.emit("room:close");
 };
 socket.on("connect",()=>{
- bindPing();
  renderStatus();
+ measurePing();
+ if(!pingTimer)pingTimer=setInterval(measurePing,5000);
  if(resumeToken){
   isResuming=true;
   $("status").textContent="Reconectando à sessão...";
