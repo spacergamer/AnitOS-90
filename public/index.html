@@ -179,17 +179,34 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 @media(hover:none) and (pointer:coarse){
  button,.btn{ -webkit-tap-highlight-color:transparent }
 }
+
+/* Hide the landing-page hero while the user is inside a session. */
+body.session-active .hero{display:none}
+#rollFocusOverlay{display:none}
+@media(max-width:700px) and (orientation:portrait){
+ #rollFocusOverlay{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,0);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,background .22s ease,visibility .22s}
+ #rollFocusOverlay.visible{opacity:1;visibility:visible;background:rgba(0,0,0,.64)}
+ #rollFocusOverlay .roll-focus-window{width:min(100%,360px);background:var(--win-bg);color:#000;border-top:3px solid var(--win-border-light);border-left:3px solid var(--win-border-light);border-right:3px solid var(--win-border-darker);border-bottom:3px solid var(--win-border-darker);box-shadow:inset -2px -2px 0 var(--win-border-dark),inset 2px 2px 0 #dfdfdf;padding:3px;transform:translateY(8px) scale(.98);transition:transform .22s ease}
+ #rollFocusOverlay.visible .roll-focus-window{transform:translateY(0) scale(1)}
+ .roll-focus-title{background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:7px 9px;font-size:21px;text-shadow:1px 1px #000}
+ .roll-focus-subtitle{padding:12px 9px 4px;font-size:19px;overflow-wrap:anywhere}
+ .roll-focus-results{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:9px;padding:12px 8px 17px}
+ .roll-focus-die{min-width:68px;min-height:68px;display:flex;align-items:center;justify-content:center;background:#fff;border:3px inset var(--win-border-dark);color:var(--title-blue);font-size:42px;font-weight:700}
+ .roll-focus-die.rolling{color:var(--hospital-green)}
+ .roll-focus-status{text-align:center;padding:0 8px 12px;color:#333;font-size:18px}
+}
+@media(prefers-reduced-motion:reduce){#rollFocusOverlay,#rollFocusOverlay .roll-focus-window{transition:none}}
 </style>
 </head><body><main class="wrap"><header class="top"><div><div class="brand">AnitOS RGN System '91</div><div class="tiny">ANITOPE TECHNOLOGIES - D.I.C.E ROOM</div></div><div class="status" id="status">Conectando...</div></header>
 <section class="hero"><h1>“<em>A Ciência Salvando<br>Vidas desde 1972.</em>”</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
 <section id="lobby" class="grid"><div class="panel"><h2>01 - Criar sala</h2><div class="muted">Você será o administrador da sessão.</div><label class="field">Seu nome</label><input id="adminName" maxlength="24" value="Mestre"><label class="field">Nome da sessão</label><input id="roomName" maxlength="36" value="Light Fade — Sessão 01"><button class="btn" id="create">＋ CRIAR SALA</button></div><div class="panel"><h2>02 - Entrar em sala</h2><div class="muted">Digite o código compartilhado pelo mestre.</div><label class="field">Seu nome</label><input id="playerName" maxlength="24" placeholder="Ex.: Scott"><label class="field">Código da sala</label><input id="roomCode" maxlength="5" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.15em"><button class="btn secondary" id="join">↳ ENTRAR NA SALA</button><div class="toast" id="lobbyMsg"></div></div></section>
 <section id="room"><div class="roomtop"><div class="brand">SESSÃO ATIVA</div><div class="session-details"><div><h2 id="title"></h2><div class="code">CÓDIGO: <span id="code"></span> <button id="copy" class="secondary" style="padding:3px 7px">⧉</button></div></div><div class="session-actions"><span class="status" id="role"></span> <button class="secondary" id="leave">SAIR</button></div></div></div>
-<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="muted">Adicione os dados que deseja usar.</div><div class="dice" id="dice"><button class="die" data-s="4">+ D4</button><button class="die" data-s="6">+ D6</button><button class="die" data-s="8">+ D8</button><button class="die" data-s="10">+ D10</button><button class="die" data-s="12">+ D12</button><button class="die" data-s="20">+ D20</button><button class="die" data-s="100">+ D100</button></div><div class="pool-row"><strong>Dados na rolagem:</strong> <span id="dicePool">1d4</span> <button type="button" class="secondary" id="clearDice" style="padding:2px 7px">LIMPAR</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><button class="btn" id="roll">🎲 ROLAR</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div><div class="panel chat-panel"><h2>Chat da sessão</h2><div id="chatMessages" class="chat-messages"><div class="chat-empty">Nenhuma mensagem ainda.</div></div><form id="chatForm" class="chat-form"><input id="chatInput" maxlength="240" placeholder="Mensagem para a sessão..." autocomplete="off" aria-label="Mensagem para a sessão"><button type="submit">ENVIAR</button></form><div class="tiny">Mensagens visíveis para todos nesta sala.</div></div></div></div></section><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 - Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados - Anitope Science © 1990</div></footer></main>
+<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="muted">Adicione os dados que deseja usar.</div><div class="dice" id="dice"><button class="die" data-s="4">+ D4</button><button class="die" data-s="6">+ D6</button><button class="die" data-s="8">+ D8</button><button class="die" data-s="10">+ D10</button><button class="die" data-s="12">+ D12</button><button class="die" data-s="20">+ D20</button><button class="die" data-s="100">+ D100</button></div><div class="pool-row"><strong>Dados na rolagem:</strong> <span id="dicePool">1d4</span> <button type="button" class="secondary" id="clearDice" style="padding:2px 7px">LIMPAR</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><button class="btn" id="roll">🎲 ROLAR</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div><div class="panel chat-panel"><h2>Chat da sessão</h2><div id="chatMessages" class="chat-messages"><div class="chat-empty">Nenhuma mensagem ainda.</div></div><form id="chatForm" class="chat-form"><input id="chatInput" maxlength="240" placeholder="Mensagem para a sessão..." autocomplete="off" aria-label="Mensagem para a sessão"><button type="submit">ENVIAR</button></form><div class="tiny">Mensagens visíveis para todos nesta sala.</div></div></div></div></section><div id="rollFocusOverlay" aria-live="polite" aria-atomic="true"><div class="roll-focus-window"><div class="roll-focus-title">AnitOS RGN System '91 — ROLAGEM</div><div id="rollFocusSubtitle" class="roll-focus-subtitle"></div><div id="rollFocusResults" class="roll-focus-results"></div><div id="rollFocusStatus" class="roll-focus-status">Calculando resultado...</div></div></div><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 - Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados - Anitope Science © 1990</div></footer></main>
 <script src="/socket.io/socket.io.js"></script><script>
 
 (()=> {
 const $=id=>document.getElementById(id),socket=io();
-let room=null,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null,dicePool=[4];
+let room=null,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
 function msg(id,t){$(id).textContent=t||""}
 function renderStatus(){
@@ -210,6 +227,8 @@ function updateRollButton(){
 }
 function returnToLobby(message){
  room=null;playerId=null;isResuming=false;
+ document.body.classList.remove("session-active");
+ hideRollFocus();
  $("room").classList.remove("active");
  $("lobby").classList.remove("hidden");
  updateRollButton();
@@ -217,6 +236,7 @@ function returnToLobby(message){
 }
 function show(state){
  room=state;
+ document.body.classList.add("session-active");
  $("lobby").classList.add("hidden");
  $("room").classList.add("active");
  $("title").textContent=state.title;
@@ -283,6 +303,39 @@ function animateRoll(el,dice){
   };
   tick();
  });
+}
+function hideRollFocus(){
+ const overlay=$("rollFocusOverlay");
+ if(rollFocusTimer){clearTimeout(rollFocusTimer);rollFocusTimer=null}
+ if(overlay)overlay.classList.remove("visible");
+}
+function showRollFocus(r){
+ if(!window.matchMedia("(max-width: 700px) and (orientation: portrait)").matches)return;
+ const overlay=$("rollFocusOverlay"),subtitle=$("rollFocusSubtitle"),results=$("rollFocusResults"),status=$("rollFocusStatus");
+ if(rollFocusTimer){clearTimeout(rollFocusTimer);rollFocusTimer=null}
+ const run=++rollFocusRun;
+ const dice=Array.isArray(r.dice)?r.dice:[{sides:r.sides,total:r.total}];
+ subtitle.textContent=(r.name||"Rolagem")+" — "+r.playerName;
+ results.replaceChildren();
+ const boxes=dice.map(die=>{
+  const box=document.createElement("div");box.className="roll-focus-die rolling";box.textContent="…";box.setAttribute("aria-label","D"+die.sides);results.append(box);return {box,die};
+ });
+ status.textContent="Rolando "+dice.length+" dado(s)...";
+ overlay.classList.add("visible");
+ const start=Date.now(),duration=1000;
+ const tick=()=>{
+  if(run!==rollFocusRun)return;
+  const elapsed=Date.now()-start;
+  if(elapsed>=duration){
+   boxes.forEach(({box,die})=>{box.textContent=String(die.total);box.classList.remove("rolling")});
+   status.textContent="Resultado final";
+   rollFocusTimer=setTimeout(()=>{if(run===rollFocusRun)hideRollFocus()},3000);
+   return;
+  }
+  boxes.forEach(({box,die})=>{box.textContent=String(1+Math.floor(Math.random()*die.sides))});
+  rollFocusTimer=setTimeout(tick,55);
+ };
+ tick();
 }
 function addChatMessage(m,top=true){
  const box=$("chatMessages");const empty=box.querySelector(".chat-empty");if(empty)empty.remove();
@@ -367,7 +420,7 @@ socket.on("room:state",state=>{
  if(room&&room.code===state.code)show(state);
 });
 socket.on("dice:rolled",r=>{
- if(room){addRoll(r,true);const ds=Array.isArray(r.dice)?r.dice:[{sides:r.sides,total:r.total}];msg("roomMsg",r.playerName+" rolou "+ds.map(d=>"D"+d.sides+": "+d.total).join(" | "))}
+ if(room){showRollFocus(r);addRoll(r,true);const ds=Array.isArray(r.dice)?r.dice:[{sides:r.sides,total:r.total}];msg("roomMsg",r.playerName+" rolou "+ds.map(d=>"D"+d.sides+": "+d.total).join(" | "))}
 });
 socket.on("chat:message",m=>{if(room)addChatMessage(m,true)});
 socket.on("room:banned",m=>{saveToken("");room=null;playerId=null;returnToLobby(m)});
