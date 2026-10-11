@@ -231,7 +231,7 @@ function unlockRoll(){
   updateRollButton();
  }
  function returnToLobby(message){
- room=null;playerId=null;isResuming=false;
+ room=null;playerId=null;isResuming=false;unlockRoll();
  document.body.classList.remove("session-active");
  hideRollFocus();
  $("room").classList.remove("active");
