@@ -185,7 +185,7 @@ body.session-active .hero{display:none}
 #rollFocusOverlay{display:none}
 @media(max-width:700px) and (orientation:portrait){
  #rollFocusOverlay{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,0);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,background .22s ease,visibility .22s}
- #rollFocusOverlay.visible{opacity:1;visibility:visible;background:rgba(0,0,0,.64)}
+ #rollFocusOverlay.visible{opacity:1;visibility:visible;background:rgba(0,0,0,.64);pointer-events:auto}
  #rollFocusOverlay .roll-focus-window{width:min(100%,360px);background:var(--win-bg);color:#000;border-top:3px solid var(--win-border-light);border-left:3px solid var(--win-border-light);border-right:3px solid var(--win-border-darker);border-bottom:3px solid var(--win-border-darker);box-shadow:inset -2px -2px 0 var(--win-border-dark),inset 2px 2px 0 #dfdfdf;padding:3px;transform:translateY(8px) scale(.98);transition:transform .22s ease}
  #rollFocusOverlay.visible .roll-focus-window{transform:translateY(0) scale(1)}
  .roll-focus-title{background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:7px 9px;font-size:21px;text-shadow:1px 1px #000}
@@ -206,7 +206,7 @@ body.session-active .hero{display:none}
 
 (()=> {
 const $=id=>document.getElementById(id),socket=io();
-let room=null,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
+let room=null,playerId=null,resumeToken="",isResuming=false,isRolling=false,rollUnlockTimer=null,pingMs=null,pingTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
 function msg(id,t){$(id).textContent=t||""}
 function renderStatus(){
@@ -223,7 +223,7 @@ function saveToken(token){
  try{if(resumeToken)localStorage.setItem("anitos.resumeToken",resumeToken);else localStorage.removeItem("anitos.resumeToken")}catch{}
 }
 function updateRollButton(){
- $("roll").disabled=!socket.connected||!room||isResuming||dicePool.length===0;
+ $("roll").disabled=!socket.connected||!room||isResuming||isRolling||dicePool.length===0;
 }
 function returnToLobby(message){
  room=null;playerId=null;isResuming=false;
