@@ -10,10 +10,13 @@ Para testar, abra duas abas. Para jogar pela internet, publique este projeto com
 
 ## Incluído
 - Salas com códigos gerados no servidor e entrada por código
+- Limites de frequência para criação/entrada em salas, reconexão, rolagens e encerramento
+- Limite de 200 salas simultâneas e 20 jogadores por sala
 - Jogadores e histórico sincronizados em tempo real
 - D4, D6, D8, D10, D12, D20 e D100, com modificador
 - Resultado calculado no servidor via `crypto.randomInt`
 - Encerrar sala como administrador; se o administrador sair, outro jogador é promovido
+- Reconexão de sessão por token temporário, sem contas ou senhas
 
 ## Limitações
-Salas e rolagens ficam na memória e desaparecem quando o servidor reinicia. Não há contas, autenticação, persistência em banco, expulsão de jogadores ou proteção contra abuso. É uma primeira versão funcional para teste, não um serviço de alta segurança.
+As salas e rolagens ficam na memória e desaparecem quando o servidor reinicia. Ainda não há persistência em banco de dados. Os limites de frequência também ficam na memória e não substituem proteção de infraestrutura contra ataques distribuídos (DDoS). Esta é uma proteção básica para o protótipo, não uma solução completa de alta segurança.
