@@ -8,6 +8,14 @@ Requer Node.js 20+. No terminal, dentro desta pasta:
 
 Para testar, abra duas abas. Para jogar pela internet, publique este projeto como um serviço Node.js no Render ou Railway; use `npm install` como build command e `npm start` como start command.
 
+## Persistência com Supabase
+1. Crie um projeto no [Supabase](https://supabase.com/) e abra **Connect** no painel.
+2. Copie a string PostgreSQL. Para ambientes IPv4, prefira o **Session pooler** se a conexão direta não estiver disponível.
+3. Configure `DATABASE_URL` como variável de ambiente no serviço Node.js. Nunca coloque a string no frontend nem a envie ao GitHub.
+4. Reinicie o serviço. O servidor cria a tabela `anitos_state` automaticamente e carrega o estado salvo.
+
+O banco guarda salas, jogadores, tokens de recuperação e até 100 rolagens por sala. Depois de reiniciar o servidor, as sessões salvas podem ser recuperadas durante uma janela de 30 segundos. Sem `DATABASE_URL`, o projeto continua funcionando em memória, mas perde o estado ao reiniciar.
+
 ## Incluído
 - Salas com códigos gerados no servidor e entrada por código
 - Limites de frequência para criação/entrada em salas, reconexão, rolagens e encerramento
@@ -19,4 +27,4 @@ Para testar, abra duas abas. Para jogar pela internet, publique este projeto com
 - Reconexão de sessão por token temporário, sem contas ou senhas
 
 ## Limitações
-As salas e rolagens ficam na memória e desaparecem quando o servidor reinicia. Ainda não há persistência em banco de dados. Os limites de frequência também ficam na memória e não substituem proteção de infraestrutura contra ataques distribuídos (DDoS). Esta é uma proteção básica para o protótipo, não uma solução completa de alta segurança.
+Quando `DATABASE_URL` não estiver configurado, as salas e rolagens ficam na memória e desaparecem quando o servidor reinicia. Os limites de frequência também ficam na memória e não substituem proteção de infraestrutura contra ataques distribuídos (DDoS). Esta é uma proteção básica para o protótipo, não uma solução completa de alta segurança.
