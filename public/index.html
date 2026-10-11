@@ -64,14 +64,14 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 #room .roomtop h2{font-size:22px;margin:5px 7px;color:#000;font-weight:400;overflow-wrap:anywhere;line-height:1.1}
 .code{display:inline-flex;align-items:center;gap:5px;background:#fff;color:#000;border:2px inset var(--win-border-dark);border-radius:0;padding:2px 6px;font:18px/1.1 var(--font-sys);font-weight:400;letter-spacing:0;max-width:100%;overflow-wrap:anywhere}
 .code button{margin-left:3px}
-.roomgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+.pool-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0;padding:6px;background:#fff;border:2px inset var(--win-border-dark);font-size:18px}.pool-row strong{font-weight:400}.dice-results{display:flex;align-items:stretch;flex-wrap:wrap;gap:6px;justify-content:flex-end}.die-result{min-width:42px;padding:4px 7px;text-align:center;background:#fff;border:2px inset var(--win-border-dark);color:var(--title-blue);font-size:27px;font-weight:700}.die-result.rolling{color:#008080}.admin-action{font-size:16px;padding:2px 5px;white-space:nowrap}.event{flex-wrap:wrap}.event .info{flex:1 1 120px}.roomgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
 .dice{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .die{background:var(--win-bg);color:#000;border-top-color:#fff;border-left-color:#fff;border-right-color:#000;border-bottom-color:#000;padding:6px 4px}
 .die.selected{background:var(--title-blue);color:#fff;border-top-color:#000;border-left-color:#000;border-right-color:#fff;border-bottom-color:#fff;box-shadow:none}
 .event,.player{min-width:0;display:flex;align-items:center;gap:9px;padding:8px;margin:7px 0;border:1px solid var(--win-border-dark);border-radius:0;background:#fff;color:#000}
 .event .d{color:var(--title-blue);min-width:34px;font-weight:700}
 .event .info{flex:1;min-width:0;overflow-wrap:anywhere}
-.event small{display:block;color:#333;font-size:17px;margin-top:3px}
+.event small{display:block;color:#333;font-size:17px;margin-top:3px}.event .dice-results{flex:1 0 100%;justify-content:flex-start;margin-top:4px}
 .result{color:var(--title-blue);font-size:27px;font-weight:700;overflow-wrap:anywhere}
 .toast{color:#006b35;font-size:18px;min-height:20px;margin-top:8px}
 #log{max-height:430px;overflow:auto}
@@ -94,12 +94,12 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 <section class="hero"><h1>“<em>A Ciência Salvando<br>Vidas desde 1972.</em>”</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
 <section id="lobby" class="grid"><div class="panel"><h2>01 - Criar sala</h2><div class="muted">Você será o administrador da sessão.</div><label class="field">Seu nome</label><input id="adminName" maxlength="24" value="Mestre"><label class="field">Nome da sessão</label><input id="roomName" maxlength="36" value="Light Fade — Sessão 01"><button class="btn" id="create">＋ CRIAR SALA</button></div><div class="panel"><h2>02 - Entrar em sala</h2><div class="muted">Digite o código compartilhado pelo mestre.</div><label class="field">Seu nome</label><input id="playerName" maxlength="24" placeholder="Ex.: Scott"><label class="field">Código da sala</label><input id="roomCode" maxlength="5" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.15em"><button class="btn secondary" id="join">↳ ENTRAR NA SALA</button><div class="toast" id="lobbyMsg"></div></div></section>
 <section id="room"><div class="roomtop"><div class="brand">SESSÃO ATIVA</div><div class="session-details"><div><h2 id="title"></h2><div class="code">CÓDIGO: <span id="code"></span> <button id="copy" class="secondary" style="padding:3px 7px">⧉</button></div></div><div class="session-actions"><span class="status" id="role"></span> <button class="secondary" id="leave">SAIR</button></div></div></div>
-<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="dice" id="dice"><button class="die selected" data-s="4">D4</button><button class="die" data-s="6">D6</button><button class="die" data-s="8">D8</button><button class="die" data-s="10">D10</button><button class="die" data-s="12">D12</button><button class="die" data-s="20">D20</button><button class="die" data-s="100">D100</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><label class="field">Modificador</label><input id="modifier" type="number" min="-999" max="999" value="0"><button class="btn" id="roll">🎲 ROLAR D4</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div></div></div></section><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 - Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados - Anitope Science © 1990</div></footer></main>
+<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="muted">Clique nos dados para montar sua rolagem. Pode misturar tipos; cada resultado é independente.</div><div class="dice" id="dice"><button class="die" data-s="4">+ D4</button><button class="die" data-s="6">+ D6</button><button class="die" data-s="8">+ D8</button><button class="die" data-s="10">+ D10</button><button class="die" data-s="12">+ D12</button><button class="die" data-s="20">+ D20</button><button class="die" data-s="100">+ D100</button></div><div class="pool-row"><strong>Dados na rolagem:</strong> <span id="dicePool">1d4</span> <button type="button" class="secondary" id="clearDice" style="padding:2px 7px">LIMPAR</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><label class="field">Modificador</label><input id="modifier" type="number" min="-999" max="999" value="0"><button class="btn" id="roll">🎲 ROLAR D4</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div></div></div></section><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 - Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados - Anitope Science © 1990</div></footer></main>
 <script src="/socket.io/socket.io.js"></script><script>
 
 (()=> {
 const $=id=>document.getElementById(id),socket=io();
-let room=null,sides=4,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null;
+let room=null,playerId=null,resumeToken="",isResuming=false,pingMs=null,pingTimer=null,dicePool=[4];
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
 function msg(id,t){$(id).textContent=t||""}
 function renderStatus(){
@@ -116,7 +116,7 @@ function saveToken(token){
  try{if(resumeToken)localStorage.setItem("anitos.resumeToken",resumeToken);else localStorage.removeItem("anitos.resumeToken")}catch{}
 }
 function updateRollButton(){
- $("roll").disabled=!socket.connected||!room||isResuming;
+ $("roll").disabled=!socket.connected||!room||isResuming||dicePool.length===0;
 }
 function returnToLobby(message){
  room=null;playerId=null;isResuming=false;
@@ -137,10 +137,16 @@ function show(state){
  $("count").textContent="("+state.players.length+")";
  $("players").replaceChildren();
  state.players.forEach(p=>{
-  const el=document.createElement("div");
-  el.className="player";
-  el.textContent=(p.admin?"♛ ":"● ")+p.name+(p.admin?" - ADM":"")+(p.connected?"":" - DESCONECTADO");
-  $( "players").append(el);
+  const el=document.createElement("div");el.className="player";
+  const label=document.createElement("span");
+  label.textContent=(p.admin?"♛ ":"● ")+p.name+(p.admin?" - ADM":"")+(p.connected?"":" - DESCONECTADO");
+  el.append(label);
+  if(me?.admin&&!p.admin){
+   const ban=document.createElement("button");ban.className="secondary admin-action";ban.textContent="BANIR";
+   ban.onclick=()=>{if(confirm("Banir "+p.name+" desta sala?"))socket.emit("room:ban",{playerId:p.id})};
+   el.append(ban);
+  }
+  $("players").append(el);
  });
  $("log").replaceChildren();
  if(!state.rolls.length){$("log").textContent="Nenhuma rolagem registrada."}
@@ -149,17 +155,46 @@ function show(state){
 }
 function addRoll(r,top=true){
  if($("log").textContent==="Nenhuma rolagem registrada.")$("log").textContent="";
- const el=document.createElement("div");el.className="event";
- const d=document.createElement("div");d.className="d";d.textContent="D"+r.sides;
+ const el=document.createElement("div");el.className="event";el.dataset.rollId=r.id;
  const info=document.createElement("div");info.className="info";
  const b=document.createElement("strong");b.textContent=r.name;
  const small=document.createElement("small");
- small.textContent="Por "+r.playerName+" - natural "+r.natural+(r.modifier?" - mod "+(r.modifier>0?"+":"")+r.modifier:"")+" - "+new Date(r.time).toLocaleTimeString("pt-BR");
+ const dice=Array.isArray(r.dice)?r.dice:[{sides:r.sides,natural:r.natural,total:r.total,modifier:r.modifier||0}];
+ small.textContent="Por "+r.playerName+" - "+dice.length+" dado(s) - "+new Date(r.time).toLocaleTimeString("pt-BR");
  info.append(b,small);
- const result=document.createElement("div");result.className="result";result.textContent=(r.total>0?"+":"")+r.total;
- el.append(d,info,result);
+ const results=document.createElement("div");results.className="dice-results";
+ dice.forEach((die,i)=>{
+  const box=document.createElement("div");box.className="die-result";box.dataset.dieIndex=i;box.textContent=String(die.total);
+  results.append(box);
+ });
+ el.append(info,results);
+ const me=room?.players.find(p=>p.id===playerId);
+ if(me?.admin){
+  const del=document.createElement("button");del.className="secondary admin-action";del.textContent="APAGAR";
+  del.onclick=()=>{if(confirm("Apagar esta rolagem do histórico para todos?"))socket.emit("roll:delete",{id:r.id})};
+  el.append(del);
+ }
  top?$("log").prepend(el):$("log").append(el);
  while($("log").children.length>100)$("log").lastChild.remove();
+ if(top)animateRoll(el,dice);
+}
+function animateRoll(el,dice){
+ const boxes=[...el.querySelectorAll(".die-result")];
+ boxes.forEach((box,i)=>{
+  const die=dice[i],duration=650+i*120,start=Date.now();box.classList.add("rolling");
+  const tick=()=>{
+   const elapsed=Date.now()-start;
+   if(elapsed>=duration){box.textContent=String(die.total);box.classList.remove("rolling");return}
+   box.textContent=String(1+Math.floor(Math.random()*die.sides));
+   setTimeout(tick,55);
+  };
+  tick();
+ });
+}
+function renderPool(){
+ const grouped={};dicePool.forEach(d=>grouped[d]=(grouped[d]||0)+1);
+ $("dicePool").textContent=Object.entries(grouped).map(([s,n])=>n+"d"+s).join(" + ")||"Nenhum";
+ $("roll").disabled=!socket.connected||!room||isResuming||dicePool.length===0;
 }
 $("create").onclick=()=>{
  if(!socket.connected)return msg("lobbyMsg","Sem conexão com o servidor. Aguarde a reconexão.");
@@ -174,13 +209,13 @@ $("join").onclick=()=>{
 };
 $("dice").onclick=e=>{
  const b=e.target.closest("[data-s]");if(!b)return;
- sides=+b.dataset.s;
- document.querySelectorAll(".die").forEach(x=>x.classList.toggle("selected",x===b));
- $("roll").textContent="🎲 ROLAR D"+sides;
+ if(dicePool.length>=20)return msg("roomMsg","Limite de 20 dados por rolagem.");
+ dicePool.push(Number(b.dataset.s));renderPool();
 };
+$("clearDice").onclick=()=>{dicePool=[];renderPool()};
 $("roll").onclick=()=>{
- if(!socket.connected||!room||isResuming)return;
- socket.emit("dice:roll",{sides,modifier:$("modifier").value,character:$("character").value});
+ if(!socket.connected||!room||isResuming||!dicePool.length)return;
+ socket.emit("dice:roll",{dice:[...dicePool],modifier:$("modifier").value,character:$("character").value});
 };
 $("copy").onclick=async()=>{
  try{await navigator.clipboard.writeText($("code").textContent);msg("roomMsg","Código copiado!")}
@@ -229,8 +264,9 @@ socket.on("room:state",state=>{
  if(room&&room.code===state.code)show(state);
 });
 socket.on("dice:rolled",r=>{
- if(room){addRoll(r,true);msg("roomMsg",r.playerName+" rolou D"+r.sides+": "+r.total)}
+ if(room){addRoll(r,true);const ds=Array.isArray(r.dice)?r.dice:[{sides:r.sides,total:r.total}];msg("roomMsg",r.playerName+" rolou "+ds.map(d=>"D"+d.sides+": "+d.total).join(" | "))}
 });
+socket.on("room:banned",m=>{saveToken("");room=null;playerId=null;returnToLobby(m)});
 socket.on("app:error",m=>{
  if(isResuming){isResuming=false;renderStatus();updateRollButton()}
  msg(room?"roomMsg":"lobbyMsg",m);
@@ -245,7 +281,8 @@ socket.on("room:closed",m=>{
  saveToken("");
  returnToLobby("A sala foi encerrada.");
 });
-updateRollButton();
+renderPool();
+ updateRollButton();
 })();
 
 </script></body></html>
