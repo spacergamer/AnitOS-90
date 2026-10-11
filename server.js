@@ -44,7 +44,7 @@ function state(r){
 function sync(r){io.to(r.code).emit("room:state",state(r))}
 function snapshot(){
  return [...rooms.values()].map(r=>({
-  code:r.code,title:r.title,rolls:r.rolls,
+  code:r.code,title:r.title,rolls:r.rolls,bannedNames:[...(r.bannedNames||[])],
   players:[...r.players.values()].map(p=>({
    id:p.id,recoveryToken:p.recoveryToken,name:p.name,admin:p.admin,connected:p.connected
   }))
@@ -64,7 +64,7 @@ async function initializePersistence(){
  if(Array.isArray(saved)){
   for(const data of saved){
    if(!data||typeof data.code!=="string"||!Array.isArray(data.players))continue;
-   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[]};
+   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[],bannedNames:new Set(Array.isArray(data.bannedNames)?data.bannedNames:[])};
    for(const old of data.players){
     if(!old||typeof old.id!=="string"||typeof old.recoveryToken!=="string")continue;
     const p={id:old.id,recoveryToken:old.recoveryToken,name:name(old.name),admin:Boolean(old.admin),connected:false,socketId:null,resumeTimer:null,resumeExpiresAt:Date.now()+RESUME_WINDOW_MS};
@@ -163,7 +163,8 @@ io.on("connection",s=>{
    code:c,
    title:String(p?.title||"Sessão sem título").trim().slice(0,36)||"Sessão sem título",
    players:new Map(),
-   rolls:[]
+   rolls:[],
+   bannedNames:new Set()
   };
   const player={
    id:randomBytes(12).toString("hex"),
@@ -183,6 +184,8 @@ io.on("connection",s=>{
   if(!allowEvent(s,"room:join",10,60_000)||!allowEvent(s,"room:join",30,60_000,"ip"))return;
   const c=String(p?.code||"").trim().toUpperCase(),r=rooms.get(c);
   if(!r)return error(s,"Sala não encontrada. Confira o código.");
+  const joiningName=name(p?.name).toLocaleLowerCase("pt-BR");
+  if(r.bannedNames?.has(joiningName))return error(s,"Este nome foi banido desta sala. Entre em contato com o mestre.");
   if(r.players.size>=MAX_PLAYERS_PER_ROOM)return error(s,"Esta sala atingiu o limite de 20 jogadores.");
   leave(s);
   const player={
@@ -226,20 +229,52 @@ io.on("connection",s=>{
   if(!allowEvent(s,"dice:roll",8,1_000))return;
   const r=rooms.get(s.data.roomCode),playerId=s.data.playerId,pl=r?.players.get(playerId);
   if(!r||!pl||!pl.connected||pl.socketId!==s.id)return error(s,"Entre em uma sala antes de rolar.");
-  const sides=Number(p?.sides),m=Number(p?.modifier||0);
-  if(!DICE.has(sides))return error(s,"Dado inválido.");
+  const requested=Array.isArray(p?.dice)?p.dice:[p?.sides];
+  if(!requested.length||requested.length>20||requested.some(v=>!DICE.has(Number(v))))return error(s,"Escolha entre 1 e 20 dados válidos.");
+  const m=Number(p?.modifier||0);
   if(!Number.isFinite(m))return error(s,"Modificador inválido.");
-  const mod=Math.max(-999,Math.min(999,Math.trunc(m))),natural=randomInt(1,sides+1);
+  const mod=Math.max(-999,Math.min(999,Math.trunc(m)));
+  const dice=requested.map(sides=>{const natural=randomInt(1,Number(sides)+1);return {sides:Number(sides),natural,total:natural+mod,modifier:mod}});
+  const first=dice[0];
   const roll={
    id:randomBytes(8).toString("hex"),
    name:name(p?.character,pl.name),
    playerName:pl.name,
-   sides,natural,modifier:mod,total:natural+mod,
+   sides:first.sides,natural:first.natural,modifier:mod,total:first.total,dice,
    time:new Date().toISOString()
   };
   r.rolls.unshift(roll);
   r.rolls=r.rolls.slice(0,100);
   io.to(r.code).emit("dice:rolled",roll);
+  persistState();
+ });
+ s.on("roll:delete",p=>{
+  if(!allowEvent(s,"roll:delete",20,10_000))return;
+  const r=rooms.get(s.data.roomCode),pl=r?.players.get(s.data.playerId);
+  if(!r||!pl)return error(s,"Entre em uma sala antes de moderar.");
+  if(!pl.admin)return error(s,"Só o administrador pode apagar rolagens.");
+  const id=String(p?.id||"");
+  const index=r.rolls.findIndex(item=>item.id===id);
+  if(index<0)return error(s,"Essa rolagem não existe mais.");
+  r.rolls.splice(index,1);
+  sync(r);persistState();
+ });
+ s.on("room:ban",p=>{
+  if(!allowEvent(s,"room:ban",10,10_000))return;
+  const r=rooms.get(s.data.roomCode),admin=r?.players.get(s.data.playerId);
+  if(!r||!admin)return error(s,"Entre em uma sala antes de moderar.");
+  if(!admin.admin)return error(s,"Só o administrador pode banir jogadores.");
+  const target=r.players.get(String(p?.playerId||""));
+  if(!target)return error(s,"Jogador não encontrado.");
+  if(target.id===admin.id||target.admin)return error(s,"Não é possível banir o administrador.");
+  r.bannedNames=r.bannedNames||new Set();
+  r.bannedNames.add(target.name.toLocaleLowerCase("pt-BR"));
+  const member=target.socketId&&io.sockets.sockets.get(target.socketId);
+  if(member){
+   member.emit("room:banned","Você foi removido e banido desta sala pelo administrador.");
+   member.leave(r.code);member.data.roomCode=null;member.data.playerId=null;
+  }
+  removePlayer(r,target);
   persistState();
  });
  s.on("room:close",()=>{
