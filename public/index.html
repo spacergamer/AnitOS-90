@@ -47,7 +47,7 @@ body::after{
 .hero{padding:22px 8px 18px;color:#fff;text-shadow:1px 1px #000}
 .hero .brand{color:#05ffa1}
 .hero h1{font-size:clamp(38px,7vw,64px);line-height:.9;margin:10px 0 14px;font-weight:400}
-.hero em{color:#ff71ce;text-shadow:2px 2px #000}
+.hero em{color:#ff71ce;text-shadow:2px 2px #000;font-style:italic}.hero .muted{display:inline-block;max-width:760px;padding:6px 9px;background:rgba(0,0,40,.48);color:#fff!important;font-size:21px;text-shadow:1px 1px #000;line-height:1.2}
 .grid{gap:14px}
 .panel{
   min-width:0;background:#c0c0c0;color:#000;padding:10px;margin:0 0 14px;border-radius:0;
@@ -55,9 +55,11 @@ body::after{
   box-shadow:inset -1px -1px 0 #808080,inset 1px 1px 0 #dfdfdf;
 }
 .panel h2{
-  margin:-5px -5px 12px;padding:4px 7px;background:linear-gradient(90deg,#000080,#1084d0);
-  color:#fff;font-size:22px;font-weight:700;letter-spacing:.02em;
+  margin:-8px -8px 12px;padding:5px 7px;background:linear-gradient(90deg,#000080,#1084d0);
+  color:#fff;font-size:22px;font-weight:700;letter-spacing:.02em;min-height:31px;
+  border-bottom:1px solid #00004d;text-shadow:1px 1px #000;
 }
+.panel h2::after{content:"_  □  ×";float:right;margin-left:10px;padding:0 3px;background:#c0c0c0;color:#000;font:700 17px/18px var(--font-sys);text-shadow:none;border-top:1px solid #fff;border-left:1px solid #fff;border-right:1px solid #404040;border-bottom:1px solid #404040;}
 .field{color:#000;font-size:17px;letter-spacing:.04em;margin:11px 0 4px}
 input,select,textarea{
   width:100%;min-width:0;border-radius:0;background:#fff;color:#000;border:2px inset #808080;
@@ -96,7 +98,7 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 .toast{color:#006b35;font-size:17px;min-height:20px}
 #log{max-height:430px;overflow:auto}
 #players{max-height:270px;overflow:auto}
-.foot{padding:14px 5px;color:#fff;text-shadow:1px 1px #000}
+.foot{padding:0;margin-top:18px;color:#000;text-shadow:none;font-size:17px;letter-spacing:0;text-transform:none;background:#c0c0c0;border-top:2px solid #fff;border-left:2px solid #fff;border-right:2px solid #000;border-bottom:2px solid #000;box-shadow:inset -1px -1px 0 #808080,inset 1px 1px 0 #dfdfdf}.foot-main{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 10px;font-weight:700;border-bottom:1px solid #808080}.foot-main span{font-weight:400}.copyright{padding:5px 10px;background:#000080;color:#fff;font-size:16px;text-shadow:1px 1px #000}
 .hidden{display:none!important}
 @media(max-width:700px){
   .wrap{padding:10px}
@@ -116,10 +118,10 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 </style>
 
 </head><body><main class="wrap"><header class="top"><div><div class="brand">AnitOS RGN System '91</div><div class="tiny">ANITOPE TECHNOLOGIES - D.I.C.E ROOM</div></div><div class="status" id="status">Conectando...</div></header>
-<section class="hero"><div class="brand">ANITOPE SCIENCE // DIVISÃO DE SISTEMAS · 1990</div><h1>A Ciência Salvando<br>Vidas desde 1972.</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
+<section class="hero"><h1>“<em>A Ciência Salvando<br>Vidas desde 1972.</em>”</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
 <section id="lobby" class="grid"><div class="panel"><h2>01 / Criar sala</h2><div class="muted">Você será o administrador da sessão.</div><label class="field">Seu nome</label><input id="adminName" maxlength="24" value="Mestre"><label class="field">Nome da sessão</label><input id="roomName" maxlength="36" value="Light Fade — Sessão 01"><button class="btn" id="create">＋ CRIAR SALA</button></div><div class="panel"><h2>02 / Entrar em sala</h2><div class="muted">Digite o código compartilhado pelo mestre.</div><label class="field">Seu nome</label><input id="playerName" maxlength="24" placeholder="Ex.: Scott"><label class="field">Código da sala</label><input id="roomCode" maxlength="5" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.15em"><button class="btn secondary" id="join">↳ ENTRAR NA SALA</button><div class="toast" id="lobbyMsg"></div></div></section>
 <section id="room"><div class="roomtop"><div><div class="brand">SESSÃO ATIVA</div><h2 id="title"></h2><div class="code">CÓDIGO: <span id="code"></span> <button id="copy" class="secondary" style="padding:3px 7px">⧉</button></div></div><div><span class="status" id="role"></span> <button class="secondary" id="leave">SAIR</button></div></div>
-<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="dice" id="dice"><button class="die selected" data-s="4">D4</button><button class="die" data-s="6">D6</button><button class="die" data-s="8">D8</button><button class="die" data-s="10">D10</button><button class="die" data-s="12">D12</button><button class="die" data-s="20">D20</button><button class="die" data-s="100">D100</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><label class="field">Modificador</label><input id="modifier" type="number" min="-999" max="999" value="0"><button class="btn" id="roll">🎲 ROLAR D4</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div></div></div></section><footer class="foot">ANITOPE SCIENCE · AnitOS RGN System '91 · Versão 1.1 · SISTEMA DE SESSÕES</footer></main>
+<div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="dice" id="dice"><button class="die selected" data-s="4">D4</button><button class="die" data-s="6">D6</button><button class="die" data-s="8">D8</button><button class="die" data-s="10">D10</button><button class="die" data-s="12">D12</button><button class="die" data-s="20">D20</button><button class="die" data-s="100">D100</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><label class="field">Modificador</label><input id="modifier" type="number" min="-999" max="999" value="0"><button class="btn" id="roll">🎲 ROLAR D4</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div></div></div></section><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 · Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados · Anitope Science © 1990</div></footer></main>
 <script src="/socket.io/socket.io.js"></script><script>
 
 (()=> {
