@@ -2,12 +2,14 @@ const express=require("express");
 const http=require("http");
 const {Server}=require("socket.io");
 const {randomInt,randomBytes}=require("node:crypto");
+const {Pool}=require("pg");
 const path=require("node:path");
 
 const app=express();
 const server=http.createServer(app);
 const io=new Server(server);
 const PORT=process.env.PORT||3000;
+const db=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.DATABASE_SSL==="disable"?false:{rejectUnauthorized:false}}):null;
 const rooms=new Map();
 const rateBuckets=new Map();
 const DICE=new Set([4,6,8,10,12,20,100]);
@@ -16,6 +18,7 @@ const MAX_ROOMS=200;
 const MAX_PLAYERS_PER_ROOM=20;
 const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 let rateChecks=0;
+let persistQueue=Promise.resolve();
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
@@ -39,6 +42,40 @@ function state(r){
  };
 }
 function sync(r){io.to(r.code).emit("room:state",state(r))}
+function snapshot(){
+ return [...rooms.values()].map(r=>({
+  code:r.code,title:r.title,rolls:r.rolls,
+  players:[...r.players.values()].map(p=>({
+   id:p.id,recoveryToken:p.recoveryToken,name:p.name,admin:p.admin,connected:p.connected
+  }))
+ }));
+}
+function persistState(){
+ if(!db)return;
+ persistQueue=persistQueue.then(async()=>{
+  await db.query(`INSERT INTO anitos_state(id,state,updated_at) VALUES(1,$1::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET state=EXCLUDED.state,updated_at=NOW()`,[JSON.stringify(snapshot())]);
+ }).catch(e=>console.error("[persistence] Não foi possível salvar o estado:",e.message));
+}
+async function initializePersistence(){
+ if(!db){console.warn("[persistence] DATABASE_URL não definido; usando apenas memória.");return;}
+ await db.query(`CREATE TABLE IF NOT EXISTS anitos_state(id smallint PRIMARY KEY CHECK(id=1),state jsonb NOT NULL,updated_at timestamptz NOT NULL DEFAULT NOW())`);
+ const result=await db.query("SELECT state FROM anitos_state WHERE id=1");
+ const saved=result.rows[0]?.state;
+ if(Array.isArray(saved)){
+  for(const data of saved){
+   if(!data||typeof data.code!=="string"||!Array.isArray(data.players))continue;
+   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[]};
+   for(const old of data.players){
+    if(!old||typeof old.id!=="string"||typeof old.recoveryToken!=="string")continue;
+    const p={id:old.id,recoveryToken:old.recoveryToken,name:name(old.name),admin:Boolean(old.admin),connected:false,socketId:null,resumeTimer:null,resumeExpiresAt:Date.now()+RESUME_WINDOW_MS};
+    r.players.set(p.id,p);
+   }
+   if(r.players.size){rooms.set(r.code,r);for(const p of r.players.values())expireDisconnectedPlayer(r,p);}
+  }
+ }
+ persistState();
+ console.log("[persistence] Estado carregado do Supabase; sessões desconectadas podem ser recuperadas por 30 segundos.");
+}
 function error(s,m){s.emit("app:error",m)}
 function allowEvent(s,event,limit,windowMs,scope="socket"){
  const now=Date.now();
@@ -67,9 +104,10 @@ function promoteAdmin(r){
 function removePlayer(r,p){
  if(p.resumeTimer)clearTimeout(p.resumeTimer);
  r.players.delete(p.id);
- if(!r.players.size){rooms.delete(r.code);return}
+ if(!r.players.size){rooms.delete(r.code);persistState();return}
  promoteAdmin(r);
  sync(r);
+ persistState();
 }
 function leave(s){
  const c=s.data.roomCode,playerId=s.data.playerId;
@@ -102,6 +140,7 @@ function connectPlayer(s,r,p){
  s.data.playerId=p.id;
  s.emit("room:joined",joinedPayload(r,p));
  sync(r);
+ persistState();
 }
 function expireDisconnectedPlayer(r,p){
  if(p.resumeTimer)clearTimeout(p.resumeTimer);
@@ -200,6 +239,7 @@ io.on("connection",s=>{
   r.rolls.unshift(roll);
   r.rolls=r.rolls.slice(0,100);
   io.to(r.code).emit("dice:rolled",roll);
+  persistState();
  });
  s.on("room:close",()=>{
   if(!allowEvent(s,"room:close",3,10_000))return;
@@ -217,6 +257,7 @@ io.on("connection",s=>{
    }
   }
   rooms.delete(c);
+  persistState();
  });
  s.on("room:leave",()=>{
   if(!allowEvent(s,"room:leave",5,10_000))return;
@@ -232,7 +273,15 @@ io.on("connection",s=>{
   s.data.playerId=null;
   expireDisconnectedPlayer(r,p);
   sync(r);
+  persistState();
  });
 });
 
-server.listen(PORT,"0.0.0.0",()=>console.log("Dice Rooms na porta "+PORT));
+initializePersistence().then(()=>{
+ server.listen(PORT,"0.0.0.0",()=>console.log("Dice Rooms na porta "+PORT));
+}).catch(e=>{
+ console.error("[persistence] Falha ao inicializar o banco:",e.message);
+ process.exit(1);
+});
+process.on("SIGINT",async()=>{await persistQueue;if(db)await db.end();process.exit(0)});
+process.on("SIGTERM",async()=>{await persistQueue;if(db)await db.end();process.exit(0)});
