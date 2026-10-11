@@ -9,9 +9,13 @@ const server=http.createServer(app);
 const io=new Server(server);
 const PORT=process.env.PORT||3000;
 const rooms=new Map();
+const rateBuckets=new Map();
 const DICE=new Set([4,6,8,10,12,20,100]);
 const RESUME_WINDOW_MS=30_000;
+const MAX_ROOMS=200;
+const MAX_PLAYERS_PER_ROOM=20;
 const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+let rateChecks=0;
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
@@ -36,6 +40,25 @@ function state(r){
 }
 function sync(r){io.to(r.code).emit("room:state",state(r))}
 function error(s,m){s.emit("app:error",m)}
+function allowEvent(s,event,limit,windowMs,scope="socket"){
+ const now=Date.now();
+ const identity=scope==="ip"?(s.handshake.address||"unknown"):s.id;
+ const key=scope+":"+identity+":"+event;
+ let bucket=rateBuckets.get(key);
+ if(!bucket||now-bucket.start>=windowMs){
+  bucket={start:now,count:0};
+  rateBuckets.set(key,bucket);
+ }
+ if(bucket.count>=limit){
+  error(s,"Muitas ações em pouco tempo. Aguarde um instante e tente novamente.");
+  return false;
+ }
+ bucket.count++;
+ if(++rateChecks%250===0){
+  for(const [k,v] of rateBuckets)if(now-v.start>120_000)rateBuckets.delete(k);
+ }
+ return true;
+}
 function promoteAdmin(r){
  if([...r.players.values()].some(p=>p.admin))return;
  const next=[...r.players.values()].find(p=>p.connected)||r.players.values().next().value;
@@ -92,6 +115,8 @@ function expireDisconnectedPlayer(r,p){
 
 io.on("connection",s=>{
  s.on("room:create",p=>{
+  if(!allowEvent(s,"room:create",3,60_000)||!allowEvent(s,"room:create",10,60_000,"ip"))return;
+  if(rooms.size>=MAX_ROOMS)return error(s,"O servidor atingiu o limite de salas. Tente novamente mais tarde.");
   leave(s);
   const c=code();
   const r={
@@ -115,8 +140,10 @@ io.on("connection",s=>{
   connectPlayer(s,r,player);
  });
  s.on("room:join",p=>{
+  if(!allowEvent(s,"room:join",10,60_000)||!allowEvent(s,"room:join",30,60_000,"ip"))return;
   const c=String(p?.code||"").trim().toUpperCase(),r=rooms.get(c);
   if(!r)return error(s,"Sala não encontrada. Confira o código.");
+  if(r.players.size>=MAX_PLAYERS_PER_ROOM)return error(s,"Esta sala atingiu o limite de 20 jogadores.");
   leave(s);
   const player={
    id:randomBytes(12).toString("hex"),
@@ -132,6 +159,7 @@ io.on("connection",s=>{
   connectPlayer(s,r,player);
  });
  s.on("room:resume",p=>{
+  if(!allowEvent(s,"room:resume",5,60_000))return;
   const token=String(p?.token||"");
   if(!/^[a-f0-9]{64}$/.test(token)){
    s.emit("room:resume:failed","Não foi possível recuperar a sessão. Entre novamente pelo lobby.");
@@ -155,6 +183,7 @@ io.on("connection",s=>{
   connectPlayer(s,r,player);
  });
  s.on("dice:roll",p=>{
+  if(!allowEvent(s,"dice:roll",8,1_000))return;
   const r=rooms.get(s.data.roomCode),playerId=s.data.playerId,pl=r?.players.get(playerId);
   if(!r||!pl||!pl.connected||pl.socketId!==s.id)return error(s,"Entre em uma sala antes de rolar.");
   const sides=Number(p?.sides),m=Number(p?.modifier||0);
@@ -173,6 +202,7 @@ io.on("connection",s=>{
   io.to(r.code).emit("dice:rolled",roll);
  });
  s.on("room:close",()=>{
+  if(!allowEvent(s,"room:close",3,10_000))return;
   const c=s.data.roomCode,r=rooms.get(c),pl=r?.players.get(s.data.playerId);
   if(!r||!pl)return;
   if(!pl.admin)return error(s,"Só o administrador pode encerrar a sala.");
@@ -188,7 +218,10 @@ io.on("connection",s=>{
   }
   rooms.delete(c);
  });
- s.on("room:leave",()=>leave(s));
+ s.on("room:leave",()=>{
+  if(!allowEvent(s,"room:leave",5,10_000))return;
+  leave(s);
+ });
  s.on("disconnect",()=>{
   const c=s.data.roomCode,playerId=s.data.playerId;
   const r=rooms.get(c),p=r?.players.get(playerId);
