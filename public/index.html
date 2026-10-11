@@ -225,7 +225,12 @@ function saveToken(token){
 function updateRollButton(){
  $("roll").disabled=!socket.connected||!room||isResuming||isRolling||dicePool.length===0;
 }
-function returnToLobby(message){
+function unlockRoll(){
+  isRolling=false;
+  if(rollUnlockTimer){clearTimeout(rollUnlockTimer);rollUnlockTimer=null}
+  updateRollButton();
+ }
+ function returnToLobby(message){
  room=null;playerId=null;isResuming=false;
  document.body.classList.remove("session-active");
  hideRollFocus();
