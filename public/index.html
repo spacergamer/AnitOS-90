@@ -33,14 +33,14 @@ body::after{z-index:9999;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,
  background:var(--win-bg);border-top:2px solid var(--win-border-light);border-left:2px solid var(--win-border-light);
  border-right:2px solid var(--win-border-darker);border-bottom:2px solid var(--win-border-darker);
 }
-.top{padding:2px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.top{padding:2px;display:flex;justify-content:space-between;align-items:stretch;gap:10px;margin-bottom:0}
 .top>div:first-child{min-width:0;flex:1;align-self:stretch;display:flex;flex-direction:column}
 .brand{color:var(--title-blue);font-weight:700;letter-spacing:.04em}
 .top .brand{display:block;width:100%;flex:1;background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:3px 7px;text-shadow:1px 1px #000}
 .tiny,.muted,.foot{font-size:18px}
 .top .tiny{padding:3px 7px;color:#000}
-.status{background:var(--win-bg);color:#000;border-radius:0;padding:4px 8px;font-size:17px;white-space:normal;border-top:2px solid var(--win-border-dark);border-left:2px solid var(--win-border-dark);border-right:2px solid var(--win-border-light);border-bottom:2px solid var(--win-border-light)}
-.hero{padding:22px 0 18px;color:#fff;text-shadow:1px 1px #000}
+.status{display:flex;align-items:center;justify-content:center;align-self:stretch;flex-shrink:0;background:var(--win-bg);color:#000;border-radius:0;padding:7px 10px;font-size:17px;white-space:normal;border-top:2px solid var(--win-border-light);border-left:2px solid var(--win-border-light);border-right:2px solid var(--win-border-darker);border-bottom:2px solid var(--win-border-darker);box-shadow:inset -1px -1px 0 var(--win-border-dark),inset 1px 1px 0 #dfdfdf}
+.hero{padding:4px 0 18px;color:#fff;text-shadow:1px 1px #000}
 .hero .brand{color:var(--vapor-cyan)}
 .hero h1{font-size:clamp(38px,7vw,64px);line-height:.92;margin:8px 0 14px;font-weight:400}
 .hero em{font-style:italic;color:#fff;text-shadow:2px 2px #000}
@@ -56,10 +56,10 @@ button:active,.btn:active{border-top:2px solid var(--win-border-darker);border-l
 button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 .btn{width:100%;margin-top:12px}
 .secondary{background:var(--win-bg);color:#000}
-#room .roomtop{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0;padding:2px;background:var(--win-bg)}
-#room .roomtop>div:first-child{flex:1;min-width:0}
-#room .roomtop .brand{display:block;width:100%;background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:3px 7px;text-shadow:1px 1px #000}
-#room .roomtop h2{font-size:28px;margin:5px 7px;color:#000;font-weight:400;overflow-wrap:anywhere}
+#room .roomtop{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:stretch;flex-wrap:nowrap;margin:16px 0;padding:2px;background:var(--win-bg)}
+#room .roomtop>div:first-child{display:contents}.session-details{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:5px 7px}.session-details>div:first-child{min-width:0;flex:1}.session-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#room .roomtop .brand{display:block;grid-row:1;grid-column:1/-1;width:100%;box-sizing:border-box;background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:4px 7px;text-shadow:1px 1px #000}
+#room .roomtop h2{font-size:22px;margin:5px 7px;color:#000;font-weight:400;overflow-wrap:anywhere;line-height:1.1}
 .code{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;border:2px inset var(--win-border-dark);border-radius:0;padding:5px 8px;letter-spacing:.12em}
 .code button{margin-left:3px}
 .roomgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
@@ -80,10 +80,10 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 .copyright{padding:5px 10px;background:var(--title-blue);color:#fff;font-size:17px;text-shadow:1px 1px #000}
 .hidden{display:none!important}
 @media(max-width:700px){
- .wrap{padding:10px}.top{gap:8px;flex-wrap:wrap}.top>div{min-width:0}.top>div:first-child{flex-basis:100%}
+ .wrap{padding:10px}.top{gap:8px;flex-wrap:wrap}.top>div{min-width:0}.top>div:first-child{flex:1 1 55%}.top .status{flex:0 1 auto}
  .grid,.roomgrid{grid-template-columns:minmax(0,1fr)}.panel{padding:2px}
  .hero{padding:18px 4px}.hero h1{font-size:clamp(38px,12vw,56px)}
- #room .roomtop{align-items:flex-start}.event{gap:6px;padding:6px}.event .d{min-width:28px}.result{font-size:23px}
+ #room .roomtop{align-items:flex-start}.session-details{align-items:flex-start}.session-actions{align-items:flex-start}.event{gap:6px;padding:6px}.event .d{min-width:28px}.result{font-size:23px}
 }
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
 </style>
@@ -91,7 +91,7 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 </head><body><main class="wrap"><header class="top"><div><div class="brand">AnitOS RGN System '91</div><div class="tiny">ANITOPE TECHNOLOGIES - D.I.C.E ROOM</div></div><div class="status" id="status">Conectando...</div></header>
 <section class="hero"><h1>“<em>A Ciência Salvando<br>Vidas desde 1972.</em>”</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
 <section id="lobby" class="grid"><div class="panel"><h2>01 - Criar sala</h2><div class="muted">Você será o administrador da sessão.</div><label class="field">Seu nome</label><input id="adminName" maxlength="24" value="Mestre"><label class="field">Nome da sessão</label><input id="roomName" maxlength="36" value="Light Fade — Sessão 01"><button class="btn" id="create">＋ CRIAR SALA</button></div><div class="panel"><h2>02 - Entrar em sala</h2><div class="muted">Digite o código compartilhado pelo mestre.</div><label class="field">Seu nome</label><input id="playerName" maxlength="24" placeholder="Ex.: Scott"><label class="field">Código da sala</label><input id="roomCode" maxlength="5" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.15em"><button class="btn secondary" id="join">↳ ENTRAR NA SALA</button><div class="toast" id="lobbyMsg"></div></div></section>
-<section id="room"><div class="roomtop"><div><div class="brand">SESSÃO ATIVA</div><h2 id="title"></h2><div class="code">CÓDIGO: <span id="code"></span> <button id="copy" class="secondary" style="padding:3px 7px">⧉</button></div></div><div><span class="status" id="role"></span> <button class="secondary" id="leave">SAIR</button></div></div>
+<section id="room"><div class="roomtop"><div class="brand">SESSÃO ATIVA</div><div class="session-details"><div><h2 id="title"></h2><div class="code">CÓDIGO: <span id="code"></span> <button id="copy" class="secondary" style="padding:3px 7px">⧉</button></div></div><div class="session-actions"><span class="status" id="role"></span> <button class="secondary" id="leave">SAIR</button></div></div></div>
 <div class="roomgrid"><div class="panel"><h2>Histórico de rolagens</h2><div id="log" class="muted">Nenhuma rolagem registrada.</div><p class="tiny">Os resultados são calculados pelo servidor e sincronizados com a sala.</p></div><div><div class="panel"><h2>Rolar dados</h2><div class="dice" id="dice"><button class="die selected" data-s="4">D4</button><button class="die" data-s="6">D6</button><button class="die" data-s="8">D8</button><button class="die" data-s="10">D10</button><button class="die" data-s="12">D12</button><button class="die" data-s="20">D20</button><button class="die" data-s="100">D100</button></div><label class="field">Personagem / nome da rolagem</label><input id="character" maxlength="24" placeholder="Nome do personagem"><label class="field">Modificador</label><input id="modifier" type="number" min="-999" max="999" value="0"><button class="btn" id="roll">🎲 ROLAR D4</button><div id="adminTools" class="hidden"><button class="btn secondary" id="close">ENCERRAR SALA</button></div><div class="toast" id="roomMsg"></div></div><div class="panel"><h2>Jogadores <span id="count" class="brand"></span></h2><div id="players"></div></div></div></div></section><footer class="foot"><div class="foot-main"><div>AnitOS RGN System '91</div><span>Versão 1.1 - Sistema de sessões</span></div><div class="copyright">Todos os direitos reservados - Anitope Science © 1990</div></footer></main>
 <script src="/socket.io/socket.io.js"></script><script>
 
