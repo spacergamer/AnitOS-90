@@ -41,6 +41,7 @@ body::after{z-index:9999;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,
 .top .tiny{padding:3px 7px;color:#000}
 .status{display:flex;align-items:center;justify-content:center;align-self:stretch;flex-shrink:0;background:var(--win-bg);color:#000;border-radius:0;padding:7px 10px;font-size:17px;white-space:normal;border-top:2px solid var(--win-border-light);border-left:2px solid var(--win-border-light);border-right:2px solid var(--win-border-darker);border-bottom:2px solid var(--win-border-darker);box-shadow:inset -1px -1px 0 var(--win-border-dark),inset 1px 1px 0 #dfdfdf}
 .top>.status{align-self:center;max-width:260px;padding:3px 8px;font-size:16px;line-height:1;white-space:nowrap;flex-shrink:0}
+#room .session-actions #role{font-family:var(--font-sys);font-size:18px;font-weight:400;letter-spacing:0;line-height:1.1;padding:3px 7px;white-space:nowrap}
 .hero{padding:4px 0 18px;color:#fff;text-shadow:1px 1px #000}
 .hero .brand{color:var(--vapor-cyan)}
 .hero h1{font-size:clamp(38px,7vw,64px);line-height:.92;margin:8px 0 14px;font-weight:400}
@@ -61,7 +62,7 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 .session-details{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:5px 7px}.session-details>div:first-child{min-width:0;flex:1}.session-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #room .roomtop .brand{display:block;grid-row:1;grid-column:1/-1;width:100%;box-sizing:border-box;background:linear-gradient(90deg,var(--title-blue),#1084d0);color:#fff;padding:4px 7px;text-shadow:1px 1px #000}
 #room .roomtop h2{font-size:22px;margin:5px 7px;color:#000;font-weight:400;overflow-wrap:anywhere;line-height:1.1}
-.code{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;border:2px inset var(--win-border-dark);border-radius:0;padding:5px 8px;letter-spacing:.12em}
+.code{display:inline-flex;align-items:center;gap:5px;background:#fff;color:#000;border:2px inset var(--win-border-dark);border-radius:0;padding:2px 6px;font:18px/1.1 var(--font-sys);font-weight:400;letter-spacing:0;max-width:100%;overflow-wrap:anywhere}
 .code button{margin-left:3px}
 .roomgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
 .dice{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
