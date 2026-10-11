@@ -90,6 +90,96 @@ button:disabled{color:#777;cursor:default;text-shadow:1px 1px #fff}
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
 </style>
 
+
+<style id="anitos-mobile-optimization">
+/* Mobile-first session layout; preserves the Windows '91 visual language. */
+@media(max-width:700px){
+ html,body{width:100%;min-width:0}
+ body{font-size:19px;padding-bottom:env(safe-area-inset-bottom)}
+ .wrap{width:100%;max-width:100%;padding:10px 9px calc(12px + env(safe-area-inset-bottom))}
+ .top{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+ .top>div:first-child{width:100%;min-height:0}
+ .top .brand{font-size:22px;line-height:1.05;overflow-wrap:anywhere}
+ .top .tiny{font-size:17px;line-height:1.1}
+ .top>.status{justify-self:stretch;width:100%;max-width:none;min-width:0;min-height:30px;white-space:normal;text-align:center;font-size:17px}
+ .hero{padding:12px 2px 13px}
+ .hero h1{font-size:clamp(34px,10vw,48px);line-height:.98;margin:3px 0 10px}
+ .hero h1 br{display:none}
+ .hero .muted{width:100%;font-size:20px;padding:7px 8px}
+ .grid{grid-template-columns:minmax(0,1fr);gap:8px}
+ .panel{margin:0 0 9px;padding:2px;min-width:0}
+ .panel h2{font-size:22px;padding:5px 7px;margin-bottom:7px}
+ .panel>.muted{padding:2px 7px}
+ .field{font-size:18px;margin:9px 7px 4px}
+ input,select,textarea{font-size:20px;min-height:42px;padding:7px 8px}
+ #lobby .panel input{width:calc(100% - 14px);margin:0 7px}
+ button,.btn{min-height:42px;padding:7px 10px;font-size:20px;touch-action:manipulation}
+ .btn{width:calc(100% - 14px);margin:9px 7px 7px}
+ #lobby .muted{font-size:18px;line-height:1.15}
+ #room .roomtop{margin:9px 0;padding:2px}
+ #room .roomtop .brand{font-size:20px;padding:5px 7px}
+ .session-details{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;padding:7px}
+ #room .roomtop h2{font-size:24px;margin:0 0 6px;overflow-wrap:anywhere}
+ .session-details>div:first-child{width:100%}
+ .code{font-size:19px;min-height:34px;justify-content:flex-start}
+ .code button{min-width:38px;min-height:32px;margin-left:auto}
+ .session-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;width:100%;align-items:stretch}
+ #room .session-actions #role{display:flex;align-items:center;justify-content:center;white-space:normal;text-align:center;min-height:38px}
+ #leave{min-width:72px}
+ .roomgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+ .roomgrid>div:nth-child(2){display:contents}
+ .roomgrid>.panel:first-child{order:4}
+ .roomgrid>div:nth-child(2)>.panel:nth-child(1){order:1}
+ .roomgrid>div:nth-child(2)>.panel:nth-child(2){order:3}
+ .roomgrid>div:nth-child(2)>.panel:nth-child(3){order:2}
+ .dice{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px 7px}
+ .die{min-height:43px;padding:6px 2px;font-size:19px}
+ .pool-row{margin:8px 7px;padding:6px;gap:6px;font-size:18px}
+ #dicePool{overflow-wrap:anywhere}
+ #clearDice{min-height:34px;margin-left:auto}
+ #character{width:calc(100% - 14px);margin:0 7px}
+ #roll{width:calc(100% - 14px);min-height:50px;font-size:24px;margin:9px 7px 7px}
+ #adminTools .btn{width:calc(100% - 14px)}
+ .toast{padding:0 7px;overflow-wrap:anywhere}
+ #players{max-height:240px;overflow:auto;padding:0 6px}
+ .player{gap:6px;align-items:center;padding:7px;flex-wrap:wrap;font-size:18px}
+ .player>span{flex:1;min-width:0;overflow-wrap:anywhere}
+ .admin-action{min-height:34px;padding:4px 7px;font-size:17px}
+ #log{max-height:360px;overflow:auto;padding:0 5px}
+ .event{align-items:flex-start;gap:6px;padding:7px}
+ .event .info{flex:1 1 calc(100% - 12px);min-width:0}
+ .event .info strong{overflow-wrap:anywhere}
+ .event small{font-size:16px;line-height:1.15}
+ .event .dice-results{flex:1 0 100%;gap:5px}
+ .die-result{min-width:39px;padding:4px 6px;font-size:25px}
+ .event>.admin-action{margin-left:auto}
+ .chat-panel{min-width:0}
+ .chat-messages{height:min(36vh,320px);min-height:170px;max-height:320px;padding:5px;overscroll-behavior:contain}
+ .chat-message{padding:7px 3px}
+ .chat-meta{font-size:16px;flex-wrap:wrap}
+ .chat-text{font-size:20px;line-height:1.15;overflow-wrap:anywhere}
+ .chat-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:0 6px 6px}
+ .chat-form input{width:100%;min-width:0;min-height:44px}
+ .chat-form button{min-height:44px;padding:6px 9px}
+ .chat-panel>.tiny{padding:0 7px 5px;line-height:1.1}
+ .foot{margin-top:10px}
+ .foot-main{display:block;padding:6px 8px;line-height:1.2}
+ .foot-main span{display:block;margin-top:3px}
+ .copyright{font-size:16px;line-height:1.15;padding:6px 8px;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+ .wrap{padding-left:6px;padding-right:6px}
+ .top .brand{font-size:20px}
+ .hero h1{font-size:34px}
+ .dice{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .session-actions{grid-template-columns:minmax(0,1fr) auto}
+ .chat-form{grid-template-columns:minmax(0,1fr) auto}
+ .chat-form button{font-size:18px;padding:5px 7px}
+}
+@media(hover:none) and (pointer:coarse){
+ button,.btn{ -webkit-tap-highlight-color:transparent }
+}
+</style>
 </head><body><main class="wrap"><header class="top"><div><div class="brand">AnitOS RGN System '91</div><div class="tiny">ANITOPE TECHNOLOGIES - D.I.C.E ROOM</div></div><div class="status" id="status">Conectando...</div></header>
 <section class="hero"><h1>“<em>A Ciência Salvando<br>Vidas desde 1972.</em>”</h1><div class="muted">Crie uma sala, compartilhe o código e role dados em tempo real com o grupo.</div></section>
 <section id="lobby" class="grid"><div class="panel"><h2>01 - Criar sala</h2><div class="muted">Você será o administrador da sessão.</div><label class="field">Seu nome</label><input id="adminName" maxlength="24" value="Mestre"><label class="field">Nome da sessão</label><input id="roomName" maxlength="36" value="Light Fade — Sessão 01"><button class="btn" id="create">＋ CRIAR SALA</button></div><div class="panel"><h2>02 - Entrar em sala</h2><div class="muted">Digite o código compartilhado pelo mestre.</div><label class="field">Seu nome</label><input id="playerName" maxlength="24" placeholder="Ex.: Scott"><label class="field">Código da sala</label><input id="roomCode" maxlength="5" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.15em"><button class="btn secondary" id="join">↳ ENTRAR NA SALA</button><div class="toast" id="lobbyMsg"></div></div></section>
