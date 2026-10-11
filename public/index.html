@@ -152,7 +152,7 @@ function addRoll(r,top=true){
  const info=document.createElement("div");info.className="info";
  const b=document.createElement("strong");b.textContent=r.name;
  const small=document.createElement("small");
- small.textContent="Por "+r.playerName+" - natural "+r.natural+(r.modifier?" - mod "+(r.modifier>0?"+":"")+r.modifier:"")+" · "+new Date(r.time).toLocaleTimeString("pt-BR");
+ small.textContent="Por "+r.playerName+" - natural "+r.natural+(r.modifier?" - mod "+(r.modifier>0?"+":"")+r.modifier:"")+" - "+new Date(r.time).toLocaleTimeString("pt-BR");
  info.append(b,small);
  const result=document.createElement("div");result.className="result";result.textContent=(r.total>0?"+":"")+r.total;
  el.append(d,info,result);
