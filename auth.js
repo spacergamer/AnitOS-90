@@ -23,7 +23,7 @@ function readCookie(req, key) {
 }
 
 function setSessionCookie(res, token) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = (process.env.NODE_ENV === "production" || process.env.RENDER === "true") ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}${secure}`);
 }
 
