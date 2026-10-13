@@ -355,12 +355,9 @@ function registerAuthRoutes(app, express, db) {
         return sendError(res, 400, "O capítulo excede o limite de 200 personagens por sincronização.");
       }
 
+      const characters = normalizeBoardCharacters(snapshot);
       let synced = 0;
-      for (const character of snapshot) {
-        if (!character || typeof character !== "object" || Array.isArray(character)) continue;
-        const sourceKey = String(character.id || "").trim().slice(0, 160);
-        const name = String(character.nome || character.name || sourceKey).trim().slice(0, 100);
-        if (!sourceKey || !name) continue;
+      for (const character of characters) {
         await client.query(
           `INSERT INTO anitos_characters
             (id,campaign_id,owner_id,name,data,source_key)
@@ -368,7 +365,7 @@ function registerAuthRoutes(app, express, db) {
            ON CONFLICT (campaign_id,source_key) WHERE source_key IS NOT NULL
            DO UPDATE SET name=EXCLUDED.name,data=EXCLUDED.data,updated_at=now()
            RETURNING id`,
-          [crypto.randomUUID(), campaign.id, campaign.owner_id, name, JSON.stringify(character), sourceKey]
+          [crypto.randomUUID(), campaign.id, campaign.owner_id, character.name, JSON.stringify(character.data), character.sourceKey]
         );
         synced++;
       }
@@ -464,4 +461,15 @@ function registerAuthRoutes(app, express, db) {
   });
 }
 
-module.exports = {initializeAuthSchema, registerAuthRoutes};
+function normalizeBoardCharacters(snapshot) {
+  if (!Array.isArray(snapshot)) throw new TypeError("Snapshot must be an array.");
+  return snapshot.flatMap(character => {
+    if (!character || typeof character !== "object" || Array.isArray(character)) return [];
+    const sourceKey = String(character.id || "").trim().slice(0, 160);
+    const name = String(character.nome || character.name || sourceKey).trim().slice(0, 100);
+    if (!sourceKey || !name) return [];
+    return [{sourceKey, name, data: character}];
+  });
+}
+
+module.exports = {initializeAuthSchema, registerAuthRoutes, normalizeBoardCharacters};
