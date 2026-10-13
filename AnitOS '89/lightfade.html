@@ -1310,6 +1310,12 @@
             setupAudioEnded(category);
         });
 
+        // Keep the browser backup while synchronizing only an explicitly selected campaign.
+        const remoteCampaignId = new URLSearchParams(window.location.search).get('campaign');
+        let remoteCampaignReady = false;
+        let remoteSaveQueue = Promise.resolve();
+        let remoteSaveFailed = false;
+
         if (Object.keys(appData.snapshots).length === 0) {
             appData.snapshots['c0'] = JSON.parse(JSON.stringify(defaultChars));
             saveData();
@@ -1318,15 +1324,13 @@
         // =========================================================
         // CORE & UI UPDATE
         // =========================================================
-        // Keep the browser backup while synchronizing only an explicitly selected campaign.
-        const remoteCampaignId = new URLSearchParams(window.location.search).get('campaign');
-        let remoteCampaignReady = false;
-        let remoteSaveQueue = Promise.resolve();
+        // Remote campaign state is initialized above the first possible save.
 
         function saveData() {
             localStorage.setItem('MGR_DATA', JSON.stringify(appData));
             if (!remoteCampaignId || !remoteCampaignReady) return;
             const snapshot = JSON.stringify(appData);
+            remoteSaveFailed = false;
             remoteSaveQueue = remoteSaveQueue.then(async () => {
                 const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), {
                     method: 'PATCH',
@@ -1339,6 +1343,7 @@
                     throw new Error(result.error || 'Falha ao salvar a campanha remota.');
                 }
             }).catch(error => {
+                remoteSaveFailed = true;
                 console.error('[ANITOPEBOARD] Falha ao sincronizar campanha:', error);
                 const status = document.getElementById('remote-save-status');
                 if (status) status.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
@@ -3027,6 +3032,7 @@
                     remoteCampaignReady = true;
                     saveData();
                     await remoteSaveQueue;
+                    if (remoteSaveFailed) throw new Error('A cópia inicial falhou. Seus dados locais foram preservados; tente novamente.');
                 }
                 const status = document.createElement('div');
                 status.id = 'remote-save-status';
