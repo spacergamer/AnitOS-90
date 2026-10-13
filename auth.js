@@ -326,17 +326,34 @@ function registerAuthRoutes(app, express, db) {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem sincronizar fichas.");
     const chapterId = typeof req.body?.chapterId === "string" ? req.body.chapterId : "";
     if (!chapterId || chapterId.length > 160) return sendError(res, 400, "Selecione um capítulo válido.");
+    let client;
+    let transactionStarted = false;
     try {
-      const result = await db.query(
-        "SELECT id,owner_id,data FROM anitos_campaigns WHERE id=$1 AND owner_id=$2",
+      client = await db.connect();
+      await client.query("BEGIN");
+      transactionStarted = true;
+      const result = await client.query(
+        "SELECT id,owner_id,data FROM anitos_campaigns WHERE id=$1 AND owner_id=$2 FOR UPDATE",
         [req.params.id, req.user.id]
       );
       const campaign = result.rows[0];
-      if (!campaign) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
+      if (!campaign) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
+      }
       const boardData = campaign.data && typeof campaign.data === "object" ? campaign.data : {};
       const snapshot = boardData.snapshots && boardData.snapshots[chapterId];
-      if (!Array.isArray(snapshot)) return sendError(res, 400, "O capítulo não possui uma lista de personagens sincronizável.");
-      if (snapshot.length > 200) return sendError(res, 400, "O capítulo excede o limite de 200 personagens por sincronização.");
+      if (!Array.isArray(snapshot)) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        return sendError(res, 400, "O capítulo não possui uma lista de personagens sincronizável.");
+      }
+      if (snapshot.length > 200) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        return sendError(res, 400, "O capítulo excede o limite de 200 personagens por sincronização.");
+      }
 
       let synced = 0;
       for (const character of snapshot) {
@@ -344,7 +361,7 @@ function registerAuthRoutes(app, express, db) {
         const sourceKey = String(character.id || "").trim().slice(0, 160);
         const name = String(character.nome || character.name || sourceKey).trim().slice(0, 100);
         if (!sourceKey || !name) continue;
-        await db.query(
+        await client.query(
           `INSERT INTO anitos_characters
             (id,campaign_id,owner_id,name,data,source_key)
            VALUES($1,$2,$3,$4,$5::jsonb,$6)
@@ -355,10 +372,15 @@ function registerAuthRoutes(app, express, db) {
         );
         synced++;
       }
+      await client.query("COMMIT");
+      transactionStarted = false;
       res.json({ok: true, chapterId, synced});
     } catch (err) {
+      if (client && transactionStarted) await client.query("ROLLBACK").catch(() => {});
       console.error("[characters] Falha ao sincronizar ANITOPEBOARD:", err.message);
       sendError(res, 500, "Não foi possível sincronizar as fichas do capítulo.");
+    } finally {
+      if (client) client.release();
     }
   });
 
