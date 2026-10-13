@@ -101,6 +101,9 @@ async function initializeAuthSchema(db) {
     );
     CREATE INDEX IF NOT EXISTS anitos_characters_campaign_idx ON anitos_characters(campaign_id);
     CREATE INDEX IF NOT EXISTS anitos_characters_assigned_idx ON anitos_characters(assigned_player_id);
+    ALTER TABLE anitos_characters ADD COLUMN IF NOT EXISTS source_key text;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_characters_source_key_idx
+      ON anitos_characters(campaign_id, source_key) WHERE source_key IS NOT NULL;
   `);
 }
 
@@ -316,6 +319,46 @@ function registerAuthRoutes(app, express, db) {
     } catch (err) {
       console.error("[campaigns] Falha ao listar jogadores:", err.message);
       sendError(res, 500, "Não foi possível carregar os jogadores da campanha.");
+    }
+  });
+
+  app.post("/api/campaigns/:id/sync-board-characters", requireAuth, async (req, res) => {
+    if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem sincronizar fichas.");
+    const chapterId = typeof req.body?.chapterId === "string" ? req.body.chapterId : "";
+    if (!chapterId || chapterId.length > 160) return sendError(res, 400, "Selecione um capítulo válido.");
+    try {
+      const result = await db.query(
+        "SELECT id,owner_id,data FROM anitos_campaigns WHERE id=$1 AND owner_id=$2",
+        [req.params.id, req.user.id]
+      );
+      const campaign = result.rows[0];
+      if (!campaign) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
+      const boardData = campaign.data && typeof campaign.data === "object" ? campaign.data : {};
+      const snapshot = boardData.snapshots && boardData.snapshots[chapterId];
+      if (!Array.isArray(snapshot)) return sendError(res, 400, "O capítulo não possui uma lista de personagens sincronizável.");
+      if (snapshot.length > 200) return sendError(res, 400, "O capítulo excede o limite de 200 personagens por sincronização.");
+
+      let synced = 0;
+      for (const character of snapshot) {
+        if (!character || typeof character !== "object" || Array.isArray(character)) continue;
+        const sourceKey = String(character.id || "").trim().slice(0, 160);
+        const name = String(character.nome || character.name || sourceKey).trim().slice(0, 100);
+        if (!sourceKey || !name) continue;
+        await db.query(
+          `INSERT INTO anitos_characters
+            (id,campaign_id,owner_id,name,data,source_key)
+           VALUES($1,$2,$3,$4,$5::jsonb,$6)
+           ON CONFLICT (campaign_id,source_key) WHERE source_key IS NOT NULL
+           DO UPDATE SET name=EXCLUDED.name,data=EXCLUDED.data,updated_at=now()
+           RETURNING id`,
+          [crypto.randomUUID(), campaign.id, campaign.owner_id, name, JSON.stringify(character), sourceKey]
+        );
+        synced++;
+      }
+      res.json({ok: true, chapterId, synced});
+    } catch (err) {
+      console.error("[characters] Falha ao sincronizar ANITOPEBOARD:", err.message);
+      sendError(res, 500, "Não foi possível sincronizar as fichas do capítulo.");
     }
   });
 
