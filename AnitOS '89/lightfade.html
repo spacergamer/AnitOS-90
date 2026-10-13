@@ -3002,8 +3002,9 @@
         
         async function initializeCampaignSession() {
             if (!remoteCampaignId) {
-                renderSidebar();
-                closeMainWindow();
+                // O dashboard integrado nunca deve abrir em modo local/anônimo.
+                // A campanha é o escopo de segurança e persistência do Mestre.
+                window.location.replace('/account?reason=select-campaign');
                 return;
             }
             try {
