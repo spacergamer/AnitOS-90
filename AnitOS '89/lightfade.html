@@ -3043,7 +3043,8 @@
                 syncBoardButton.textContent = 'SINCRONIZAR FICHAS DO CAPÍTULO';
                 syncBoardButton.style.cssText = 'font:inherit;cursor:pointer;background:#05ffa1;color:#000;border:1px solid #05ffa1;padding:4px 7px;';
                 syncBoardButton.addEventListener('click', async () => {
-                    if (!activeChap || !Array.isArray(appData.snapshots[activeChap])) {
+                    const chapterId = activeChap;
+                    if (!chapterId || !Array.isArray(appData.snapshots[chapterId])) {
                         alert('Abra um capítulo com personagens antes de sincronizar as fichas.');
                         return;
                     }
@@ -3057,7 +3058,7 @@
                             method: 'POST',
                             credentials: 'same-origin',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ chapterId: activeChap })
+                            body: JSON.stringify({ chapterId })
                         });
                         const result = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(result.error || 'Falha ao sincronizar as fichas.');
