@@ -5,7 +5,8 @@
   "description": "AnitOS '90 — ANITOPEBOARD e salas RGN multiplayer",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --check server.js && node --check auth.js"
   },
   "engines": {
     "node": ">=20"
