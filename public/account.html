@@ -212,7 +212,9 @@ function campaignCard(campaign) {
 }
 let assignedSheetTimer = null;
 let assignedSheetCampaign = null;
+let assignedSheetViewToken = 0;
 $("closeSheets").addEventListener("click", () => {
+  assignedSheetViewToken++;
   if (assignedSheetTimer) clearInterval(assignedSheetTimer);
   assignedSheetTimer = null;
   assignedSheetCampaign = null;
@@ -283,6 +285,9 @@ function renderSheetData(value) {
   return root;
 }
 async function openAssignedSheets(campaign) {
+  const viewToken = ++assignedSheetViewToken;
+  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  assignedSheetTimer = null;
   assignedSheetCampaign = campaign;
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = false;
@@ -290,9 +295,10 @@ async function openAssignedSheets(campaign) {
   $("sheetList").replaceChildren();
   message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
   await refreshAssignedSheets(true);
-  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  // Do not create a timer if the player closed or switched views during the request.
+  if (viewToken !== assignedSheetViewToken || assignedSheetCampaign?.id !== campaign.id || $("sheetWindow").hidden) return;
   assignedSheetTimer = setInterval(() => {
-    if (!assignedSheetCampaign || $("sheetWindow").hidden) return;
+    if (viewToken !== assignedSheetViewToken || !assignedSheetCampaign || $("sheetWindow").hidden) return;
     refreshAssignedSheets(false);
   }, 15000);
 }
