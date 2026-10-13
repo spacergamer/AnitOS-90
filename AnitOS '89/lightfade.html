@@ -1318,7 +1318,32 @@
         // =========================================================
         // CORE & UI UPDATE
         // =========================================================
-        function saveData() { localStorage.setItem('MGR_DATA', JSON.stringify(appData)); }
+        // Keep the browser backup while synchronizing only an explicitly selected campaign.
+        const remoteCampaignId = new URLSearchParams(window.location.search).get('campaign');
+        let remoteCampaignReady = false;
+        let remoteSaveQueue = Promise.resolve();
+
+        function saveData() {
+            localStorage.setItem('MGR_DATA', JSON.stringify(appData));
+            if (!remoteCampaignId || !remoteCampaignReady) return;
+            const snapshot = JSON.stringify(appData);
+            remoteSaveQueue = remoteSaveQueue.then(async () => {
+                const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), {
+                    method: 'PATCH',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: JSON.parse(snapshot) })
+                });
+                if (!response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.error || 'Falha ao salvar a campanha remota.');
+                }
+            }).catch(error => {
+                console.error('[ANITOPEBOARD] Falha ao sincronizar campanha:', error);
+                const status = document.getElementById('remote-save-status');
+                if (status) status.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
+            });
+        }
 
         function saveUiState() {
             localStorage.setItem('MGR_UI_STATE', JSON.stringify({
@@ -2968,8 +2993,56 @@
         // FORÇAR SEMPRE FECHADO NO LOGIN / RECARREGAMENTO:
         activeChap = null; 
         
-        renderSidebar();
-        closeMainWindow(); // Garante o fechamento total da tela principal ao carregar a página
-    </script>
+        async function initializeCampaignSession() {
+            if (!remoteCampaignId) {
+                renderSidebar();
+                closeMainWindow();
+                return;
+            }
+            try {
+                const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), { credentials: 'same-origin' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.campaign) throw new Error(payload.error || 'Faça login para abrir esta campanha.');
+                if (!payload.campaign.is_owner) {
+                    alert('O ANITOPEBOARD completo é exclusivo do Mestre. Entre na conta de Jogador para acessar as fichas atribuídas.');
+                    window.location.href = '/account';
+                    return;
+                }
+                const remoteData = payload.campaign.data;
+                if (remoteData && Array.isArray(remoteData.acts) && Array.isArray(remoteData.chapters) && remoteData.snapshots) {
+                    appData = remoteData;
+                    appData.extraFriends = normalizeExtraList(appData.extraFriends || [], 'Amigo');
+                    appData.extraEnemies = normalizeExtraList(appData.extraEnemies || [], 'Inimigo');
+                    appData.extraPets = normalizeExtraList(appData.extraPets || [], 'Pet');
+                    appData.shops = Array.isArray(appData.shops) ? appData.shops : [];
+                    localStorage.setItem('MGR_DATA', JSON.stringify(appData));
+                    remoteCampaignReady = true;
+                } else {
+                    const importLocal = confirm('Esta campanha ainda não tem dados no banco. Deseja copiar para ela os dados MGR_DATA deste navegador? Isso preserva o armazenamento local e cria uma cópia na campanha.');
+                    if (!importLocal) {
+                        alert('Campanha remota não alterada. Você voltou à central para escolher outra ação.');
+                        window.location.href = '/account';
+                        return;
+                    }
+                    remoteCampaignReady = true;
+                    saveData();
+                    await remoteSaveQueue;
+                }
+                const status = document.createElement('div');
+                status.id = 'remote-save-status';
+                status.textContent = 'CAMPANHA SINCRONIZADA COM O SERVIDOR';
+                status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:5px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);';
+                document.body.appendChild(status);
+                if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
+                renderSidebar();
+                closeMainWindow();
+            } catch (error) {
+                console.error('[ANITOPEBOARD] Não foi possível abrir a campanha:', error);
+                alert(error.message || 'Não foi possível abrir a campanha. Faça login e tente novamente.');
+                window.location.href = '/account';
+            }
+        }
+        initializeCampaignSession();
+</script>
 </body>
 </html>
