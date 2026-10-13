@@ -3037,7 +3037,41 @@
                 const status = document.createElement('div');
                 status.id = 'remote-save-status';
                 status.textContent = 'CAMPANHA SINCRONIZADA COM O SERVIDOR';
-                status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:5px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);';
+                status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:7px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 24px);';
+                const syncBoardButton = document.createElement('button');
+                syncBoardButton.type = 'button';
+                syncBoardButton.textContent = 'SINCRONIZAR FICHAS DO CAPÍTULO';
+                syncBoardButton.style.cssText = 'font:inherit;cursor:pointer;background:#05ffa1;color:#000;border:1px solid #05ffa1;padding:4px 7px;';
+                syncBoardButton.addEventListener('click', async () => {
+                    if (!activeChap || !Array.isArray(appData.snapshots[activeChap])) {
+                        alert('Abra um capítulo com personagens antes de sincronizar as fichas.');
+                        return;
+                    }
+                    const originalLabel = syncBoardButton.textContent;
+                    syncBoardButton.disabled = true;
+                    syncBoardButton.textContent = 'SINCRONIZANDO…';
+                    try {
+                        await remoteSaveQueue;
+                        if (remoteSaveFailed) throw new Error('Há alterações que ainda não foram salvas no servidor. Confira a conexão e tente novamente.');
+                        const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/sync-board-characters', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chapterId: activeChap })
+                        });
+                        const result = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(result.error || 'Falha ao sincronizar as fichas.');
+                        status.firstChild.textContent = 'FICHAS SINCRONIZADAS: ' + result.synced;
+                        syncBoardButton.textContent = 'SINCRONIZAR NOVAMENTE';
+                    } catch (error) {
+                        alert(error.message || 'Não foi possível sincronizar as fichas.');
+                        syncBoardButton.textContent = originalLabel;
+                    } finally {
+                        syncBoardButton.disabled = false;
+                    }
+                });
+                status.appendChild(document.createTextNode(' '));
+                status.appendChild(syncBoardButton);
                 document.body.appendChild(status);
                 if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
                 renderSidebar();
