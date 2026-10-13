@@ -90,7 +90,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </section>
 <section class="window" id="sheetWindow" hidden>
 <div class="bar"><span id="sheetTitle">FICHAS ATRIBUÍDAS</span><button id="closeSheets" type="button">Voltar</button></div>
-<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><div id="sheetList" class="grid"></div></div>
+<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><p id="sheetUpdated" class="muted">Atualização automática a cada 15 segundos.</p><div id="sheetList" class="grid"></div></div>
 </section>
 <section class="window" id="masterWindow" hidden>
 <div class="bar"><span id="masterTitle">ADMINISTRAÇÃO DE FICHAS</span><button id="closeMaster" type="button">Voltar</button></div>
@@ -210,7 +210,12 @@ function campaignCard(campaign) {
   card.append(id);
   return card;
 }
+let assignedSheetTimer = null;
+let assignedSheetCampaign = null;
 $("closeSheets").addEventListener("click", () => {
+  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  assignedSheetTimer = null;
+  assignedSheetCampaign = null;
   $("sheetWindow").hidden = true;
   $("appWindow").hidden = false;
 });
@@ -278,35 +283,61 @@ function renderSheetData(value) {
   return root;
 }
 async function openAssignedSheets(campaign) {
+  assignedSheetCampaign = campaign;
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = false;
   $("sheetTitle").textContent = "FICHAS — " + campaign.title;
   $("sheetList").replaceChildren();
   message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
+  await refreshAssignedSheets(true);
+  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  assignedSheetTimer = setInterval(() => {
+    if (!assignedSheetCampaign || $("sheetWindow").hidden) return;
+    refreshAssignedSheets(false);
+  }, 15000);
+}
+async function refreshAssignedSheets(showLoading) {
+  const campaign = assignedSheetCampaign;
+  if (!campaign) return;
+  if (showLoading) message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
   try {
     const result = await api("/api/campaigns/" + encodeURIComponent(campaign.id) + "/characters");
-    $("sheetList").replaceChildren();
-    if (!result.characters.length) {
+    if (assignedSheetCampaign?.id !== campaign.id || $("sheetWindow").hidden) return;
+    const characters = Array.isArray(result.characters) ? result.characters : [];
+    const previous = new Map(Array.from($("sheetList").children).map(card => [card.dataset.characterId, card]));
+    if (!characters.length) {
+      $("sheetList").replaceChildren();
       message("sheetMessage", "Nenhuma ficha foi atribuída a você nesta campanha.");
+      $("sheetUpdated").textContent = "Verificado em " + new Date().toLocaleTimeString();
       return;
     }
-    message("sheetMessage", result.characters.length + " ficha(s) disponível(is) em modo somente leitura.", "success");
-    for (const character of result.characters) {
-      const card = document.createElement("article");
-      card.className = "card sheet-card";
-      const heading = document.createElement("h3");
-      heading.textContent = character.name || "Personagem sem nome";
-      const campaignLabel = document.createElement("p");
-      campaignLabel.className = "muted";
-      campaignLabel.textContent = "Ficha vinculada à campanha · somente leitura";
-      const data = document.createElement("div");
-      data.className = "sheet-data";
-      data.append(renderSheetData(character.data));
-      card.append(heading, campaignLabel, data);
-      $("sheetList").append(card);
+    const next = [];
+    for (const character of characters) {
+      let card = previous.get(character.id);
+      if (!card) {
+        card = document.createElement("article");
+        card.className = "card sheet-card";
+        card.dataset.characterId = character.id;
+        const heading = document.createElement("h3");
+        const campaignLabel = document.createElement("p");
+        campaignLabel.className = "muted";
+        const data = document.createElement("div");
+        data.className = "sheet-data";
+        card.append(heading, campaignLabel, data);
+      }
+      card.querySelector("h3").textContent = character.name || "Personagem sem nome";
+      card.querySelector("p").textContent = "Ficha vinculada à campanha · somente leitura" +
+        (character.updated_at ? " · salva em " + new Date(character.updated_at).toLocaleString() : "");
+      const data = card.querySelector(".sheet-data");
+      data.replaceChildren(renderSheetData(character.data));
+      next.push(card);
     }
+    $("sheetList").replaceChildren(...next);
+    message("sheetMessage", characters.length + " ficha(s) disponível(is) em modo somente leitura.", "success");
+    $("sheetUpdated").textContent = "Última verificação: " + new Date().toLocaleTimeString() + " · atualização automática a cada 15 segundos.";
   } catch (error) {
-    message("sheetMessage", error.message, "error");
+    if (showLoading || !$("sheetList").children.length) message("sheetMessage", error.message, "error");
+    $("sheetUpdated").textContent = "Falha na atualização: " + new Date().toLocaleTimeString();
   }
 }
 
