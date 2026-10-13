@@ -28,7 +28,7 @@ function setSessionCookie(res, token) {
 }
 
 function clearSessionCookie(res) {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = (process.env.NODE_ENV === "production" || process.env.RENDER === "true") ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`);
 }
 
