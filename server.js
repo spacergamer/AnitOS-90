@@ -34,7 +34,7 @@ app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(boardDir,"lightfade.html")
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/rgn",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
-app.get("/",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
+app.get("/",(_q,r)=>r.redirect(302,"/account"));
 
 function code(){
  let c;
