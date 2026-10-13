@@ -166,6 +166,12 @@ function campaignCard(campaign) {
     const label = document.createElement("p"); label.textContent = "Código para jogadores:";
     const code = document.createElement("span"); code.className = "code"; code.textContent = campaign.join_code;
     card.append(label, code);
+    const open = document.createElement("a");
+    open.href = "/anitopeboard/?campaign=" + encodeURIComponent(campaign.id);
+    open.className = "button";
+    open.textContent = "Abrir campanha no ANITOPEBOARD";
+    open.style.marginTop = "12px";
+    card.append(open);
   }
   const id = document.createElement("p"); id.className = "muted"; id.textContent = "ID: " + escapeText(campaign.id);
   card.append(id);
