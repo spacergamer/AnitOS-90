@@ -1345,8 +1345,10 @@
             }).catch(error => {
                 remoteSaveFailed = true;
                 console.error('[ANITOPEBOARD] Falha ao sincronizar campanha:', error);
+                const statusLabel = document.getElementById('remote-save-label');
                 const status = document.getElementById('remote-save-status');
-                if (status) status.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
+                if (statusLabel) statusLabel.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
+                else if (status) status.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
             });
         }
 
@@ -3036,8 +3038,11 @@
                 }
                 const status = document.createElement('div');
                 status.id = 'remote-save-status';
-                status.textContent = 'CAMPANHA SINCRONIZADA COM O SERVIDOR';
                 status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:7px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 24px);';
+                const statusLabel = document.createElement('span');
+                statusLabel.id = 'remote-save-label';
+                statusLabel.textContent = 'CAMPANHA SINCRONIZADA COM O SERVIDOR';
+                status.appendChild(statusLabel);
                 const syncBoardButton = document.createElement('button');
                 syncBoardButton.type = 'button';
                 syncBoardButton.textContent = 'SINCRONIZAR FICHAS DO CAPÍTULO';
@@ -3062,7 +3067,7 @@
                         });
                         const result = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(result.error || 'Falha ao sincronizar as fichas.');
-                        status.firstChild.textContent = 'FICHAS SINCRONIZADAS: ' + result.synced;
+                        statusLabel.textContent = 'FICHAS SINCRONIZADAS: ' + result.synced;
                         syncBoardButton.textContent = 'SINCRONIZAR NOVAMENTE';
                     } catch (error) {
                         alert(error.message || 'Não foi possível sincronizar as fichas.');
