@@ -29,6 +29,7 @@ button:disabled{opacity:.5;cursor:wait}
 .code{font-size:30px;letter-spacing:3px;background:#111;color:var(--cyan);padding:4px 8px;display:inline-block}
 .notice{padding:8px;border:1px solid #777;background:#eee;margin:10px 0}.error{color:#8b0000}.success{color:#005b20}
 .sheet-data{white-space:pre-wrap;overflow-wrap:anywhere;background:#111;color:var(--cyan);padding:12px;max-height:360px;overflow:auto;font:18px 'VT323',monospace}.sheet-card h3{margin:0 0 8px;font-size:26px}
+.sheet-data{max-height:none;white-space:normal}.sheet-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.sheet-field{min-width:0;padding:8px;background:#e5e5e5;border:2px inset #888;overflow-wrap:anywhere}.sheet-field>strong{display:block;color:#333;border-bottom:1px solid #999;margin-bottom:5px}.sheet-value{white-space:pre-wrap;overflow-wrap:anywhere;color:#005b50}.sheet-group{grid-column:1/-1;padding:8px;border:1px solid #888;background:#d4d4d4}.sheet-group-title{font-size:20px;font-weight:bold;margin-bottom:8px}.sheet-empty{color:#555;font-style:italic}
 textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;border:2px inset var(--dark);resize:vertical}.char-json{min-height:180px}
 [hidden]{display:none!important}
 @media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
@@ -213,10 +214,68 @@ $("closeSheets").addEventListener("click", () => {
   $("sheetWindow").hidden = true;
   $("appWindow").hidden = false;
 });
-function renderSheetValue(value) {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "string") return value;
-  try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+function renderSheetData(value) {
+  const root = document.createElement("div");
+  root.className = "sheet-fields";
+  const appendValue = (parent, label, item, depth) => {
+    const field = document.createElement("div");
+    field.className = "sheet-field";
+    const title = document.createElement("strong");
+    title.textContent = label;
+    field.append(title);
+    if (item === null || item === undefined) {
+      const text = document.createElement("div");
+      text.className = "sheet-value";
+      text.textContent = "—";
+      field.append(text);
+    } else if (typeof item === "object" && depth < 7) {
+      const entries = Array.isArray(item) ? item.map((entry, index) => [String(index + 1), entry]) : Object.entries(item);
+      if (!entries.length) {
+        const empty = document.createElement("div");
+        empty.className = "sheet-empty";
+        empty.textContent = Array.isArray(item) ? "Lista vazia" : "Sem dados";
+        field.append(empty);
+      } else {
+        field.classList.add("sheet-group");
+        const nested = document.createElement("div");
+        nested.className = "sheet-fields";
+        for (const [key, child] of entries.slice(0, 100)) appendValue(nested, key, child, depth + 1);
+        if (entries.length > 100) {
+          const rest = document.createElement("div");
+          rest.className = "sheet-empty";
+          rest.textContent = "Mais " + (entries.length - 100) + " itens omitidos.";
+          nested.append(rest);
+        }
+        field.append(nested);
+      }
+    } else {
+      const text = document.createElement("div");
+      text.className = "sheet-value";
+      text.textContent = typeof item === "string" ? item : String(item);
+      field.append(text);
+    }
+    parent.append(field);
+  };
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+    if (!entries.length) {
+      const empty = document.createElement("p");
+      empty.className = "sheet-empty";
+      empty.textContent = "Esta ficha ainda não tem atributos preenchidos.";
+      root.append(empty);
+    } else {
+      for (const [key, item] of entries.slice(0, 100)) appendValue(root, key, item, 0);
+      if (entries.length > 100) {
+        const rest = document.createElement("p");
+        rest.className = "sheet-empty";
+        rest.textContent = "Mais " + (entries.length - 100) + " campos omitidos.";
+        root.append(rest);
+      }
+    }
+  } else {
+    appendValue(root, "Ficha", value, 0);
+  }
+  return root;
 }
 async function openAssignedSheets(campaign) {
   $("appWindow").hidden = true;
@@ -240,9 +299,9 @@ async function openAssignedSheets(campaign) {
       const campaignLabel = document.createElement("p");
       campaignLabel.className = "muted";
       campaignLabel.textContent = "Ficha vinculada à campanha · somente leitura";
-      const data = document.createElement("pre");
+      const data = document.createElement("div");
       data.className = "sheet-data";
-      data.textContent = renderSheetValue(character.data);
+      data.append(renderSheetData(character.data));
       card.append(heading, campaignLabel, data);
       $("sheetList").append(card);
     }
