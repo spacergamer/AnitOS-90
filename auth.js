@@ -304,6 +304,22 @@ function registerAuthRoutes(app, express, db) {
     }
   });
 
+  app.delete("/api/campaigns/:id", requireAuth, async (req, res) => {
+    if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem excluir campanhas.");
+    try {
+      const result = await db.query(
+        "DELETE FROM anitos_campaigns WHERE id=$1 AND owner_id=$2 RETURNING id,title",
+        [req.params.id, req.user.id]
+      );
+      if (!result.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
+      // Os vínculos e fichas são removidos pelo ON DELETE CASCADE do esquema.
+      res.json({ok: true, deleted: result.rows[0]});
+    } catch (err) {
+      console.error("[campaigns] Falha ao excluir:", err.message);
+      sendError(res, 500, "Não foi possível excluir a campanha.");
+    }
+  });
+
   app.get("/api/campaigns/:id/members", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem consultar a lista de jogadores.");
     try {
