@@ -10,7 +10,7 @@ async function main() {
   let campaignExists = true;
   const db = {
     async query(sql, params) {
-      const normalized = sql.replace(/\\s+/g, " ").trim();
+      const normalized = sql.replace(/\s+/g, " ").trim();
       calls.push({sql: normalized, params});
       if (normalized.includes("FROM anitos_sessions s JOIN anitos_users")) {
         const hash = params[0];
@@ -54,7 +54,7 @@ async function main() {
     });
     const deleteCall = calls.find(call => call.sql.startsWith("DELETE FROM anitos_campaigns"));
     assert.ok(deleteCall, "master deletion should issue a delete query");
-    assert.match(deleteCall.sql, /WHERE id=\\$1 AND owner_id=\\$2/,
+    assert.match(deleteCall.sql, /WHERE id=\$1 AND owner_id=\$2/,
       "deletion must enforce campaign ownership in SQL");
 
     campaignExists = false;
