@@ -4,6 +4,7 @@ const {promisify} = require("node:util");
 const scrypt = promisify(crypto.scrypt);
 const COOKIE = "anitos_session";
 const SESSION_DAYS = 30;
+const authAttempts = new Map();
 
 function sendError(res, status, message) {
   return res.status(status).json({error: message});
@@ -29,6 +30,22 @@ function setSessionCookie(res, token) {
 function clearSessionCookie(res) {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`);
+}
+
+function limitAuthAttempts(req, res, next) {
+  const key = String(req.ip || req.socket?.remoteAddress || "unknown") + ":" + req.path;
+  const now = Date.now();
+  let bucket = authAttempts.get(key);
+  if (!bucket || now - bucket.startedAt >= 15 * 60 * 1000) {
+    bucket = {startedAt: now, count: 0};
+    authAttempts.set(key, bucket);
+  }
+  if (bucket.count >= 10) return sendError(res, 429, "Muitas tentativas. Aguarde 15 minutos e tente novamente.");
+  bucket.count++;
+  if (authAttempts.size > 5000) {
+    for (const [entry, value] of authAttempts) if (now - value.startedAt >= 15 * 60 * 1000) authAttempts.delete(entry);
+  }
+  next();
 }
 
 function tokenHash(token) {
@@ -126,7 +143,7 @@ function registerAuthRoutes(app, express, db) {
     setSessionCookie(res, token);
   }
 
-  app.post("/api/auth/register", databaseRequired, async (req, res) => {
+  app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
@@ -155,7 +172,7 @@ function registerAuthRoutes(app, express, db) {
     }
   });
 
-  app.post("/api/auth/login", databaseRequired, async (req, res) => {
+  app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
@@ -195,7 +212,7 @@ function registerAuthRoutes(app, express, db) {
   app.get("/api/campaigns", requireAuth, async (req, res) => {
     try {
       const result = await db.query(
-        `SELECT c.id,c.owner_id,c.title,c.join_code,c.created_at,c.updated_at,
+        `SELECT c.id,c.owner_id,c.title,CASE WHEN c.owner_id=$1 THEN c.join_code ELSE NULL END AS join_code,c.created_at,c.updated_at,
           (c.owner_id=$1) AS is_owner
          FROM anitos_campaigns c
          LEFT JOIN anitos_campaign_members m ON m.campaign_id=c.id
@@ -249,7 +266,8 @@ function registerAuthRoutes(app, express, db) {
   app.get("/api/campaigns/:id", requireAuth, async (req, res) => {
     try {
       const result = await db.query(
-        `SELECT c.id,c.owner_id,c.title,c.join_code,c.data,c.created_at,c.updated_at,
+        `SELECT c.id,c.owner_id,c.title,CASE WHEN c.owner_id=$1 THEN c.join_code ELSE NULL END AS join_code,
+          CASE WHEN c.owner_id=$1 THEN c.data ELSE NULL END AS data,c.created_at,c.updated_at,
           (c.owner_id=$1) AS is_owner
          FROM anitos_campaigns c
          LEFT JOIN anitos_campaign_members m ON m.campaign_id=c.id AND m.user_id=$1
