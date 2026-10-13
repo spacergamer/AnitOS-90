@@ -10,6 +10,10 @@ async function main() {
     id: "char-player", campaign_id: "campaign-1", name: "Ficha do Jogador",
     data: {hp: 12}, assigned_player_id: "player-1", updated_at: "2026-10-13T12:00:00Z"
   };
+  const otherCharacter = {
+    id: "char-other", campaign_id: "campaign-1", name: "Outra Ficha",
+    data: {hp: 8}, assigned_player_id: "player-2", updated_at: "2026-10-13T12:00:00Z"
+  };
   const calls = [];
   const db = {
     async query(sql, params) {
@@ -30,7 +34,7 @@ async function main() {
           assert.equal(params[1], "player-1", "player queries must be scoped to their own user ID");
           return {rows: [assignedCharacter]};
         }
-        throw new Error("Player request attempted an unscoped character query.");
+        return {rows: [assignedCharacter, otherCharacter]};
       }
       if (sql.includes("CASE WHEN c.owner_id=$1 THEN c.data ELSE NULL END AS data")) {
         assert.equal(params[0], "player-1");
@@ -62,12 +66,14 @@ async function main() {
     const sheetsBody = await sheetsResponse.json();
     assert.equal(sheetsBody.readOnly, true);
     assert.deepEqual(sheetsBody.characters.map(character => character.id), ["char-player"]);
-    const characterQuery = calls.find(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters"));
-    assert.ok(characterQuery?.sql.includes("assigned_player_id=$2"), "player character query must filter by assigned player");
-    assert.equal(characterQuery.params[1], "player-1");
+    const playerCharacterQuery = calls.find(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters") && call.sql.includes("assigned_player_id=$2"));
+    assert.ok(playerCharacterQuery, "player character query must filter by assigned player");
+    assert.equal(playerCharacterQuery.params[1], "player-1");
 
     const masterResponse = await get("/api/campaigns/campaign-1/characters", masterToken);
     assert.equal(masterResponse.status, 200);
+    const masterBody = await masterResponse.json();
+    assert.deepEqual(masterBody.characters.map(character => character.id), ["char-player", "char-other"]);
     assert.equal(calls.some(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters") && !call.sql.includes("assigned_player_id=$2")), true,
       "master can load all campaign characters");
 
