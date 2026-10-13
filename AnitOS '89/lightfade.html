@@ -1,0 +1,2975 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnitOS '89</title>
+    <link rel="icon" type="image/x-icon" href="img/as.ico">
+
+    <!-- Fontes -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=VT323&family=Special+Elite&family=Dancing+Script:wght@700&family=Syncopate:wght@700&family=Chakra+Petch:wght@700&family=Courier+Prime&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* =========================================================
+           VAPORWAVE / WIN 95 / HOSPITAL CRT AESTHETIC
+        ========================================================= */
+        :root {
+            --win-bg: #c0c0c0;
+            --win-border-light: #ffffff;
+            --win-border-dark: #808080;
+            --win-border-darker: #000000;
+            --title-blue: #000080;
+            --hospital-green: #008080;
+            --vapor-pink: #ff71ce;
+            --vapor-cyan: #05ffa1;
+            --font-sys: 'VT323', "Pixelated MS Sans Serif", "MS Sans Serif", "Microsoft Sans Serif", Tahoma, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--hospital-green);
+            background-image: linear-gradient(180deg, var(--hospital-green) 0%, #000033 100%);
+            color: #000;
+            font-family: var(--font-sys);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-size: 18px;
+            position: relative;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+            font-smooth: never;
+            text-rendering: optimizeSpeed;
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+                    rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 10000;
+            pointer-events: none;
+            animation: scroll-lines 8s linear infinite;
+        }
+
+        @keyframes scroll-lines {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 100%;
+            }
+        }
+
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .window {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-left: 2px solid var(--win-border-light);
+            border-right: 2px solid var(--win-border-darker);
+            border-bottom: 2px solid var(--win-border-darker);
+            box-shadow: inset -1px -1px 0 var(--win-border-dark), inset 1px 1px 0 var(--win-border-light);
+            padding: 2px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, var(--title-blue), #1084d0);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .window-content {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+            background: #fff;
+            border: 2px inset var(--win-border-dark);
+            margin-top: 2px;
+        }
+
+        #desktop {
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            height: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .main-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        button,
+        .btn {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-left: 2px solid var(--win-border-light);
+            border-right: 2px solid var(--win-border-darker);
+            border-bottom: 2px solid var(--win-border-darker);
+            padding: 5px 10px;
+            font-family: var(--font-sys);
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            text-decoration: none;
+            font-size: 17px;
+            -webkit-font-smoothing: none;
+            text-rendering: optimizeSpeed;
+        }
+
+        button:active {
+            border-top: 2px solid var(--win-border-darker);
+            border-left: 2px solid var(--win-border-darker);
+            border-right: 2px solid var(--win-border-light);
+            border-bottom: 2px solid var(--win-border-light);
+        }
+
+        button.dice {
+            padding: 2px 8px;
+            margin-left: 5px;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        input,
+        select {
+            border: 2px inset var(--win-border-dark);
+            background: #fff;
+            padding: 2px 4px;
+            font-family: var(--font-sys);
+            font-size: 17px;
+            -webkit-font-smoothing: none;
+            text-rendering: optimizeSpeed;
+        }
+
+        input.num {
+            width: 82px;
+            text-align: right;
+            font-size: 18px;
+        }
+
+        input.xp-num {
+            font-weight: bold;
+            width: 62px;
+            text-align: center;
+            vertical-align: middle;
+            height: 24px;
+            line-height: 24px;
+            margin-left: 8px;
+            padding: 2px 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        textarea {
+            border: 2px inset var(--win-border-dark);
+            width: 100%;
+            font-family: var(--font-sys);
+            font-size: 17px;
+            padding: 5px;
+            -webkit-font-smoothing: none;
+            text-rendering: optimizeSpeed;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: -2px;
+            z-index: 2;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-left: 2px solid var(--win-border-light);
+            border-right: 2px solid var(--win-border-darker);
+            border-bottom: none;
+            padding: 5px 15px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .tab.active {
+            margin-top: 0;
+            padding-bottom: 7px;
+            background: #fff;
+            font-weight: bold;
+            border-top: 3px solid var(--vapor-cyan);
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--win-bg);
+            padding-bottom: 5px;
+            flex-wrap: wrap;
+        }
+
+        .sub-tab {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-left: 2px solid var(--win-border-light);
+            border-right: 2px solid var(--win-border-darker);
+            border-bottom: 2px solid var(--win-border-darker);
+            padding: 5px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .sub-tab.active {
+            background: #fff;
+            border-style: inset;
+            border-color: var(--win-border-dark);
+            border-top: 3px solid var(--vapor-cyan);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .teach-btn {
+            width: 100%;
+            font-size: 18px;
+            margin-top: 6px;
+            padding: 5px 8px;
+        }
+
+        .skill-path-card {
+            border: 1px dashed var(--win-border-dark);
+            padding: 6px;
+            font-size: 17px;
+            line-height: 1.08;
+        }
+
+        .skill-path-card button {
+            width: 100%;
+            margin-top: 4px;
+            font-size: 17px;
+            padding: 4px 6px;
+        }
+
+        .list-box {
+            border: 2px inset var(--win-border-dark);
+            background: #fff;
+            padding: 2px;
+            height: 150px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+
+        .list-item:hover,
+        .list-item.selected {
+            background: var(--title-blue);
+            color: white;
+        }
+
+        /* Fontes Corrigidas */
+        [class^="char-"],
+        [class*=" char-"] {
+            -webkit-font-smoothing: auto;
+            -moz-osx-font-smoothing: auto;
+            font-smooth: auto;
+            text-rendering: auto;
+        }
+
+        .char-Ash {
+            font-family: 'Cedarville Cursive', cursive;
+            color: #cc0000;
+            font-size: 32px;
+            text-transform: capitalize;
+        }
+
+        .char-George {
+            font-family: 'Chakra Petch', sans-serif;
+            color: #00aa00;
+            text-transform: uppercase;
+            font-size: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .char-Charles {
+            font-family: 'Special Elite', monospace;
+            color: darkblue;
+            font-size: 28px;
+            text-transform: capitalize;
+        }
+
+        .char-Alan {
+            font-family: 'Dancing Script', cursive;
+            color: #3399ff;
+            font-size: 34px;
+            text-transform: capitalize;
+        }
+
+        .char-Tony {
+            font-family: 'Papyrus', fantasy;
+            color: #d4af37;
+            text-transform: lowercase;
+            font-size: 30px;
+        }
+
+        .char-Evan {
+            font-family: 'Syncopate', sans-serif;
+            color: #ff6600;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+
+        .char-Custom {
+            font-family: var(--font-sys);
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .char-style-1 {
+            font-family: 'Courier Prime', monospace;
+            color: #1b4de5;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .char-style-2 {
+            font-family: Georgia, serif;
+            color: #7a3b0f;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .char-style-3 {
+            font-family: 'Chakra Petch', sans-serif;
+            color: #ff00d4;
+            font-size: 25px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .char-style-4 {
+            font-family: 'Syncopate', sans-serif;
+            color: #00d4ff;
+            font-size: 23px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .char-style-5 {
+            font-family: 'Dancing Script', cursive;
+            color: #8b1e9e;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .char-style-6 {
+            font-family: 'Special Elite', monospace;
+            color: #2e7d32;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .char-style-7 {
+            font-family: 'Courier New', monospace;
+            color: #111;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .char-style-8 {
+            font-family: 'Cedarville Cursive', cursive;
+            color: #b00020;
+            font-size: 26px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .char-style-9 {
+            font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+            color: #ff6f00;
+            font-size: 24px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .char-style-10 {
+            font-family: 'Trebuchet MS', sans-serif;
+            color: #004d40;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .char-style-11 {
+            font-family: 'Arial Black', sans-serif;
+            color: #7b1fa2;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .char-style-12 {
+            font-family: 'Palatino Linotype', serif;
+            color: #6a1b9a;
+            font-size: 26px;
+            font-style: italic;
+            text-transform: capitalize;
+        }
+
+        .char-style-13 {
+            font-family: 'Segoe UI', sans-serif;
+            color: #455a64;
+            font-size: 23px;
+            font-weight: 600;
+            text-transform: lowercase;
+        }
+
+        .char-style-14 {
+            font-family: 'Courier Prime', monospace;
+            color: #263238;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .char-card {
+            border: 2px solid var(--win-border-dark);
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+        }
+
+        .shop-item-card {
+            background: #e8e8e8;
+            border: 2px solid var(--win-border-dark);
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--title-blue);
+        }
+
+        .enemy-card {
+            border: 2px solid #4a0000;
+            background: #1a1a1a;
+            color: #ff4d4d;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        .enemy-card input {
+            background: #333;
+            color: #fff;
+            border: 1px solid #4a0000;
+        }
+
+        .enemy-card .section-title {
+            background: #4a0000;
+        }
+
+        /* --- 1. XP Bar (Input) --- */
+        input.xp-num {
+            font-weight: bold;
+            width: 62px;
+            text-align: center;
+            vertical-align: middle;
+            height: 24px;
+            line-height: 24px;
+            margin-left: 8px;
+            padding: 2px;
+            box-sizing: border-box;
+            font-size: 16px;
+            border: 1px solid var(--win-border-dark);
+        }
+
+        /* Center logo shown above the background but below dashboard windows */
+        #center-logo {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 30%;
+            max-height: 30%;
+            width: auto;
+            height: auto;
+            opacity: 0.92;
+            z-index: 5; /* lower than #desktop (z-index:10) so dashboard overlays it */
+            pointer-events: none;
+            display: block;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 18px rgba(0,0,0,0.35));
+            will-change: transform, opacity, filter;
+            /* animation intentionally removed to keep logo static */
+        }
+
+        .audio-card {
+            width: 100%;
+        }
+
+        .subtabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 12px;
+        }
+
+        .subtab {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-left: 2px solid var(--win-border-light);
+            border-right: 2px solid var(--win-border-darker);
+            border-bottom: 2px solid var(--win-border-darker);
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .subtab.active {
+            background: #fff;
+            border-top-color: var(--title-blue);
+        }
+
+        .extra-card {
+            border: 2px solid var(--win-border-dark);
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f8f8;
+        }
+
+        .extra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .status-block,
+        .inventory-block {
+            background: #fff;
+            border: 1px solid var(--win-border-dark);
+            padding: 8px;
+        }
+
+        .cond-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .cond-bar input {
+            width: 100%;
+            max-width: 435px;
+        }
+
+        .flex-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            background: var(--title-blue);
+            color: white;
+            padding: 2px 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .del-btn {
+            color: red;
+            font-size: 11px;
+            padding: 2px 5px;
+            margin-left: auto;
+        }
+
+        .extra-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            padding: 1px 6px;
+            background: rgba(242, 242, 242, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.14);
+            border-radius: 4px;
+            font-size: 16px;
+            color: #111;
+            line-height: 1;
+        }
+
+        .extra-stat .extra-symbol {
+            display: inline-block;
+            width: 14px;
+            text-align: center;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .extra-stat input.num {
+            width: 46px;
+            padding: 1px 4px;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 3px;
+            background: #fff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .campaign-tools {
+            border-top: 2px groove var(--win-border-light);
+            margin-top: 14px;
+            padding-top: 10px;
+        }
+
+        .campaign-tools .flex-row {
+            flex-wrap: wrap;
+        }
+
+        /* Painel de Ações */
+        .combat-panel {
+            background: var(--win-bg);
+            border-top: 2px solid var(--win-border-light);
+            border-bottom: 2px solid var(--win-border-darker);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        /* Float Modals */
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            box-shadow: 5px 5px 0 #000;
+            min-width: 400px;
+        }
+
+        #log-flutuante {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #000;
+            color: #05ffa1;
+            border: 2px solid #fff;
+            padding: 10px;
+            font-family: 'VT323', monospace;
+            width: 300px;
+            height: 150px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hidden audio elements for system sound effects (preloaded for file:// compatibility) -->
+    <audio id="sfx-snd_rudebuster_swing" preload="auto" src="aud/snd_rudebuster_swing.wav" style="display:none;"></audio>
+    <audio id="sfx-monitorbeep" preload="auto" src="aud/monitorbeep1.wav" style="display:none;"></audio>
+
+    <!-- Center logo above background; dashboard windows will overlay it -->
+    <img id="center-logo" src="img/as.png" alt="Logo">
+
+    <div id="desktop">
+        <!-- SIDEBAR -->
+        <div class="sidebar window">
+            <div class="title-bar"><span>ANITOPEBOARD.EXE</span></div>
+            <div class="window-content" style="background: var(--win-bg);">
+                <h3 style="margin-bottom:10px; text-shadow: 2px 2px var(--vapor-pink); color: white;">CAMPANHA</h3>
+
+                <label>Selecionar Ato:</label>
+                <div class="list-box" id="list-acts"></div>
+                <div class="flex-row" style="margin-top:5px;">
+                    <button onclick="addAct()">+ Ato</button>
+                    <button onclick="editAct()">Renomear</button>
+                    <button onclick="delAct()" class="del-btn" style="margin-left:auto;">Deletar</button>
+                </div>
+
+                <label style="margin-top:10px; display:block;">Selecionar Capítulo:</label>
+                <div class="list-box" id="list-chapters"></div>
+                <div class="flex-row" style="margin-top:5px;">
+                    <button onclick="addChapter()">+ Cap.</button>
+                    <button onclick="editChapter()">Renomear</button>
+                    <button onclick="delChapter()" class="del-btn" style="margin-left:auto;">Deletar</button>
+                </div>
+
+                <div class="campaign-tools">
+                    <label>Arquivo da Campanha:</label>
+                    <div class="flex-row" style="margin-top:5px;">
+                        <button onclick="exportCampaign()">Exportar Backup</button>
+                        <button onclick="document.getElementById('campaign-import-file').click()">Importar
+                            Backup</button>
+                    </div>
+                    <input type="file" id="campaign-import-file" accept="application/json,.json" class="hidden"
+                        onchange="importCampaign(event)">
+                    <small>Os boards salvam no navegador. Use backup JSON ao fim de cada sessão.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN AREA -->
+        <div class="main-area window hidden" id="main-window">
+            <div class="title-bar">
+                <span id="win-title">CAPÍTULO</span>
+                <button onclick="closeMainWindow()">X</button>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('resumo')">Resumo</div>
+                <div class="tab" onclick="switchTab('status')">Status</div>
+                <div class="tab" onclick="switchTab('inventario')">Inventário</div>
+                <div class="tab" onclick="switchTab('skill-table')">Skill Table</div>
+                <div class="tab" onclick="switchTab('skill-path')">Skill Path</div>
+                <div class="tab" onclick="switchTab('extras')">Extras</div>
+                <div class="tab" onclick="switchTab('salvar')">Salvar</div>
+            </div>
+
+            <div class="window-content" id="tab-content" style="padding-bottom: 20px;">
+                <!-- Renderizado via JS -->
+            </div>
+
+            <!-- PAINEL DE COMBATE FIXO NO RODAPÉ DA JANELA -->
+            <div class="combat-panel" id="combat-panel">
+                <strong>AÇÃO:</strong>
+                <select id="combat-target"></select>
+                <input type="number" id="combat-val" class="num" placeholder="Valor">
+
+                <select id="combat-type">
+                    <option value="DANO_ATK">DANO FÍSICO (HP)</option>
+                    <option value="DANO_NEU">DANO MENTAL (NEU)</option>
+                    <option value="HAZARD">HAZARD</option>
+                    <option value="HAZARD_CRIT">HAZARD CRÍTICO</option>
+                    <option value="CURA_HP">CURAR HP</option>
+                    <option value="CURA_STA">CURAR STA</option>
+                    <option value="CURA_NEU">CURAR NEU</option>
+                </select>
+
+                <button onclick="executeCombat()" style="background:var(--title-blue); color:white;">APLICAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAIS DE SISTEMA -->
+    <div id="import-modal" class="window modal hidden">
+        <div class="title-bar"><span>IMPORTAR DADOS</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <p>Os dados deste capítulo estão vazios.</p>
+            <select id="import-select" style="width: 100%; margin: 10px 0; padding: 5px;"></select>
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="executeImport()">Importar</button>
+                <button onclick="skipImport()">Iniciar Zerado</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-char-modal" class="window modal hidden">
+        <div class="title-bar"><span>ADICIONAR EMPREGADO</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <div class="flex-row">Nome: <input type="text" id="new-char-name" style="width:100%;"></div>
+            <div class="flex-row">Cor: <input type="color" id="new-char-color" value="#000000"></div>
+            <div class="flex-row">Fonte:
+                <select id="new-char-font">
+                    <option value="char-Custom">Padrão do Sistema</option>
+                    <option value="char-Ash">Cedarville (Estilo Ash)</option>
+                    <option value="char-George">Chakra Petch (Estilo George)</option>
+                    <option value="char-Charles">Special Elite (Estilo Charles)</option>
+                    <option value="char-Alan">Dancing Script (Estilo Alan)</option>
+                    <option value="char-Tony">Papyrus (Estilo Tony)</option>
+                    <option value="char-Evan">Syncopate (Estilo Evan)</option>
+                    <option value="char-style-1">Estilo 1 (Mecânico)</option>
+                    <option value="char-style-2">Estilo 2 (Rústico)</option>
+                    <option value="char-style-3">Estilo 3 (Neon)</option>
+                    <option value="char-style-4">Estilo 4 (Futurista)</option>
+                    <option value="char-style-5">Estilo 5 (Elegante)</option>
+                    <option value="char-style-6">Estilo 6 (Técnico)</option>
+                    <option value="char-style-7">Estilo 7 (Noir)</option>
+                    <option value="char-style-8">Estilo 8 (Retro)</option>
+                    <option value="char-style-9">Estilo 9 (Punk)</option>
+                    <option value="char-style-10">Estilo 10 (Cientista)</option>
+                    <option value="char-style-11">Estilo 11 (Brutal)</option>
+                    <option value="char-style-12">Estilo 12 (Arcano)</option>
+                    <option value="char-style-13">Estilo 13 (Sutil)</option>
+                    <option value="char-style-14">Estilo 14 (Monocromático)</option>
+                </select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="confirmAddChar()">Salvar Personagem</button>
+                <button onclick="document.getElementById('add-char-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Amigo -->
+    <div id="add-friend-modal" class="window modal hidden">
+        <div class="title-bar"><span>ADICIONAR AMIGO</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <div class="flex-row">Nome: <input type="text" id="new-friend-name" style="width:100%;"></div>
+            <div class="flex-row">Cor: <input type="color" id="new-friend-color" value="#000000"></div>
+            <div class="flex-row">Fonte:
+                <select id="new-friend-font">
+                    <option value="char-Custom">Padrão do Sistema</option>
+                    <option value="char-Ash">Cedarville (Estilo Ash)</option>
+                    <option value="char-George">Chakra Petch (Estilo George)</option>
+                    <option value="char-Charles">Special Elite (Estilo Charles)</option>
+                    <option value="char-Alan">Dancing Script (Estilo Alan)</option>
+                    <option value="char-Tony">Papyrus (Estilo Tony)</option>
+                    <option value="char-Evan">Syncopate (Estilo Evan)</option>
+                    <option value="char-style-1">Estilo 1 (Mecânico)</option>
+                    <option value="char-style-2">Estilo 2 (Rústico)</option>
+                    <option value="char-style-3">Estilo 3 (Neon)</option>
+                    <option value="char-style-4">Estilo 4 (Futurista)</option>
+                    <option value="char-style-5">Estilo 5 (Elegante)</option>
+                    <option value="char-style-6">Estilo 6 (Técnico)</option>
+                    <option value="char-style-7">Estilo 7 (Noir)</option>
+                    <option value="char-style-8">Estilo 8 (Retro)</option>
+                    <option value="char-style-9">Estilo 9 (Punk)</option>
+                    <option value="char-style-10">Estilo 10 (Cientista)</option>
+                    <option value="char-style-11">Estilo 11 (Brutal)</option>
+                    <option value="char-style-12">Estilo 12 (Arcano)</option>
+                    <option value="char-style-13">Estilo 13 (Sutil)</option>
+                    <option value="char-style-14">Estilo 14 (Monocromático)</option>
+                </select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="confirmAddFriend()">Salvar Amigo</button>
+                <button onclick="document.getElementById('add-friend-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Inimigo -->
+    <div id="add-enemy-modal" class="window modal hidden">
+        <div class="title-bar"><span>ADICIONAR INIMIGO</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <div class="flex-row">Nome: <input type="text" id="new-enemy-name" style="width:100%;"></div>
+            <div class="flex-row">Cor: <input type="color" id="new-enemy-color" value="#000000"></div>
+            <div class="flex-row">Fonte:
+                <select id="new-enemy-font">
+                    <option value="char-Custom">Padrão do Sistema</option>
+                    <option value="char-Ash">Cedarville (Estilo Ash)</option>
+                    <option value="char-George">Chakra Petch (Estilo George)</option>
+                    <option value="char-Charles">Special Elite (Estilo Charles)</option>
+                    <option value="char-Alan">Dancing Script (Estilo Alan)</option>
+                    <option value="char-Tony">Papyrus (Estilo Tony)</option>
+                    <option value="char-Evan">Syncopate (Estilo Evan)</option>
+                    <option value="char-style-1">Estilo 1 (Mecânico)</option>
+                    <option value="char-style-2">Estilo 2 (Rústico)</option>
+                    <option value="char-style-3">Estilo 3 (Neon)</option>
+                    <option value="char-style-4">Estilo 4 (Futurista)</option>
+                    <option value="char-style-5">Estilo 5 (Elegante)</option>
+                    <option value="char-style-6">Estilo 6 (Técnico)</option>
+                    <option value="char-style-7">Estilo 7 (Noir)</option>
+                    <option value="char-style-8">Estilo 8 (Retro)</option>
+                    <option value="char-style-9">Estilo 9 (Punk)</option>
+                    <option value="char-style-10">Estilo 10 (Cientista)</option>
+                    <option value="char-style-11">Estilo 11 (Brutal)</option>
+                    <option value="char-style-12">Estilo 12 (Arcano)</option>
+                    <option value="char-style-13">Estilo 13 (Sutil)</option>
+                    <option value="char-style-14">Estilo 14 (Monocromático)</option>
+                </select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="confirmAddEnemy()">Salvar Inimigo</button>
+                <button onclick="document.getElementById('add-enemy-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-pet-modal" class="window modal hidden">
+        <div class="title-bar"><span>ADICIONAR PET</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <div class="flex-row">Nome: <input type="text" id="new-pet-name" style="width:100%;"></div>
+            <div class="flex-row">Dono: <select id="new-pet-owner" style="width:100%;">
+                <option value="">Nenhum</option>
+            </select></div>
+            <div class="flex-row">Cor: <input type="color" id="new-pet-color" value="#000000"></div>
+            <div class="flex-row">Fonte:
+                <select id="new-pet-font">
+                    <option value="char-Custom">Padrão do Sistema</option>
+                    <option value="char-Ash">Cedarville (Estilo Ash)</option>
+                    <option value="char-George">Chakra Petch (Estilo George)</option>
+                    <option value="char-Charles">Special Elite (Estilo Charles)</option>
+                    <option value="char-Alan">Dancing Script (Estilo Alan)</option>
+                    <option value="char-Tony">Papyrus (Estilo Tony)</option>
+                    <option value="char-Evan">Syncopate (Estilo Evan)</option>
+                    <option value="char-style-1">Estilo 1 (Mecânico)</option>
+                    <option value="char-style-2">Estilo 2 (Rústico)</option>
+                    <option value="char-style-3">Estilo 3 (Neon)</option>
+                    <option value="char-style-4">Estilo 4 (Futurista)</option>
+                    <option value="char-style-5">Estilo 5 (Elegante)</option>
+                    <option value="char-style-6">Estilo 6 (Técnico)</option>
+                    <option value="char-style-7">Estilo 7 (Noir)</option>
+                    <option value="char-style-8">Estilo 8 (Retro)</option>
+                    <option value="char-style-9">Estilo 9 (Punk)</option>
+                    <option value="char-style-10">Estilo 10 (Cientista)</option>
+                    <option value="char-style-11">Estilo 11 (Brutal)</option>
+                    <option value="char-style-12">Estilo 12 (Arcano)</option>
+                    <option value="char-style-13">Estilo 13 (Sutil)</option>
+                    <option value="char-style-14">Estilo 14 (Monocromático)</option>
+                </select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="confirmAddPet()">Salvar Pet</button>
+                <button onclick="document.getElementById('add-pet-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-char-modal" class="window modal hidden">
+        <div class="title-bar"><span>EDITAR EMPREGADO</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <input type="hidden" id="edit-char-index">
+            <input type="hidden" id="edit-char-type">
+            <div class="flex-row">Nome: <input type="text" id="edit-char-name" style="width:100%;"></div>
+            <div class="flex-row">Cor: <input type="color" id="edit-char-color" value="#000000"></div>
+            <div class="flex-row">Fonte:
+                <select id="edit-char-font">
+                    <option value="char-Custom">Padrão do Sistema</option>
+                    <option value="char-Ash">Cedarville (Estilo Ash)</option>
+                    <option value="char-George">Chakra Petch (Estilo George)</option>
+                    <option value="char-Charles">Special Elite (Estilo Charles)</option>
+                    <option value="char-Alan">Dancing Script (Estilo Alan)</option>
+                    <option value="char-Tony">Papyrus (Estilo Tony)</option>
+                    <option value="char-Evan">Syncopate (Estilo Evan)</option>
+                    <option value="char-style-1">Estilo 1 (Mecânico)</option>
+                    <option value="char-style-2">Estilo 2 (Rústico)</option>
+                    <option value="char-style-3">Estilo 3 (Neon)</option>
+                    <option value="char-style-4">Estilo 4 (Futurista)</option>
+                    <option value="char-style-5">Estilo 5 (Elegante)</option>
+                    <option value="char-style-6">Estilo 6 (Técnico)</option>
+                    <option value="char-style-7">Estilo 7 (Noir)</option>
+                    <option value="char-style-8">Estilo 8 (Retro)</option>
+                    <option value="char-style-9">Estilo 9 (Punk)</option>
+                    <option value="char-style-10">Estilo 10 (Cientista)</option>
+                    <option value="char-style-11">Estilo 11 (Brutal)</option>
+                    <option value="char-style-12">Estilo 12 (Arcano)</option>
+                    <option value="char-style-13">Estilo 13 (Sutil)</option>
+                    <option value="char-style-14">Estilo 14 (Monocromático)</option>
+                </select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="confirmEditChar()">Salvar Alterações</button>
+                <button onclick="document.getElementById('edit-char-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="teach-skill-modal" class="window modal hidden">
+        <div class="title-bar"><span>TRANSFERÊNCIA SINDICAL DE HABILIDADE (-25% XP)</span></div>
+        <div class="window-content" style="background: var(--win-bg);">
+            <p>Habilidade: <strong id="teach-skill-name"></strong></p>
+            <p>Custo c/ Desconto: <strong id="teach-skill-cost"></strong></p>
+            <div class="flex-row" style="margin-top:10px;">
+                Ensinar para:
+                <select id="teach-target"></select>
+            </div>
+            <div class="flex-row" style="justify-content: flex-end; margin-top:10px;">
+                <button onclick="executeTeachSkill()">Ensinar</button>
+                <button onclick="document.getElementById('teach-skill-modal').classList.add('hidden')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="log-flutuante" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <strong>TERMINAL DE LOGS</strong>
+            <button class="btn btn-small" onclick="closeLog()">Fechar</button>
+        </div>
+        <div id="log-content" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- SCRIPT DO SISTEMA -->
+    <script>
+        const fontStylePresets = [
+            { value: 'char-Ash', label: 'Ash (Médico vermelha)', className: 'char-Ash' },
+            { value: 'char-George', label: 'George (Caps verde)', className: 'char-George' },
+            { value: 'char-Charles', label: 'Charles (Máquina azul)', className: 'char-Charles' },
+            { value: 'char-Alan', label: 'Alan (Assinatura azul)', className: 'char-Alan' },
+            { value: 'char-Tony', label: 'Tony (Papyrus dourado)', className: 'char-Tony' },
+            { value: 'char-Evan', label: 'Evan (Caps larga laranja)', className: 'char-Evan' },
+            { value: 'char-style-1', label: 'Estilo 1 (Mecânico)', className: 'char-style-1' },
+            { value: 'char-style-2', label: 'Estilo 2 (Rústico)', className: 'char-style-2' },
+            { value: 'char-style-3', label: 'Estilo 3 (Neon)', className: 'char-style-3' },
+            { value: 'char-style-4', label: 'Estilo 4 (Futurista)', className: 'char-style-4' },
+            { value: 'char-style-5', label: 'Estilo 5 (Elegante)', className: 'char-style-5' },
+            { value: 'char-style-6', label: 'Estilo 6 (Técnico)', className: 'char-style-6' },
+            { value: 'char-style-7', label: 'Estilo 7 (Noir)', className: 'char-style-7' },
+            { value: 'char-style-8', label: 'Estilo 8 (Retro)', className: 'char-style-8' },
+            { value: 'char-style-9', label: 'Estilo 9 (Punk)', className: 'char-style-9' },
+            { value: 'char-style-10', label: 'Estilo 10 (Cientista)', className: 'char-style-10' },
+            { value: 'char-style-11', label: 'Estilo 11 (Brutal)', className: 'char-style-11' },
+            { value: 'char-style-12', label: 'Estilo 12 (Arcano)', className: 'char-style-12' },
+            { value: 'char-style-13', label: 'Estilo 13 (Sutil)', className: 'char-style-13' },
+            { value: 'char-style-14', label: 'Estilo 14 (Monocromático)', className: 'char-style-14' }
+        ];
+
+        const defaultChars = [
+            {
+                id: 'Ash', nome: 'Ash', classFont: 'char-Ash', color: '#cc0000',
+                resumo: { hp: 46, hpMax: 100, sta: 20, staMax: 60, atk: 10, def: 7, agi: 13, iq: 152, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Ansiedade, Sensível', neu: 85, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: 'MANOPLA PRATEADA', itens: 'Martelo, Kit Médico (x2), Esparadrapo', peso: 50, amizade: 'LAN', dinheiro: 0 },
+                skills: { s: 2025, o: 0, c: 500, p: 0, nat: 'INTELIGENTE\nJOVEM\nCARISMA\nMEDICINA\nRESISTENTE\nFURTIVA', apr: 'PISTOLEIRO', apd: 'OLHAR DE SARGENTO' }
+            },
+            {
+                id: 'George', nome: 'George', classFont: 'char-George', color: '#00aa00',
+                resumo: { hp: 90, hpMax: 90, sta: 20, staMax: 120, atk: 14, def: 9, agi: 16, iq: 120, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Ganância, Rancor, Envenenado', neu: 100, neuMax: 100, o2: 100, o2Max: 100, temp: 5 },
+                inv: { cabeca: 'CAPACETE DE FERRO', torso: 'PEITORAL DE FERRO', pernas: 'CALÇAS DE FERRO', maoe: '', maod: 'MANOPLA DOURADA', itens: 'AT-02, Chave Phillips, Cartucho AT-02 (x5)', peso: 40, amizade: 'RAM', dinheiro: 200 },
+                skills: { s: 1000, o: 100, c: 100, p: 0, nat: 'PERCEPTIVO\nRESISTENTE\nÁGIL\nPERSUASIVO\nPISTOLEIRO\nENGENHEIRO', apr: 'TRYHARDER\nSOBREVIVENTE FINAL', apd: '' }
+            },
+            {
+                id: 'Charles', nome: 'Charles', classFont: 'char-Charles', color: 'darkblue',
+                resumo: { hp: 90, hpMax: 100, sta: 30, staMax: 40, atk: 13, def: 18, agi: 10, iq: 150, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Traumas, Irá, Depressão', neu: 75, neuMax: 100, o2: 100, o2Max: 100, temp: 5 },
+                inv: { cabeca: 'CAPACETE DE FERRO', torso: 'PEITORAL DE FERRO', pernas: 'CALÇAS DE FERRO', maoe: '', maod: 'MANOPLA PRATEADA', itens: '', peso: 25, amizade: 'DIAVOLO', dinheiro: 25 },
+                skills: { s: 500, o: 0, c: 0, p: 0, nat: 'FORTE\nVELHO\nCARISMA\nINTIMIDADOR\nHACKER\nVETERANO', apr: '', apd: '' }
+            },
+            {
+                id: 'Alan', nome: 'Alan', classFont: 'char-Alan', color: '#3399ff',
+                resumo: { hp: 65, hpMax: 100, sta: 30, staMax: 60, atk: 9, def: 11, agi: 13, iq: 130, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Canhoto, Impulso, Envenenado', neu: 75, neuMax: 100, o2: 100, o2Max: 100, temp: 5 },
+                inv: { cabeca: '', torso: '', pernas: '', maoe: 'Rifle Sul', maod: 'MANOPLA PRATEADA', itens: 'AP-55, Cartucho de Pistola (x4)', peso: 30, amizade: 'BOB', dinheiro: 0 },
+                skills: { s: 0, o: 0, c: 8, p: 0, nat: 'CRIATIVO\nPERCEPTIVO\nPISTOLEIRO\nÁGIL\nCARISMA\nJOVEM', apr: 'MAFIOSO', apd: '' }
+            },
+            {
+                id: 'Tony', nome: 'Tony', classFont: 'char-Tony', color: '#d4af37',
+                resumo: { hp: 59, hpMax: 100, sta: 40, staMax: 40, atk: 20, def: 11, agi: 12, iq: 133, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Hiperatividade, Sedentário', neu: 100, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: 'MANOPLA PRATEADA', itens: 'Chave Quebrada, Torretas (x5), Gosh (x3), SSL-90, Cartucho SSL (X16)', peso: 65, amizade: 'N11', dinheiro: 0 },
+                skills: { s: 1, o: 1005, c: 0, p: 0, nat: 'AMBIVERSO\nNERD\nOUSADO\nMECÂNICO\nJOVEM\nCRIATIVO', apr: 'CASCA GROSSA', apd: '' }
+            },
+            {
+                id: 'Evan', nome: 'EVAN', classFont: 'char-Evan', color: '#ff6600',
+                resumo: { hp: 90, hpMax: 100, sta: 50, staMax: 80, atk: 7, def: 18, agi: 14, iq: 85, extraAtk: 0, extraDef: 0 },
+                status: { cond: 'Hipersensível, Autoironia', neu: 35, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: 'MANOPLA PRATEADA', itens: 'Pilha AAA, Traje Anti-radiação, Laser, Chave de Fenda', peso: 7, amizade: 'No', dinheiro: 0 },
+                skills: { s: 1, o: 0, c: 0, p: 0, nat: 'ESQUENTADINHO\nMANIPULADOR\nDETETIVE\nANÁLISTA\nPSICÓLOGO\nCASCA GROSSA', apr: '', apd: '' }
+            }
+        ];
+
+        const skillShop = {
+            fisico: [
+                { nome: 'Servente', req: { s: 1000, o: 0, c: 0, p: 0 } }, { nome: 'Pulo duplo?', req: { s: 1000, o: 0, c: 0, p: 0 } },
+                { nome: 'Casca Grossa', req: { s: 2000, o: 0, c: 0, p: 0 } }, { nome: 'Esquentadinho', req: { s: 2500, o: 0, c: 0, p: 0 } },
+                { nome: 'Equilibrista', req: { s: 0, o: 1000, c: 2000, p: 0 } }, { nome: 'Parkour!', req: { s: 3000, o: 1000, c: 0, p: 0 } },
+                { nome: 'Maromba', req: { s: 4500, o: 0, c: 0, p: 0 } }, { nome: 'Try Harder', req: { s: 2000, o: 5000, c: 0, p: 0 } },
+                { nome: 'Sobrevivente Final', req: { s: 6000, o: 0, c: 0, p: 0 } }, { nome: "You Can't See Me!", req: { s: 0, o: 0, c: -8000, p: 0 } },
+                { nome: 'Antivirus', req: { s: 6000, o: 0, c: 0, p: 0 } }, { nome: 'Radiofóbio', req: { s: 7500, o: 0, c: 0, p: 0 } }
+            ],
+            tecnica: [
+                { nome: 'Piloto', req: { s: 0, o: 1200, c: 0, p: 0 } }, { nome: 'Pistoleiro', req: { s: 0, o: 3000, c: 0, p: 0 } },
+                { nome: 'Ladino', req: { s: 1000, o: 3000, c: 0, p: 0 } }, { nome: 'Medicina', req: { s: 0, o: 3000, c: 0, p: 500 } },
+                { nome: 'Químico', req: { s: 0, o: 3000, c: 0, p: 3000 } }, { nome: 'Armeiro', req: { s: 0, o: 3500, c: 0, p: 500 } },
+                { nome: 'Engenheiro', req: { s: 0, o: 3500, c: 0, p: 1000 } }, { nome: 'Mecânico', req: { s: 1000, o: 3500, c: 0, p: 0 } },
+                { nome: 'Psicólogo', req: { s: 0, o: 1500, c: 2500, p: 5000 } }, { nome: 'Mafioso', req: { s: 0, o: 5000, c: 1500, p: 500 } },
+                { nome: 'Hacker', req: { s: 0, o: 4000, c: 0, p: 5000 } }, { nome: 'Detetive', req: { s: 0, o: 5000, c: 500, p: 1500 } }
+            ],
+            social: [
+                { nome: 'Análise', req: { s: 0, o: 0, c: 1500, p: 500 } }, { nome: 'Extroverso', req: { s: 0, o: 0, c: 2500, p: 0 } },
+                { nome: 'Ambiverso', req: { s: 0, o: 0, c: 2500, p: 2500 } }, { nome: 'Líder Nato', req: { s: 0, o: 0, c: 3500, p: 500 } },
+                { nome: 'Olhar de Sargento', req: { s: 0, o: 0, c: 3000, p: 0 } }, { nome: 'Diplomata', req: { s: 0, o: 0, c: 3000, p: 3500 } },
+                { nome: 'Sensual', req: { s: 0, o: 0, c: 2500, p: 2500 } }, { nome: 'Persuasivo', req: { s: 0, o: 0, c: 3000, p: 3500 } },
+                { nome: 'Ousado', req: { s: 0, o: 0, c: 4000, p: 4000 } }, { nome: 'Manipulador', req: { s: 0, o: 0, c: 3500, p: 3500 } },
+                { nome: 'Moralista', req: { s: 0, o: 100, c: 2500, p: 4000 } }, { nome: 'Sortudo', req: { s: 0, o: 5000, c: 5000, p: 5000 } }
+            ],
+            mental: [
+                { nome: 'Sagaz', req: { s: 0, o: 0, c: 500, p: 1500 } }, { nome: 'Foca na Foca', req: { s: 0, o: 0, c: 0, p: 3500 } },
+                { nome: 'NERD', req: { s: 0, o: 0, c: 0, p: 999 } }, { nome: 'Olho de Escopeta', req: { s: 0, o: 500, c: 0, p: 1500 } },
+                { nome: 'Pensa Rápido!', req: { s: 0, o: 1000, c: 0, p: 3000 } }, { nome: 'Ágil na Queimada', req: { s: 2500, o: 0, c: 0, p: 3000 } },
+                { nome: 'CDF', req: { s: 0, o: 1400, c: 1500, p: 3000 } }, { nome: 'Veterano', req: { s: 0, o: 0, c: 500, p: 6500 } },
+                { nome: 'Memória de Elefante', req: { s: 0, o: 0, c: 0, p: 5000 } }, { nome: 'Frio é Psicólogico', req: { s: 4000, o: 0, c: 0, p: 4000 } },
+                { nome: 'Homem Mosca', req: { s: 1000, o: 0, c: 0, p: 7500 } }, { nome: 'Jogada Desiciva', req: { s: 0, o: 0, c: 1000, p: 9000 } }
+            ]
+        };
+
+        let appData = JSON.parse(localStorage.getItem('MGR_DATA')) || {
+            acts: [{ id: 'Ato I', name: 'Ato I' }, { id: 'Ato II', name: 'Ato II' }],
+            chapters: [
+                { id: 'c0', actId: 'Ato I', name: '0 - Teste de Negligência' },
+                { id: 'c1', actId: 'Ato I', name: '1 - Tiro Silvestre' },
+                { id: 'c2', actId: 'Ato I', name: '2 - A Voz' },
+                { id: 'c3', actId: 'Ato I', name: '3 - Teste de Resistência' },
+                { id: 'c4', actId: 'Ato I', name: '4 - Cognição' },
+                { id: 'c5', actId: 'Ato I', name: '5 - Rosa dos Ventos' },
+                { id: 'c6', actId: 'Ato II', name: '6 - Anticlímax' }
+            ],
+            snapshots: {},
+            extraFriends: [],
+            extraEnemies: [],
+            extraPets: [],
+            shops: []
+        };
+
+        let activeAct = null, activeChap = null, activeTab = 'resumo', activeExtraTab = 'som';
+        let activePetOwner = '';
+        const savedUiState = JSON.parse(localStorage.getItem('MGR_UI_STATE')) || {};
+
+        function normalizeExtraList(list, defaultName) {
+            if (!Array.isArray(list)) return [];
+            return list.map(item => {
+                if (item.resumo) {
+                    item.resumo = Object.assign({ hp: 100, hpMax: 100, sta: 50, staMax: 50, atk: 10, def: 10, agi: 10, iq: 100, extraAtk: 0, extraDef: 0 }, item.resumo);
+                    item.inv = Object.assign({ cabeca: '', torso: '', pernas: '', maoe: '', maod: '', itens: '', peso: 0, amizade: '', dinheiro: 0 }, item.inv);
+                    return item;
+                }
+                const normalized = {
+                    id: item.nome || defaultName + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    nome: item.nome || defaultName,
+                    classFont: item.classFont || 'char-Custom',
+                    color: item.color || '#000000',
+                    resumo: {
+                        hp: item.hp !== undefined && item.hp !== '' ? Number(item.hp) : 100,
+                        hpMax: item.hpMax !== undefined && item.hpMax !== '' ? Number(item.hpMax) : 100,
+                        sta: item.sta !== undefined && item.sta !== '' ? Number(item.sta) : 50,
+                        staMax: item.staMax !== undefined && item.staMax !== '' ? Number(item.staMax) : 50,
+                        atk: item.atk !== undefined && item.atk !== '' ? Number(item.atk) : 10,
+                        def: item.def !== undefined && item.def !== '' ? Number(item.def) : 10,
+                        agi: item.agi !== undefined && item.agi !== '' ? Number(item.agi) : 10,
+                        iq: item.iq !== undefined && item.iq !== '' ? Number(item.iq) : 100,
+                        extraAtk: 0,
+                        extraDef: 0
+                    },
+                    status: {
+                        cond: item.cond || '',
+                        neu: 100,
+                        neuMax: 100,
+                        o2: 100,
+                        o2Max: 100,
+                        temp: 0
+                    },
+                    inv: {
+                        cabeca: item.cabeca || '',
+                        torso: item.torso || '',
+                        pernas: item.pernas || '',
+                        maoe: item.maoe || '',
+                        maod: item.maod || '',
+                        itens: item.itens || '',
+                        peso: item.peso !== undefined && item.peso !== '' ? Number(item.peso) : 0,
+                        amizade: item.amizade || '',
+                        dinheiro: item.dinheiro !== undefined && item.dinheiro !== '' ? Number(item.dinheiro) : 0
+                    },
+                    skills: { s: 0, o: 0, c: 0, p: 0, nat: '', apr: '', apd: '' }
+                };
+                if (item.obs !== undefined) normalized.obs = item.obs;
+                if (item.visible !== undefined) normalized.visible = Boolean(item.visible);
+                return normalized;
+            });
+        }
+        appData.extraFriends = normalizeExtraList(appData.extraFriends, 'Amigo');
+        appData.extraEnemies = normalizeExtraList(appData.extraEnemies, 'Inimigo');
+            appData.extraPets = normalizeExtraList(appData.extraPets, 'Pet');
+        // Music Player Globals
+        const audioCategories = {
+            musicas: [],
+            temas: [],
+            ambiente: [],
+            efeitos: []
+        };
+        let currentAudioCategory = 'musicas';
+        let currentAudioIndex = {
+            musicas: 0,
+            temas: 0,
+            ambiente: 0,
+            efeitos: 0
+        };
+        const audioPlayers = {
+            musicas: new Audio(),
+            temas: new Audio(),
+            ambiente: new Audio(),
+            efeitos: new Audio()
+        };
+        const audioVolumes = {
+            musicas: 1,
+            temas: 1,
+            ambiente: 1,
+            efeitos: 1
+        };
+        // Loop state per category: true = repeat current track, false = auto-advance to next
+        const loopEnabled = {
+            musicas: false,
+            temas: false,
+            ambiente: false,
+            efeitos: false
+        };
+        // Set up ended event for auto-advance or repeat
+        function setupAudioEnded(category) {
+            const player = audioPlayers[category];
+            player.onended = () => {
+                if (category === 'efeitos') {
+                    player.pause();
+                    player.currentTime = 0;
+                    return;
+                }
+                if (loopEnabled[category]) {
+                    // Loop: replay the same track
+                    player.currentTime = 0;
+                    player.play();
+                } else {
+                    // Auto-advance to next track
+                    nextMusic(category);
+                    playCurrentMusic(category);
+                }
+            };
+        }
+        Object.keys(audioPlayers).forEach(category => {
+            setupAudioEnded(category);
+        });
+
+        if (Object.keys(appData.snapshots).length === 0) {
+            appData.snapshots['c0'] = JSON.parse(JSON.stringify(defaultChars));
+            saveData();
+        }
+
+        // =========================================================
+        // CORE & UI UPDATE
+        // =========================================================
+        function saveData() { localStorage.setItem('MGR_DATA', JSON.stringify(appData)); }
+
+        function saveUiState() {
+            localStorage.setItem('MGR_UI_STATE', JSON.stringify({
+                activeAct,
+                activeChap,
+                activeTab,
+                activeExtraTab,
+                activePetOwner
+            }));
+        }
+
+        function getExportFileName() {
+            const stamp = new Date().toISOString().slice(0, 10);
+            return `light-fade-campanha-${stamp}.json`;
+        }
+
+        function exportCampaign() {
+            const payload = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                appData
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = getExportFileName();
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            logMsg('Backup da campanha exportado.');
+            showLog();
+        }
+
+        function importCampaign(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const importedData = parsed.appData || parsed;
+                    const isValid = importedData
+                        && Array.isArray(importedData.acts)
+                        && Array.isArray(importedData.chapters)
+                        && importedData.snapshots
+                        && typeof importedData.snapshots === 'object';
+
+                    if (!isValid) throw new Error('Formato inválido.');
+                    if (!confirm('Importar este backup e substituir a campanha atual?')) return;
+
+                    importedData.extraFriends = normalizeExtraList(importedData.extraFriends || [], 'Amigo');
+                    importedData.extraEnemies = normalizeExtraList(importedData.extraEnemies || [], 'Inimigo');
+                    importedData.extraPets = normalizeExtraList(importedData.extraPets || [], 'Pet');
+                    importedData.shops = importedData.shops || [];
+                    appData = importedData;
+                    activeAct = appData.acts[0] ? appData.acts[0].id : null;
+                    activeChap = null;
+                    activeTab = 'resumo';
+                    activeExtraTab = 'som';
+                    saveData();
+                    saveUiState();
+                    renderSidebar();
+                    closeMainWindow();
+                    logMsg('Backup importado com sucesso.');
+                    showLog();
+                } catch (err) {
+                    alert('Não foi possível importar este backup JSON.');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function slugifyFilePart(value) {
+            return String(value || 'capitulo')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .toLowerCase() || 'capitulo';
+        }
+
+        function getActiveChapter() {
+            return appData.chapters.find(c => c.id === activeChap);
+        }
+
+        function exportChapter() {
+            const chapter = getActiveChapter();
+            if (!chapter || !appData.snapshots[activeChap]) return alert('Selecione um capítulo para exportar.');
+
+            const act = appData.acts.find(a => a.id === chapter.actId);
+            const payload = {
+                type: 'LIGHT_FADE_CHAPTER',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                chapter: {
+                    name: chapter.name,
+                    actName: act ? act.name : '',
+                    originalId: chapter.id
+                },
+                snapshot: appData.snapshots[activeChap]
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `light-fade-${slugifyFilePart(chapter.name)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            logMsg(`Capítulo exportado: ${chapter.name}.`);
+            showLog();
+        }
+
+        function importChapter(event, mode) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const snapshot = parsed.snapshot || parsed.characters || parsed;
+                    if (!Array.isArray(snapshot)) throw new Error('Snapshot inválido.');
+
+                    if (mode === 'new') {
+                        if (!activeAct) return alert('Selecione um ato antes de importar como novo capítulo.');
+                        const importedName = parsed.chapter && parsed.chapter.name ? parsed.chapter.name : file.name.replace(/\.json$/i, '');
+                        const newChapter = {
+                            id: 'c' + Date.now(),
+                            actId: activeAct,
+                            name: importedName
+                        };
+                        appData.chapters.push(newChapter);
+                        appData.snapshots[newChapter.id] = JSON.parse(JSON.stringify(snapshot));
+                        activeChap = newChapter.id;
+                    } else {
+                        const chapter = getActiveChapter();
+                        if (!chapter) return alert('Selecione um capítulo para receber o JSON.');
+                        if (!confirm(`Substituir os dados de "${chapter.name}" por este JSON?`)) return;
+                        appData.snapshots[activeChap] = JSON.parse(JSON.stringify(snapshot));
+                    }
+
+                    saveData();
+                    saveUiState();
+                    renderSidebar();
+                    openMainWindow();
+                    logMsg('JSON de capítulo importado com sucesso.');
+                    showLog();
+                } catch (err) {
+                    alert('Não foi possível importar este JSON de capítulo.');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearLog() {
+            const div = document.getElementById('log-content');
+            if (div) div.innerHTML = '';
+        }
+
+        function logMsg(msg) {
+            const div = document.getElementById('log-content');
+            div.innerHTML = `> ${msg}<br>` + div.innerHTML;
+        }
+
+        // Mostra o terminal de logs (removido por padrão). Pode ser fechado manualmente.
+        function showLog() {
+            const el = document.getElementById('log-flutuante');
+            if (el) el.classList.remove('hidden');
+        }
+
+        function closeLog() {
+            const el = document.getElementById('log-flutuante');
+            if (el) {
+                el.classList.add('hidden');
+                clearLog();
+            }
+        }
+
+        // Extra stats visibility state
+        let extraStatsVisible = false;
+
+        function autoHideExtraStats() {
+            document.querySelectorAll('.extra-stat').forEach(el => {
+                const input = el.querySelector('input');
+                const val = input ? Number(input.value) : 0;
+                if (extraStatsVisible || val !== 0) {
+                    el.style.display = 'inline-flex';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleExtraStats() {
+            extraStatsVisible = !extraStatsVisible;
+            autoHideExtraStats();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const el = document.getElementById('log-flutuante');
+            if (e.key === "'" && el && !el.classList.contains('hidden')) {
+                clearLog();
+            }
+            if (e.key === '\\') {
+                e.preventDefault();
+                toggleExtraStats();
+            }
+        });
+
+        function updateCharState(charIndex, section, field, value) {
+            let val = value;
+            if (!isNaN(val) && val !== '') val = Number(val);
+            if (section === 'root') appData.snapshots[activeChap][charIndex][field] = val;
+            else appData.snapshots[activeChap][charIndex][section][field] = val;
+            saveData();
+        }
+
+        // Gera input interativo (oninput salva imediatamente)
+        function inputBind(charIndex, section, field, isNum = true, isTextarea = false, extraClass = '') {
+            const val = section === 'root' ? appData.snapshots[activeChap][charIndex][field] : appData.snapshots[activeChap][charIndex][section][field];
+            if (isTextarea) return `<textarea oninput="updateCharState(${charIndex}, '${section}', '${field}', this.value)" rows="3">${val}</textarea>`;
+            // Special formatting for money fields (dinheiro) -> display as 00,00
+            if (field === 'dinheiro') {
+                const disp = formatMoneyDisplay(val);
+                return `<input type="text" class="${extraClass}" value="${disp}" oninput="updateCharMoneyState(${charIndex}, '${section}', '${field}', this.value)">`;
+            }
+            const classes = `${isNum ? 'num' : ''} ${extraClass}`.trim();
+            return `<input type="${isNum ? 'number' : 'text'}" class="${classes}" value="${val}" oninput="updateCharState(${charIndex}, '${section}', '${field}', this.value)">`;
+        }
+
+        function updateExtraState(type, index, section, field, value) {
+            let val = value;
+            if (field === 'visible') val = Boolean(value);
+            else if (!isNaN(val) && val !== '' && typeof val !== 'boolean') val = Number(val);
+            let list;
+            if (type === 'friend') list = appData.extraFriends;
+            else if (type === 'enemy') list = appData.extraEnemies;
+            else if (type === 'pet') list = appData.extraPets;
+            if (!list || !list[index]) return;
+            if (section === 'root') list[index][field] = val;
+            else {
+                if (!list[index][section]) list[index][section] = {};
+                list[index][section][field] = val;
+            }
+            saveData();
+        }
+
+        // Money formatting helpers (display uses comma decimals: 00,00)
+        function formatMoneyDisplay(val) {
+            if (val === undefined || val === null || val === '') return '0,00';
+            const num = Number(val) || 0;
+            return num.toFixed(2).replace('.', ',');
+        }
+
+        function parseMoneyInput(str) {
+            if (str === undefined || str === null || str === '') return 0;
+            // Replace comma with dot, remove non-numeric except minus and dot
+            const cleaned = String(str).replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9\-\.]/g, '');
+            const n = parseFloat(cleaned);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function updateCharMoneyState(charIndex, section, field, inputValue) {
+            const parsed = parseMoneyInput(inputValue);
+            updateCharState(charIndex, section, field, parsed);
+            // Re-render to update displayed formatting
+            saveData(); renderTab();
+        }
+
+        function updateExtraMoneyState(type, index, section, field, inputValue) {
+            const parsed = parseMoneyInput(inputValue);
+            updateExtraState(type, index, section, field, parsed);
+            saveData(); renderTab();
+        }
+
+        function extraInputBind(type, index, section, field, isNum = true, isTextarea = false, extraClass = '') {
+            let list;
+            if (type === 'friend') list = appData.extraFriends;
+            else if (type === 'enemy') list = appData.extraEnemies;
+            else if (type === 'pet') list = appData.extraPets;
+            const item = list ? list[index] : null;
+            const val = item ? (section === 'root' ? item[field] : (item[section] ? item[section][field] : '')) : '';
+            if (type === 'pet' && field === 'dono') {
+                const chars = (appData.snapshots[activeChap] || []).map((c, i) => `<option value="${i}" ${String(i) === String(val) ? 'selected' : ''}>${c.nome}</option>`).join('');
+                return `
+                    <select class="${extraClass}" onchange="updateExtraState('pet', ${index}, 'root', 'dono', this.value)">
+                        <option value="">Nenhum</option>
+                        ${chars}
+                    </select>
+                `;
+            }
+            if (isTextarea) return `<textarea oninput="updateExtraState('${type}', ${index}, '${section}', '${field}', this.value)" rows="2">${val || ''}</textarea>`;
+            // Money formatting for extra entities
+            if (field === 'dinheiro') {
+                const disp = formatMoneyDisplay(val);
+                return `<input type="text" class="${extraClass}" value="${disp}" oninput="updateExtraMoneyState('${type}', ${index}, '${section}', '${field}', this.value)">`;
+            }
+            const classes = `${isNum ? 'num' : ''} ${extraClass}`.trim();
+            return `<input type="${isNum ? 'number' : 'text'}" class="${classes}" value="${val !== undefined && val !== null ? val : ''}" oninput="updateExtraState('${type}', ${index}, '${section}', '${field}', this.value)">`;
+        }
+
+        function getPetClassFont(pet) {
+            if (pet && pet.dono !== undefined && pet.dono !== '' && appData.snapshots[activeChap]) {
+                const owner = appData.snapshots[activeChap][Number(pet.dono)];
+                if (owner && owner.classFont) return owner.classFont;
+            }
+            return pet.classFont || 'char-Custom';
+        }
+
+        function rollExtraStats(extraType, index, type) {
+            const list = extraType === 'friend' ? appData.extraFriends : appData.extraEnemies;
+            const c = list[index];
+            const name = c.nome || (extraType === 'friend' ? 'Amigo' : 'Inimigo');
+            let result = 0, msg = "";
+
+            const atk = Number(c.resumo?.atk || 0);
+            const def = Number(c.resumo?.def || 0);
+            const iq = Number(c.resumo?.iq || 0);
+            const agi = Number(c.resumo?.agi || 0);
+
+            if (type === 'atk') {
+                let d20 = Math.floor(Math.random() * 20) + 1;
+                result = atk + d20;
+                msg = `${name} [ATK]: D20(${d20}) + ATK(${atk}) = DANOA: ${result}`;
+                if (d20 === 20) msg += " (HAZARD CRÍTICO!)";
+                else if (d20 > 18) msg += " (HAZARD!)";
+            } else if (type === 'def') {
+                result = def;
+                msg = `${name} [DEF]: ${result} Pronta para aparar.`;
+            } else if (type === 'iq') {
+                // Apply fractional IQ rule: X = (IQ - 100) / 30; success if d6 <= 3 + X
+                const iqVal = Number(iq) || 0;
+                const X = (iqVal - 100) / 30;
+                const lim = 3 + X; // fractional threshold
+                let d6 = Math.floor(Math.random() * 6) + 1;
+                msg = `${name} [IQ]: D6(${d6}) vs Alvo(${lim.toFixed(2)}). Result: ${d6 <= lim ? 'SUCESSO' : 'FALHA'}`;
+            } else if (type === 'agi') {
+                let d20 = Math.floor(Math.random() * 20) + 1;
+                msg = `${name} [AGI]: D20(${d20}) vs AGI(${agi}). Result: ${d20 <= agi ? 'SUCESSO' : 'FALHA'}`;
+            }
+            showLog(); logMsg(msg);
+        }
+
+        function renderSidebar() {
+            document.getElementById('list-acts').innerHTML = appData.acts.map(a =>
+                `<div class="list-item ${activeAct === a.id ? 'selected' : ''}" onclick="selectAct('${a.id}')">${a.name}</div>`
+            ).join('');
+
+            const listChaps = document.getElementById('list-chapters');
+            if (activeAct) {
+                listChaps.innerHTML = appData.chapters.filter(c => c.actId === activeAct).map(c =>
+                    `<div class="list-item ${activeChap === c.id ? 'selected' : ''}" onclick="selectChapter('${c.id}')">${c.name}</div>`
+                ).join('');
+            } else listChaps.innerHTML = '';
+        }
+
+        function selectAct(id) { activeAct = id; activeChap = null; saveUiState(); renderSidebar(); closeMainWindow(); }
+
+        function selectChapter(id) {
+            activeChap = id; saveUiState(); renderSidebar();
+            if (!appData.snapshots[activeChap]) {
+                document.getElementById('import-modal').classList.remove('hidden');
+                document.getElementById('import-select').innerHTML = Object.keys(appData.snapshots).map(chapId => {
+                    const chap = appData.chapters.find(c => c.id === chapId);
+                    return chap ? `<option value="${chapId}">${chap.name}</option>` : '';
+                }).join('');
+            } else openMainWindow();
+        }
+
+        function executeImport() {
+            appData.snapshots[activeChap] = JSON.parse(JSON.stringify(appData.snapshots[document.getElementById('import-select').value]));
+            saveData(); saveUiState(); document.getElementById('import-modal').classList.add('hidden'); openMainWindow();
+        }
+
+        function skipImport() {
+            appData.snapshots[activeChap] = JSON.parse(JSON.stringify(defaultChars));
+            saveData(); saveUiState(); document.getElementById('import-modal').classList.add('hidden'); openMainWindow();
+        }
+
+        function updateCombatTargets() {
+            const targetSelect = document.getElementById('combat-target');
+            const charOptions = (appData.snapshots[activeChap] || []).map((c, i) => `<option value="char:${i}">${c.nome}</option>`).join('');
+            const petOptions = (appData.extraPets || []).map((c, i) => `<option value="pet:${i}">${c.nome} (PET)</option>`).join('');
+            const friendOptions = (appData.extraFriends || []).map((c, i) => `<option value="friend:${i}">${c.nome} (AMIGO)</option>`).join('');
+            const enemyOptions = (appData.extraEnemies || []).map((c, i) => `<option value="enemy:${i}">${c.nome} (INIMIGO)</option>`).join('');
+            targetSelect.innerHTML = `
+                <optgroup label="PERSONAGENS">${charOptions || '<option disabled>Nenhum personagem</option>'}</optgroup>
+                <optgroup label="PETS">${petOptions || '<option disabled>Nenhum pet</option>'}</optgroup>
+                <optgroup label="AMIGOS">${friendOptions || '<option disabled>Nenhum amigo</option>'}</optgroup>
+                <optgroup label="INIMIGOS">${enemyOptions || '<option disabled>Nenhum inimigo</option>'}</optgroup>
+            `;
+        }
+
+        function openMainWindow() {
+            document.getElementById('main-window').classList.remove('hidden');
+            document.getElementById('win-title').innerText = `DATA_VIEWER: ${appData.chapters.find(c => c.id === activeChap).name.toUpperCase()}`;
+            syncTabs();
+
+            updateCombatTargets();
+
+            renderTab();
+        }
+
+        function closeMainWindow() { document.getElementById('main-window').classList.add('hidden'); }
+
+        function syncTabs() {
+            document.querySelectorAll('.tab').forEach(tabEl => {
+                const tabName = tabEl.getAttribute('onclick').match(/'([^']+)'/)[1];
+                tabEl.classList.toggle('active', tabName === activeTab);
+            });
+            const hideCombatPanel = activeTab === 'skill-table' || activeTab === 'skill-path' || activeTab === 'salvar' ||
+                (activeTab === 'extras' && activeExtraTab !== 'amigos' && activeExtraTab !== 'inimigos');
+            document.getElementById('combat-panel').style.display = hideCombatPanel ? 'none' : 'flex';
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            saveUiState();
+            syncTabs();
+            renderTab();
+        }
+
+        // =========================================================
+        // RENDERS DAS ABAS
+        // =========================================================
+        // Lógica de Tabela Real (10 slots)
+        function updateSkillSlot(charIndex, cat, slotIndex, value) {
+            let current = appData.snapshots[activeChap][charIndex].skills[cat] || '';
+            let arr = current.split('\n');
+            while(arr.length < 10) arr.push('');
+            arr[slotIndex] = value;
+            appData.snapshots[activeChap][charIndex].skills[cat] = arr.join('\n');
+            saveData();
+        }
+
+        function renderSkillTableBlock(charIndex, category, title) {
+            let arr = (appData.snapshots[activeChap][charIndex].skills[category] || '').split('\n');
+            let html = `<table style="width:100%; border-collapse:collapse; border: 2px solid var(--win-border-dark); background:#fff; margin-bottom:15px;">
+                <tr style="background:var(--win-border-dark); color:#fff; text-align:left;">
+                    <th style="padding:6px; width:40px; text-align:center; border-right:1px solid #ccc;">#</th>
+                    <th style="padding:6px;">${title}</th>
+                </tr>`;
+            for(let k = 0; k < 10; k++) {
+                let val = arr[k] || '';
+                html += `<tr style="border-top:1px solid #ccc;">
+                    <td style="padding:6px; text-align:center; background:#eee; border-right:1px solid #ccc; font-weight:bold; color:#555;">${k+1}</td>
+                    <td style="padding:0;"><input type="text" style="width:100%; border:none; padding:6px; font-family:var(--font-sys); outline:none; background:transparent;" value="${val.replace(/"/g, '"')}" oninput="updateSkillSlot(${charIndex}, '${category}', ${k}, this.value)"></td>
+                </tr>`;
+            }
+            html += `</table>`;
+            return html;
+        }
+
+        function renderTab() {
+            const container = document.getElementById('tab-content');
+            if (activeTab === 'extras') return renderExtras(container);
+            if (activeTab === 'salvar') return renderSaveTab(container);
+
+            const chars = appData.snapshots[activeChap];
+            let html = `<button onclick="document.getElementById('add-char-modal').classList.remove('hidden')" style="margin-bottom:10px;">+ ADICIONAR EMPREGADO</button>`;
+
+            chars.forEach((c, i) => {
+                html += `<div class="char-card">
+                            <div class="flex-row" style="justify-content:space-between;">
+                                <div class="${c.classFont}" style="color:${c.color || ''};">${c.nome}</div>
+                                <div>
+                                    <button class="btn btn-small" onclick="openEditChar(${i})" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
+                                    <button class="del-btn" onclick="delCharacter(${i})">X Deletar</button>
+                                </div>
+                            </div>
+                            <hr style="margin:5px 0; border:1px solid var(--win-border-dark);">`;
+
+                if (activeTab === 'resumo') {
+                    html += `
+                        <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <div style="flex:1 1 220px; display:grid; gap:8px;">
+                                <div class="status-block"><div class="flex-row"><strong>HP:</strong> ${inputBind(i, 'resumo', 'hp')} / ${inputBind(i, 'resumo', 'hpMax')}</div></div>
+                                <div class="status-block"><div class="flex-row"><strong>STA:</strong> ${inputBind(i, 'resumo', 'sta')} / ${inputBind(i, 'resumo', 'staMax')}</div></div>
+                            </div>
+                            <div style="flex:1 1 320px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                                <div class="status-block"><div class="flex-row">ATK: ${inputBind(i, 'resumo', 'atk')} <span class="extra-stat"><span class="extra-symbol">+</span>${inputBind(i, 'resumo', 'extraAtk')}</span> <button class="dice" onclick="rollStats(${i}, 'atk')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">IQ:  ${inputBind(i, 'resumo', 'iq')} <button class="dice" onclick="rollStats(${i}, 'iq')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">DEF: ${inputBind(i, 'resumo', 'def')} <span class="extra-stat"><span class="extra-symbol">+</span>${inputBind(i, 'resumo', 'extraDef')}</span> <button class="dice" onclick="rollStats(${i}, 'def')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">AGI: ${inputBind(i, 'resumo', 'agi')} <button class="dice" onclick="rollStats(${i}, 'agi')">🎲</button></div></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (activeTab === 'status') {
+                    html += `
+                        <div class="status-block" style="margin-bottom:10px;"><div class="cond-bar"><strong>COND:</strong> ${inputBind(i, 'status', 'cond', false)}</div></div>
+                        <div class="status-grid">
+                            <div class="status-block">NEU: ${inputBind(i, 'status', 'neu')} / ${inputBind(i, 'status', 'neuMax')}</div>
+                            <div class="status-block">TEMP: ${inputBind(i, 'status', 'temp')}</div>
+                            <div class="status-block">O2: ${inputBind(i, 'status', 'o2')} / ${inputBind(i, 'status', 'o2Max')}</div>
+                        </div>
+                    `;
+                }
+                else if (activeTab === 'inventario') {
+                    html += `
+                        <div class="inventory-grid">
+                            <div class="inventory-block">CABEÇA: ${inputBind(i, 'inv', 'cabeca', false)}</div>
+                            <div class="inventory-block">MÃO E.: ${inputBind(i, 'inv', 'maoe', false)}</div>
+                            <div class="inventory-block">TORSO: ${inputBind(i, 'inv', 'torso', false)}</div>
+                            <div class="inventory-block">MÃO D.: ${inputBind(i, 'inv', 'maod', false)}</div>
+                            <div class="inventory-block">PERNAS: ${inputBind(i, 'inv', 'pernas', false)}</div>
+                            <div class="inventory-block">PESO: ${inputBind(i, 'inv', 'peso')}</div>
+                        </div>
+                        <div class="inventory-block" style="margin-top:5px;">ITENS: ${inputBind(i, 'inv', 'itens', false, true)}</div>
+                        <div class="inventory-grid" style="margin-top:5px;">
+                            <div class="inventory-block">AMZ.: ${inputBind(i, 'inv', 'amizade', false)}</div>
+                            <div class="inventory-block">DINHEIRO: ${inputBind(i, 'inv', 'dinheiro', false)}</div>
+                        </div>
+                    `;
+                }
+                else if (activeTab === 'skill-table') {
+                    html += `
+                        <div style="background:#222; color:#fff; padding:6px 10px; margin-bottom:15px; display:flex; justify-content:space-around; align-items:center; border:2px inset var(--win-border-dark);">
+                            <div class="flex-row" style="font-size:20px;"><strong>S:</strong> ${inputBind(i, 'skills', 's', true, false, 'xp-num')}</div>
+                            <div class="flex-row" style="font-size:20px;"><strong>O:</strong> ${inputBind(i, 'skills', 'o', true, false, 'xp-num')}</div>
+                            <div class="flex-row" style="font-size:20px;"><strong>C:</strong> ${inputBind(i, 'skills', 'c', true, false, 'xp-num')}</div>
+                            <div class="flex-row" style="font-size:20px;"><strong>P:</strong> ${inputBind(i, 'skills', 'p', true, false, 'xp-num')}</div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:row; gap:15px; align-items:flex-start;">
+                            
+                            <div style="flex:1; display:flex; flex-direction:column;">
+                                ${renderSkillTableBlock(i, 'nat', 'NATURAIS')}
+                                <button class="btn" style="width:100%; font-size:16px; padding:8px; margin-top:-5px; background:var(--title-blue); color:#fff; border-color:var(--win-border-light);" onclick="openTeachModal(${i})">
+                                    ENSINAR
+                                </button>
+                            </div>
+
+                            <div style="flex:1;">
+                                ${renderSkillTableBlock(i, 'apr', 'APRENDENDO')}
+                            </div>
+
+                            <div style="flex:1;">
+                                ${renderSkillTableBlock(i, 'apd', 'APRENDIDAS')}
+                            </div>
+                            
+                        </div>
+                    `;
+                }
+                else if (activeTab === 'skill-path') {
+                    html += `<div style="margin-bottom:5px; font-weight:bold;">S: ${c.skills.s} | O: ${c.skills.o} | C: ${c.skills.c} | P: ${c.skills.p}</div>`;
+                    ['fisico', 'tecnica', 'social', 'mental'].forEach(cat => {
+                        html += `<div class="section-title">${cat.toUpperCase()}</div><div class="grid-4">`;
+                        skillShop[cat].forEach(sk => {
+                            let custoTexto = `S${sk.req.s} O${sk.req.o} C${sk.req.c} P${sk.req.p}`.replace(/[A-Z]0/g, '').trim();
+                            if (sk.nome === 'NERD' && sk.req.p === 999) {
+                                custoTexto = custoTexto.replace('P999', 'C0 P999');
+                            }
+                            let canBuy = c.skills.s >= sk.req.s && c.skills.o >= sk.req.o && c.skills.c >= sk.req.c && c.skills.p >= sk.req.p;
+                            if (sk.nome === 'NERD') {
+                                canBuy = canBuy && c.skills.c === 0;
+                            }
+                            if (sk.nome === "You Can't See Me!") {
+                                canBuy = canBuy && c.skills.c === -8000;
+                            }
+                            const safeSkillName = JSON.stringify(sk.nome).replace(/"/g, '&quot;');
+                            html += `<div class="skill-path-card">
+                                <strong>${sk.nome}</strong><br>Req: ${custoTexto}<br>
+                                <button ${canBuy ? '' : 'disabled'} onclick="buySkill(${i}, ${safeSkillName}, ${sk.req.s}, ${sk.req.o}, ${sk.req.c}, ${sk.req.p})">
+                                    COMPRAR
+                                </button>
+                            </div>`;
+                        });
+                        html += `</div>`;
+                    });
+                }
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+
+            // Auto-hide empty extra stats on render
+            autoHideExtraStats();
+
+            // Atualiza Target List se um char foi adicionado/removido
+            updateCombatTargets();
+        }
+
+        function renderSaveTab(container) {
+            const chapter = getActiveChapter();
+            const act = chapter ? appData.acts.find(a => a.id === chapter.actId) : null;
+            container.innerHTML = `
+                <div class="char-card">
+                    <div class="section-title">JSON DO CAPÍTULO</div>
+                    <div class="status-grid">
+                        <div class="status-block"><strong>Ato:</strong> ${act ? act.name : 'Nenhum'}</div>
+                        <div class="status-block"><strong>Capítulo:</strong> ${chapter ? chapter.name : 'Nenhum'}</div>
+                        <div class="status-block"><strong>Personagens:</strong> ${(appData.snapshots[activeChap] || []).length}</div>
+                    </div>
+                    <div class="flex-row" style="margin-top:12px; flex-wrap:wrap;">
+                        <button onclick="exportChapter()">Exportar Capítulo Atual</button>
+                        <button onclick="document.getElementById('chapter-import-replace').click()">Importar e Substituir Atual</button>
+                        <button onclick="document.getElementById('chapter-import-new').click()">Importar como Novo Capítulo</button>
+                    </div>
+                    <input type="file" id="chapter-import-replace" accept="application/json,.json" class="hidden" onchange="importChapter(event, 'replace')">
+                    <input type="file" id="chapter-import-new" accept="application/json,.json" class="hidden" onchange="importChapter(event, 'new')">
+                    <p style="margin-top:10px; font-size:12px;">
+                        O JSON do capítulo guarda os status, inventário, XP e skills do snapshot atual. Amigos, inimigos, lojas e sons continuam no backup da campanha inteira.
+                    </p>
+                </div>
+            `;
+        }
+
+        function switchExtraTab(tab) {
+            activeExtraTab = tab;
+            saveUiState();
+            renderTab();
+        }
+
+        function renderExtras(container) {
+            const categories = [
+                { key: 'musicas', label: 'MÚSICA' },
+                { key: 'temas', label: 'TEMAS' },
+                { key: 'ambiente', label: 'AMBIENTE' },
+                { key: 'efeitos', label: 'EFEITOS' }
+            ];
+
+            let content = `
+                <h2>EXTRAS</h2>
+                <div class="subtabs">
+                    <button class="subtab ${activeExtraTab === 'som' ? 'active' : ''}" onclick="switchExtraTab('som')">SOM</button>
+                    <button class="subtab ${activeExtraTab === 'amigos' ? 'active' : ''}" onclick="switchExtraTab('amigos')">AMIGOS</button>
+                    <button class="subtab ${activeExtraTab === 'pets' ? 'active' : ''}" onclick="switchExtraTab('pets')">PETS</button>
+                    <button class="subtab ${activeExtraTab === 'inimigos' ? 'active' : ''}" onclick="switchExtraTab('inimigos')">INIMIGOS</button>
+                    <button class="subtab ${activeExtraTab === 'lojas' ? 'active' : ''}" onclick="switchExtraTab('lojas')">LOJAS</button>
+                    <button class="subtab ${activeExtraTab === 'visualizacao' ? 'active' : ''}" onclick="switchExtraTab('visualizacao')">VISUALIZAÇÃO</button>
+                </div>
+            `;
+
+            if (activeExtraTab === 'som') {
+                content += `<p style="margin-bottom:10px;">Cada categoria de áudio tem sua própria fila e controles.</p><div style="display:flex; flex-direction:column; gap:12px;">`;
+                content += categories.map(cat => {
+                    const list = audioCategories[cat.key] || [];
+                    const current = list[currentAudioIndex[cat.key]];
+                    return `
+                        <div class="char-card audio-card">
+                            <div style="font-weight:bold; margin-bottom:8px;">${cat.label}</div>
+                            <p style="margin-bottom:8px;">Carregue uma pasta para <strong>${cat.label}</strong>.</p>
+                            <input type="file" id="audio-upload-${cat.key}" webkitdirectory directory multiple accept="audio/*" onchange="loadMusic(event, '${cat.key}')" style="margin: 10px 0; width:100%;">
+                            <div style="background:#000; color:#05ffa1; padding:10px; font-family:'VT323'; margin-bottom:10px;">
+                                TOCANDO: <span id="current-track-${cat.key}">${current ? current.name : 'Nenhuma música carregada'}</span>
+                            </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px; align-items:center;">
+                                <div>Itens na fila: <strong>${list.length}</strong></div>
+                                <button class="btn btn-small" onclick="clearMusicQueue('${cat.key}')">Excluir Fila</button>
+                                <label style="display:flex; align-items:center; gap:6px;">
+                                    Volume:
+                                    <input type="range" min="0" max="1" step="0.05" value="${audioVolumes[cat.key] ?? 1}" onchange="setAudioVolume('${cat.key}', this.value)">
+                                </label>
+                            </div>
+                            <div class="flex-row" style="flex-wrap:wrap; gap:8px;">
+                                <button onclick="prevMusic('${cat.key}')">|<< Ant</button>
+                                <button onclick="playCurrentMusic('${cat.key}')">Tocar</button>
+                                <button onclick="pauseCurrentMusic('${cat.key}')">Pausar</button>
+                                <button onclick="toggleLoop('${cat.key}')" id="loop-btn-${cat.key}">LOOP: OFF</button>
+                                <button onclick="nextMusic('${cat.key}')">Prox >>|</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                content += `</div>`;
+            } else if (activeExtraTab === 'amigos') {
+                content += `
+                    <div class="flex-row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <button onclick="addExtraFriend()">+ ADICIONAR AMIGO</button>
+                        <button onclick="exportExtraEntity('friend')">EXPORTAR</button>
+                        <button onclick="importExtraEntity('friend')">IMPORTAR</button>
+                    </div>
+                `;
+                content += (appData.extraFriends || []).map((friend, i) => `
+                    <div class="char-card">
+                        <div class="flex-row" style="justify-content:space-between; align-items:center;">
+                            <div class="${friend.classFont || 'char-Custom'}" style="color:${friend.color || ''}; font-size:24px; font-weight:bold;">${friend.nome || 'Amigo'}</div>
+                            <div>
+                                <button class="btn btn-small" onclick="openEditChar(${i}, 'friend')" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
+                                <button class="del-btn" onclick="deleteExtraFriend(${i})">X Deletar</button>
+                            </div>
+                        </div>
+                        <hr style="margin:5px 0; border:1px solid var(--win-border-dark);">
+                        
+                        <!-- Stats -->
+                        <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <div style="flex:1 1 220px; display:grid; gap:8px;">
+                                <div class="status-block"><div class="flex-row"><strong>HP:</strong> ${extraInputBind('friend', i, 'resumo', 'hp')} / ${extraInputBind('friend', i, 'resumo', 'hpMax')}</div></div>
+                                <div class="status-block"><div class="flex-row"><strong>STA:</strong> ${extraInputBind('friend', i, 'resumo', 'sta')} / ${extraInputBind('friend', i, 'resumo', 'staMax')}</div></div>
+                            </div>
+                            <div style="flex:1 1 320px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                                <div class="status-block"><div class="flex-row">ATK: ${extraInputBind('friend', i, 'resumo', 'atk')} <button class="dice" onclick="rollExtraStats('friend', ${i}, 'atk')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">IQ: ${extraInputBind('friend', i, 'resumo', 'iq')} <button class="dice" onclick="rollExtraStats('friend', ${i}, 'iq')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">DEF: ${extraInputBind('friend', i, 'resumo', 'def')} <button class="dice" onclick="rollExtraStats('friend', ${i}, 'def')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">AGI: ${extraInputBind('friend', i, 'resumo', 'agi')} <button class="dice" onclick="rollExtraStats('friend', ${i}, 'agi')">🎲</button></div></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Inventory -->
+                        <div style="margin-top:10px; font-weight:bold; font-size:16px;">INVENTÁRIO:</div>
+                        <div class="inventory-grid" style="margin-top:5px;">
+                            <div class="inventory-block">CABEÇA: ${extraInputBind('friend', i, 'inv', 'cabeca', false)}</div>
+                            <div class="inventory-block">MÃO E.: ${extraInputBind('friend', i, 'inv', 'maoe', false)}</div>
+                            <div class="inventory-block">TORSO: ${extraInputBind('friend', i, 'inv', 'torso', false)}</div>
+                            <div class="inventory-block">MÃO D.: ${extraInputBind('friend', i, 'inv', 'maod', false)}</div>
+                            <div class="inventory-block">PERNAS: ${extraInputBind('friend', i, 'inv', 'pernas', false)}</div>
+                            <div class="inventory-block">PESO: ${extraInputBind('friend', i, 'inv', 'peso')}</div>
+                        </div>
+                        <div class="inventory-block" style="margin-top:5px;">ITENS: ${extraInputBind('friend', i, 'inv', 'itens', false, true)}</div>
+                        <div class="inventory-grid" style="margin-top:5px;">
+                            <div class="inventory-block">AMZ.: ${extraInputBind('friend', i, 'inv', 'amizade', false)}</div>
+                            <div class="inventory-block">DINHEIRO: ${extraInputBind('friend', i, 'inv', 'dinheiro', false)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (activeExtraTab === 'pets') {
+                const ownerOptions = (appData.snapshots[activeChap] || []).map((c, i) => `<option value="${i}" ${String(activePetOwner) === String(i) ? 'selected' : ''}>${c.nome}</option>`).join('');
+                const petsForOwner = (appData.extraPets || []).filter(pet => String(pet.dono || '') === String(activePetOwner));
+
+                content += `
+                    <div class="flex-row" style="margin-bottom:10px; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <strong>DONO:</strong>
+                        <select onchange="setActivePetOwner(this.value); renderTab();">
+                            <option value="">Nenhum</option>
+                            ${ownerOptions}
+                        </select>
+                        <button onclick="addExtraPet()">+ ADICIONAR PET</button>
+                    </div>
+                `;
+
+                if (!activePetOwner) {
+                    content += `<p style="margin-bottom:10px;">Escolha um dono para ver seus pets e adicionar novos.</p>`;
+                } else {
+                    content += petsForOwner.map((pet, i) => {
+                        const globalIndex = (appData.extraPets || []).findIndex(item => item === pet);
+                        return `
+                            <div class="char-card">
+                                <div class="flex-row" style="justify-content:space-between; align-items:center;">
+                                    <div class="${getPetClassFont(pet)}" style="color:${pet.color || ''}; font-size:24px; font-weight:bold;">${pet.nome || 'Pet'}</div>
+                                    <div>
+                                        <button class="btn btn-small" onclick="openEditChar(${globalIndex}, 'pet')" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
+                                        <button class="del-btn" onclick="deleteExtraPet(${globalIndex})">X Deletar</button>
+                                    </div>
+                                </div>
+                                <hr style="margin:5px 0; border:1px solid var(--win-border-dark);">
+                                
+                                <div style="margin-top:8px; display:grid; gap:8px; grid-template-columns: repeat(2, minmax(0, 1fr));">
+                                    <div class="status-block">NOME: ${extraInputBind('pet', globalIndex, 'root', 'nome', false)}</div>
+                                    <div class="status-block">HP: ${extraInputBind('pet', globalIndex, 'resumo', 'hp')} / ${extraInputBind('pet', globalIndex, 'resumo', 'hpMax')}</div>
+                                    <div class="status-block">ATK: ${extraInputBind('pet', globalIndex, 'resumo', 'atk')}</div>
+                                    <div class="status-block">DEF: ${extraInputBind('pet', globalIndex, 'resumo', 'def')}</div>
+                                    <div class="status-block">IQ: ${extraInputBind('pet', globalIndex, 'resumo', 'iq')}</div>
+                                    <div class="status-block">AGI: ${extraInputBind('pet', globalIndex, 'resumo', 'agi')}</div>
+                                </div>
+                                
+                                <div style="margin-top:10px; font-weight:bold; font-size:16px;">INVENTÁRIO:</div>
+                                <div class="inventory-grid" style="margin-top:5px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                                    <div class="inventory-block">CABEÇA: ${extraInputBind('pet', globalIndex, 'inv', 'cabeca', false)}</div>
+                                    <div class="inventory-block">MÃO E.: ${extraInputBind('pet', globalIndex, 'inv', 'maoe', false)}</div>
+                                    <div class="inventory-block">TORSO: ${extraInputBind('pet', globalIndex, 'inv', 'torso', false)}</div>
+                                    <div class="inventory-block">MÃO D.: ${extraInputBind('pet', globalIndex, 'inv', 'maod', false)}</div>
+                                    <div class="inventory-block">PERNAS: ${extraInputBind('pet', globalIndex, 'inv', 'pernas', false)}</div>
+                                </div>
+                                <div class="inventory-block" style="margin-top:5px;">DONO: ${extraInputBind('pet', globalIndex, 'root', 'dono', false)}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    if (petsForOwner.length === 0) content += `<p style="margin-top:10px;">Nenhum pet cadastrado para este dono.</p>`;
+                }
+            } else if (activeExtraTab === 'inimigos') {
+                content += `
+                    <div class="flex-row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <button onclick="addExtraEnemy()">+ ADICIONAR INIMIGO</button>
+                        <button onclick="exportExtraEntity('enemy')">EXPORTAR</button>
+                        <button onclick="importExtraEntity('enemy')">IMPORTAR</button>
+                    </div>
+                `;
+                content += (appData.extraEnemies || []).map((enemy, i) => `
+                    <div class="enemy-card">
+                        <div class="flex-row" style="justify-content:space-between; align-items:center;">
+                            <div class="${enemy.classFont || 'char-Custom'}" style="color:${enemy.color || '#ff4d4d'}; font-size:24px; font-weight:bold;">${enemy.nome || 'Inimigo'}</div>
+                            <div class="flex-row" style="gap:6px;">
+                                <button class="btn btn-small" onclick="openEditChar(${i}, 'enemy')" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
+                                <button class="btn btn-small" onclick="duplicateExtraEnemy(${i})" style="font-size:11px; padding:2px 5px;">Duplicar</button>
+                                <button class="del-btn" onclick="deleteExtraEnemy(${i})">X Deletar</button>
+                            </div>
+                        </div>
+                        <hr style="margin:5px 0; border:1px solid #4a0000;">
+                        
+                        <!-- Stats -->
+                        <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <div style="flex:1 1 220px; display:grid; gap:8px;">
+                                <div class="status-block"><div class="flex-row"><strong>HP:</strong> ${extraInputBind('enemy', i, 'resumo', 'hp')} / ${extraInputBind('enemy', i, 'resumo', 'hpMax')}</div></div>
+                                <div class="status-block"><div class="flex-row"><strong>STA:</strong> ${extraInputBind('enemy', i, 'resumo', 'sta')} / ${extraInputBind('enemy', i, 'resumo', 'staMax')}</div></div>
+                            </div>
+                            <div style="flex:1 1 320px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px;">
+                                <div class="status-block"><div class="flex-row">ATK: ${extraInputBind('enemy', i, 'resumo', 'atk')} <button class="dice" onclick="rollExtraStats('enemy', ${i}, 'atk')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">IQ: ${extraInputBind('enemy', i, 'resumo', 'iq')} <button class="dice" onclick="rollExtraStats('enemy', ${i}, 'iq')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">DEF: ${extraInputBind('enemy', i, 'resumo', 'def')} <button class="dice" onclick="rollExtraStats('enemy', ${i}, 'def')">🎲</button></div></div>
+                                <div class="status-block"><div class="flex-row">AGI: ${extraInputBind('enemy', i, 'resumo', 'agi')} <button class="dice" onclick="rollExtraStats('enemy', ${i}, 'agi')">🎲</button></div></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Inventory -->
+                        <div style="margin-top:10px; font-weight:bold; font-size:16px;">INVENTÁRIO:</div>
+                        <div class="inventory-grid" style="margin-top:5px;">
+                            <div class="inventory-block">CABEÇA: ${extraInputBind('enemy', i, 'inv', 'cabeca', false)}</div>
+                            <div class="inventory-block">MÃO E.: ${extraInputBind('enemy', i, 'inv', 'maoe', false)}</div>
+                            <div class="inventory-block">TORSO: ${extraInputBind('enemy', i, 'inv', 'torso', false)}</div>
+                            <div class="inventory-block">MÃO D.: ${extraInputBind('enemy', i, 'inv', 'maod', false)}</div>
+                            <div class="inventory-block">PERNAS: ${extraInputBind('enemy', i, 'inv', 'pernas', false)}</div>
+                            <div class="inventory-block">PESO: ${extraInputBind('enemy', i, 'inv', 'peso')}</div>
+                        </div>
+                        <div class="inventory-block" style="margin-top:5px;">ITENS: ${extraInputBind('enemy', i, 'inv', 'itens', false, true)}</div>
+                        
+                        <!-- Extra fields for enemy -->
+                        <div class="inventory-block" style="margin-top:5px;">OBS.: ${extraInputBind('enemy', i, 'root', 'obs', false, true)}</div>
+                    </div>
+                `).join('');
+            } else if (activeExtraTab === 'lojas') {
+                content += `<div class="flex-row" style="margin-bottom:10px;"><button onclick="addExtraShop()">+ ADICIONAR ITEM NA LOJA</button></div>`;
+                content += (appData.shops || []).map((shop, i) => `
+                    <div class="shop-item-card">
+                        <div class="flex-row" style="justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong>${shop.nome || 'Item'}</strong>
+                            <button class="del-btn" onclick="deleteExtraShop(${i})">X</button>
+                        </div>
+                        <div class="status-grid">
+                            <div class="status-block">Nome do Item: <input value="${shop.nome || ''}" oninput="updateExtraShop(${i}, 'nome', this.value)"></div>
+                            <div class="status-block" style="color:green;">Compra: <input class="num" value="${shop.compra || ''}" oninput="updateExtraShop(${i}, 'compra', this.value)"></div>
+                            <div class="status-block" style="color:red;">Venda: <input class="num" value="${shop.venda || ''}" oninput="updateExtraShop(${i}, 'venda', this.value)"></div>
+                        </div>
+                        <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+                            <label style="flex:1; min-width:180px;">
+                                Personagem:
+                                <select id="shop-char-${i}" style="width:100%;" onchange="updateShopMoneyDisplay(${i})">
+                                    ${(appData.snapshots[activeChap] || []).map((c, idx) => `<option value="${idx}">${c.nome}</option>`).join('')}
+                                </select>
+                            </label>
+                            <div id="shop-money-display-${i}" class="status-block" style="flex:1; min-width:120px; text-align:center; background:#fff; border:1px solid var(--win-border-dark); padding:6px; font-weight:bold; color:green;">
+                                Dinheiro: $0,00
+                            </div>
+                            <button class="btn btn-small" onclick="transactShop(${i}, 'buy')">COMPRAR</button>
+                            <button class="btn btn-small" onclick="transactShop(${i}, 'sell')">VENDER</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (activeExtraTab === 'visualizacao') {
+                content += `
+                    <div class="extra-card">
+                        <p style="margin-bottom:8px;">Selecione um arquivo para visualizar diretamente:</p>
+                        <input type="file" accept=".txt,.doc,.docx,.png,.jpg,.jpeg,.pdf" onchange="loadExtraViewer(this.files[0])" style="width:100%; margin-bottom:10px;">
+                        <div id="viewer-output" style="border:2px inset var(--win-border-dark); background:#fff; min-height:400px; padding:10px; overflow:auto;"></div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = content;
+            
+            // Initialize money display for all shops after rendering
+            if (activeExtraTab === 'lojas') {
+                (appData.shops || []).forEach((_, i) => {
+                    updateShopMoneyDisplay(i);
+                });
+            }
+        }
+
+        function exportExtraEntity(type) {
+            const list = type === 'friend' ? appData.extraFriends : appData.extraEnemies;
+            const selectedIndex = prompt(`Digite o índice do ${type === 'friend' ? 'amigo' : 'inimigo'} para exportar (começando em 0):`);
+            const index = Number(selectedIndex);
+            if (!Number.isInteger(index) || index < 0 || !list || !list[index]) {
+                alert('Índice inválido.');
+                return;
+            }
+            const obj = JSON.stringify(list[index], null, 2);
+            const blob = new Blob([obj], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type === 'friend' ? 'amigo' : 'inimigo'}-${index}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function importExtraEntity(type) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json,.json';
+            input.onchange = (event) => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        const list = type === 'friend' ? appData.extraFriends : appData.extraEnemies;
+                        const normalized = normalizeExtraList([parsed], type === 'friend' ? 'Amigo' : 'Inimigo')[0];
+                        if (!normalized || !normalized.nome) throw new Error('Objeto inválido');
+                        list.push(normalized);
+                        saveData();
+                        renderTab();
+                        alert('Objeto importado com sucesso.');
+                    } catch (err) {
+                        alert('Não foi possível importar este objeto.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function addExtraFriend() {
+            document.getElementById('new-friend-name').value = '';
+            document.getElementById('add-friend-modal').classList.remove('hidden');
+        }
+
+        function confirmAddFriend() {
+            let nome = document.getElementById('new-friend-name').value;
+            let cor = document.getElementById('new-friend-color').value;
+            let font = document.getElementById('new-friend-font').value;
+
+            if (nome.trim() !== "") {
+                appData.extraFriends = appData.extraFriends || [];
+                appData.extraFriends.push({
+                    id: nome + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    nome: nome, classFont: font, color: cor,
+                    resumo: { hp: 100, hpMax: 100, sta: 50, staMax: 50, atk: 10, def: 10, agi: 10, iq: 100, extraAtk: 0, extraDef: 0 },
+                    status: { cond: '', neu: 100, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                    inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: '', itens: '', peso: 0, amizade: '', dinheiro: 0 },
+                    skills: { s: 0, o: 0, c: 0, p: 0, nat: '', apr: '', apd: '' }
+                });
+                saveData(); renderTab(); document.getElementById('add-friend-modal').classList.add('hidden');
+                document.getElementById('new-friend-name').value = '';
+            }
+        }
+
+        function deleteExtraFriend(index) {
+            if (confirm("Deletar Amigo?")) {
+                appData.extraFriends.splice(index, 1);
+                saveData();
+                renderTab();
+            }
+        }
+
+        function addExtraEnemy() {
+            document.getElementById('new-enemy-name').value = '';
+            document.getElementById('add-enemy-modal').classList.remove('hidden');
+        }
+
+        function confirmAddEnemy() {
+            let nome = document.getElementById('new-enemy-name').value;
+            let cor = document.getElementById('new-enemy-color').value;
+            let font = document.getElementById('new-enemy-font').value;
+
+            if (nome.trim() !== "") {
+                appData.extraEnemies = appData.extraEnemies || [];
+                appData.extraEnemies.push({
+                    id: nome + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    nome: nome, classFont: font, color: cor,
+                    resumo: { hp: 100, hpMax: 100, sta: 50, staMax: 50, atk: 10, def: 10, agi: 10, iq: 100, extraAtk: 0, extraDef: 0 },
+                    status: { cond: '', neu: 100, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                    inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: '', itens: '', peso: 0, amizade: '', dinheiro: 0 },
+                    skills: { s: 0, o: 0, c: 0, p: 0, nat: '', apr: '', apd: '' },
+                    obs: '',
+                    visible: false
+                });
+                saveData(); renderTab(); document.getElementById('add-enemy-modal').classList.add('hidden');
+                document.getElementById('new-enemy-name').value = '';
+            }
+        }
+
+        function duplicateExtraEnemy(index) {
+            const clone = JSON.parse(JSON.stringify(appData.extraEnemies[index]));
+            clone.nome = `${clone.nome} (Cópia)`;
+            appData.extraEnemies.splice(index + 1, 0, clone);
+            saveData();
+            renderTab();
+        }
+
+        function deleteExtraEnemy(index) {
+            if (confirm("Deletar Inimigo?")) {
+                appData.extraEnemies.splice(index, 1);
+                saveData();
+                renderTab();
+            }
+        }
+
+        function setActivePetOwner(value) {
+            activePetOwner = value;
+            saveUiState();
+        }
+
+        function addExtraPet() {
+            const ownerSelect = document.getElementById('new-pet-owner');
+            if (ownerSelect) {
+                ownerSelect.innerHTML = `
+                    <option value="">Nenhum</option>
+                    ${(appData.snapshots[activeChap] || []).map((c, i) => `<option value="${i}" ${String(activePetOwner) === String(i) ? 'selected' : ''}>${c.nome}</option>`).join('')}
+                `;
+                if (activePetOwner) ownerSelect.value = activePetOwner;
+            }
+            document.getElementById('new-pet-name').value = '';
+            document.getElementById('add-pet-modal').classList.remove('hidden');
+        }
+
+        function confirmAddPet() {
+            let nome = document.getElementById('new-pet-name').value;
+            let cor = document.getElementById('new-pet-color').value;
+            let font = document.getElementById('new-pet-font').value;
+            let dono = document.getElementById('new-pet-owner') ? document.getElementById('new-pet-owner').value : '';
+
+            if (nome.trim() !== "") {
+                appData.extraPets = appData.extraPets || [];
+                appData.extraPets.push({
+                    id: nome + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    nome: nome, classFont: font, color: cor,
+                    resumo: { hp: 100, hpMax: 100, atk: 10, def: 10, agi: 10, iq: 100 },
+                    inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: '' },
+                    dono: dono || activePetOwner || ''
+                });
+                saveData(); renderTab(); document.getElementById('add-pet-modal').classList.add('hidden');
+                document.getElementById('new-pet-name').value = '';
+            }
+        }
+
+        function deleteExtraPet(index) {
+            if (confirm("Deletar Pet?")) {
+                appData.extraPets.splice(index, 1);
+                saveData();
+                renderTab();
+            }
+        }
+
+        function openEditChar(index, type = 'char') {
+            let c;
+            if (type === 'char') {
+                c = appData.snapshots[activeChap][index];
+            } else if (type === 'friend') {
+                c = appData.extraFriends[index];
+            } else if (type === 'enemy') {
+                c = appData.extraEnemies[index];
+            } else if (type === 'pet') {
+                c = appData.extraPets[index];
+            }
+            document.getElementById('edit-char-type').value = type;
+            document.getElementById('edit-char-index').value = index;
+            document.getElementById('edit-char-name').value = c.nome;
+            document.getElementById('edit-char-color').value = c.color || '#000000';
+            document.getElementById('edit-char-font').value = c.classFont || 'char-Custom';
+
+            const titleSpan = document.querySelector('#edit-char-modal .title-bar span');
+            if (titleSpan) {
+                if (type === 'char') titleSpan.innerText = 'EDITAR EMPREGADO';
+                else if (type === 'friend') titleSpan.innerText = 'EDITAR AMIGO';
+                else if (type === 'enemy') titleSpan.innerText = 'EDITAR INIMIGO';
+                else if (type === 'pet') titleSpan.innerText = 'EDITAR PET';
+            }
+
+            document.getElementById('edit-char-modal').classList.remove('hidden');
+        }
+
+        function addExtraShop() {
+            appData.shops = appData.shops || [];
+            appData.shops.push({ nome: '', compra: 0, venda: 0 });
+            saveData();
+            renderTab();
+        }
+
+        function updateExtraShop(index, field, value) {
+            let val = value;
+            if (!isNaN(val) && val !== '') val = Number(val);
+            appData.shops[index][field] = val;
+            saveData();
+        }
+
+        function deleteExtraShop(index) {
+            if (confirm("Remover item da loja?")) {
+                appData.shops.splice(index, 1);
+                saveData();
+                renderTab();
+            }
+        }
+
+        function updateShopMoneyDisplay(shopIdx) {
+            const select = document.getElementById(`shop-char-${shopIdx}`);
+            const display = document.getElementById(`shop-money-display-${shopIdx}`);
+            if (!select || !display) return;
+            
+            const rawVal = select.value;
+            let charIdx = parseInt(rawVal, 10);
+            if (isNaN(charIdx)) charIdx = select.selectedIndex >= 0 ? select.selectedIndex : 0;
+            
+            const chars = appData.snapshots[activeChap] || [];
+            const char = chars[charIdx];
+            
+            if (char) {
+                const money = Number(char.inv.dinheiro) || 0;
+                display.textContent = `Dinheiro: $${formatMoneyDisplay(money)}`;
+            }
+        }
+
+        function transactShop(shopIdx, action) {
+            const select = document.getElementById(`shop-char-${shopIdx}`);
+            if (!select) return;
+            // Robustly parse selected character index; fallback to first available char
+            const rawVal = select.value;
+            let charIdx = parseInt(rawVal, 10);
+            if (isNaN(charIdx)) charIdx = select.selectedIndex >= 0 ? select.selectedIndex : 0;
+            const chars = appData.snapshots[activeChap] || [];
+            const char = chars[charIdx];
+            const item = appData.shops[shopIdx];
+
+            if (!char || !item) return;
+
+            if (action === 'buy') {
+                const currentMoney = Number(char.inv.dinheiro) || 0;
+                const price = Number(item.compra) || 0;
+                if (currentMoney >= price) {
+                    char.inv.dinheiro = currentMoney - price;
+                    const currentItems = (char.inv.itens || "").trim();
+                    char.inv.itens = currentItems ? `${currentItems}, ${item.nome}` : item.nome;
+                    logMsg(`${char.nome} comprou [${item.nome}] por $${formatMoneyDisplay(price)}.`);
+                    saveData();
+                    updateShopMoneyDisplay(shopIdx);
+                } else {
+                    alert(`${char.nome} não tem dinheiro suficiente para comprar ${item.nome}!`);
+                    return;
+                }
+            } else if (action === 'sell') {
+                const inventory = (char.inv.itens || "").split(',').map(i => i.trim()).filter(i => i);
+                const itemIndex = inventory.indexOf(item.nome);
+                if (itemIndex > -1) {
+                    inventory.splice(itemIndex, 1);
+                    char.inv.itens = inventory.join(', ');
+                    const sale = Number(item.venda) || 0;
+                    char.inv.dinheiro = (Number(char.inv.dinheiro) || 0) + sale;
+                    logMsg(`${char.nome} vendeu [${item.nome}] por $${formatMoneyDisplay(sale)}.`);
+                    saveData();
+                    updateShopMoneyDisplay(shopIdx);
+                } else {
+                    alert(`${char.nome} não possui [${item.nome}] no inventário para vender!`);
+                    return;
+                }
+            }
+        }
+
+        function loadExtraViewer(file) {
+            if (!file) return;
+            const output = document.getElementById('viewer-output');
+            if (!output) return;
+            const url = URL.createObjectURL(file);
+            const type = file.type || '';
+            const name = file.name || 'arquivo';
+
+            if (type.startsWith('image/')) {
+                output.innerHTML = `<img src="${url}" style="max-width:100%; display:block; margin:auto;">`;
+            } else if (type === 'application/pdf' || name.toLowerCase().endsWith('.pdf')) {
+                output.innerHTML = `<iframe src="${url}" style="width:100%; height:500px; border:none;"></iframe>`;
+            } else if (type.includes('word') || name.toLowerCase().endsWith('.docx') || name.toLowerCase().endsWith('.doc')) {
+                output.innerHTML = `<div style="text-align:center;"><p>Arquivos DOCX não renderizam nativamente na aba.</p><br><a href="${url}" download="${name}" class="btn">Baixar Arquivo para o Computador</a></div>`;
+            } else if (type.startsWith('text/') || name.toLowerCase().endsWith('.txt') || name.toLowerCase().endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    output.innerHTML = `<textarea readonly style="width:100%; height:450px; background:#fff; color:#000; font-family:var(--font-sys); border:none; padding:10px;">${e.target.result}</textarea>`;
+                };
+                reader.readAsText(file);
+            } else {
+                output.innerHTML = `<iframe src="${url}" style="width:100%; height:500px; border:none; background:#fff;"></iframe>`;
+            }
+        }
+
+        // =========================================================
+        // FUNÇÕES DE AÇÃO E LÓGICA
+        // =========================================================
+        function rollStats(charIndex, type) {
+            const c = appData.snapshots[activeChap][charIndex];
+            const name = c.nome;
+            let result = 0, msg = "";
+
+            if (type === 'atk') {
+                let d20 = Math.floor(Math.random() * 20) + 1;
+                const extraAtk = Number(c.resumo.extraAtk) || 0;
+                result = c.resumo.atk + extraAtk + d20;
+                msg = `${name} [ATK]: D20(${d20}) + ATK(${c.resumo.atk}${extraAtk>0?'+'+extraAtk:''}) = DANOA: ${result}`;
+                if (d20 === 20) msg += " (HAZARD CRÍTICO!)";
+                else if (d20 > 18) msg += " (HAZARD!)";
+            } else if (type === 'def') {
+                // Defesa base para uso tático (se houver sorte aplica manual)
+                const extraDef = Number(c.resumo.extraDef) || 0;
+                result = c.resumo.def + extraDef;
+                msg = `${name} [DEF]: ${result} (base ${c.resumo.def}${extraDef>0?'+'+extraDef:''}) Pronta para aparar.`;
+            } else if (type === 'iq') {
+                // Apply fractional IQ rule: X = (IQ - 100) / 30; success if d6 <= 3 + X
+                const iqVal = Number(c.resumo.iq) || 0;
+                const X = (iqVal - 100) / 30;
+                const lim = 3 + X;
+                let d6 = Math.floor(Math.random() * 6) + 1;
+                msg = `${name} [IQ]: D6(${d6}) vs Alvo(${lim.toFixed(2)}). Result: ${d6 <= lim ? 'SUCESSO' : 'FALHA'}`;
+            } else if (type === 'agi') {
+                let d20 = Math.floor(Math.random() * 20) + 1;
+                msg = `${name} [AGI]: D20(${d20}) vs AGI(${c.resumo.agi}). Result: ${d20 <= c.resumo.agi ? 'SUCESSO' : 'FALHA'}`;
+            }
+            showLog(); logMsg(msg);
+        }
+
+        function executeCombat() {
+            const targetValue = document.getElementById('combat-target').value;
+            const type = document.getElementById('combat-type').value;
+            const val = parseFloat(document.getElementById('combat-val').value) || 0;
+            let c;
+            let isPlayableChar = false;
+
+            if (targetValue.startsWith('char:')) {
+                const idx = Number(targetValue.split(':')[1]);
+                c = appData.snapshots[activeChap][idx];
+                isPlayableChar = true;
+            } else if (targetValue.startsWith('pet:')) {
+                const idx = Number(targetValue.split(':')[1]);
+                c = appData.extraPets[idx];
+            } else if (targetValue.startsWith('friend:')) {
+                const idx = Number(targetValue.split(':')[1]);
+                c = appData.extraFriends[idx];
+            } else if (targetValue.startsWith('enemy:')) {
+                const idx = Number(targetValue.split(':')[1]);
+                c = appData.extraEnemies[idx];
+            }
+
+            if (!c) return alert('Selecione um alvo válido.');
+            if (val <= 0) return alert("Insira um valor válido.");
+
+            let msg = "";
+            let amount = 0;
+
+            if (type === 'DANO_ATK') {
+                const totalDef = (Number(c.resumo.def) || 0) + (Number(c.resumo.extraDef) || 0);
+                amount = Math.round(Math.max(0, val - totalDef));
+                c.resumo.hp -= amount;
+                msg = `${c.nome} recebeu ${amount} DANO (Val:${val} - Def:${totalDef}). HP: ${c.resumo.hp}`;
+                if (isPlayableChar && c.resumo.hp <= 0) playSoundEffect('monitorbeep');
+            } else if (type === 'DANO_NEU') {
+                amount = Math.round(val);
+                c.status.neu = Math.max(0, c.status.neu - amount);
+                msg = `${c.nome} sofreu DANO MENTAL. NEU: ${c.status.neu}`;
+            } else if (type === 'HAZARD') {
+                amount = Math.round(val);
+                c.resumo.hp -= amount;
+                msg = `${c.nome} sofreu HAZARD (Ignorou DEF). HP: ${c.resumo.hp}`;
+                if (isPlayableChar && c.resumo.hp <= 0) playSoundEffect('monitorbeep');
+            } else if (type === 'HAZARD_CRIT') {
+                amount = Math.round(val * 1.5);
+                c.resumo.hp -= amount;
+                msg = `${c.nome} sofreu HAZARD CRÍTICO! Dano(${amount}). HP: ${c.resumo.hp}`;
+                playSoundEffect('snd_rudebuster_swing');
+                if (isPlayableChar && c.resumo.hp <= 0) playSoundEffect('monitorbeep');
+            } else if (type === 'CURA_HP') {
+                amount = Math.round(val);
+                c.resumo.hp = Math.min(c.resumo.hpMax, c.resumo.hp + amount);
+                msg = `${c.nome} CUROU ${amount} de HP. Atual: ${c.resumo.hp}`;
+            } else if (type === 'CURA_STA') {
+                amount = Math.round(val);
+                c.resumo.sta = Math.min(c.resumo.staMax, c.resumo.sta + amount);
+                msg = `${c.nome} RECUPEROU ${amount} de STA.`;
+            } else if (type === 'CURA_NEU') {
+                amount = Math.round(val);
+                c.status.neu = Math.min(c.status.neuMax, c.status.neu + amount);
+                msg = `${c.nome} RECUPEROU ${amount} de NEU.`;
+            }
+
+            logMsg(msg);
+            saveData();
+            document.getElementById('combat-val').value = '';
+
+            // Só re-renderiza se não estiver na aba resumos etc onde quebra o foco (ou renderiza e perdemos foco? melhor apenas renderTab)
+            // Para não perder foco no input caso alguem esteja digitando e tome dano via script, o botão tira o foco.
+            renderTab();
+        }
+
+        // Skills (Comprar e vai para APR)
+        function buySkill(charIndex, skillName, reqS, reqO, reqC, reqP) {
+            let c = appData.snapshots[activeChap][charIndex];
+            if (skillName === 'NERD' && c.skills.c !== 0) {
+                return alert('NERD só pode ser comprada quando C estiver exatamente em 0.');
+            }
+            if (skillName === "You Can't See Me!" && c.skills.c !== -8000) {
+                return alert('You Can\'t See Me só pode ser comprada quando C estiver exatamente em -8000.');
+            }
+
+            if (c.skills.s < reqS || c.skills.o < reqO || c.skills.c < reqC || c.skills.p < reqP) {
+                return alert('XP insuficiente para comprar habilidade.');
+            }
+
+            // Busca os slots da tabela APR
+            let arr = (c.skills.apr || '').split('\n');
+            while(arr.length < 10) arr.push(''); // Garante os 10 slots virtuais
+            
+            let placed = false;
+            for(let k = 0; k < 10; k++) {
+                if(arr[k].trim() === '') {
+                    arr[k] = skillName.toUpperCase();
+                    placed = true;
+                    break;
+                }
+            }
+
+            if(!placed) {
+                return alert('Sem slots disponíveis em APR (limite de 10 linhas). Remova uma habilidade manualmente antes de comprar.');
+            }
+
+            // Desconta os XPs
+            c.skills.s -= reqS;
+            c.skills.o -= reqO;
+            if (skillName === "You Can't See Me!") {
+                c.skills.c = 0;
+            } else {
+                c.skills.c -= reqC;
+            }
+            c.skills.p -= reqP;
+
+            // Salva de volta a string convertida e unida
+            c.skills.apr = arr.join('\n');
+            saveData(); renderTab(); logMsg(`${c.nome} comprou ${skillName}.`);
+        }
+
+        // Ensinar Habilidade (Desconto 25%)
+        let teachSourceIdx = null;
+        let teachSkillData = null;
+
+        function openTeachModal(sourceIdx) {
+            const c = appData.snapshots[activeChap][sourceIdx];
+            const natArray = c.skills.nat.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (natArray.length === 0) return alert(`${c.nome} não tem habilidades NAT para ensinar.`);
+
+            let chosen = prompt(`Qual habilidade de NAT ${c.nome} vai ensinar?\nLista: ${natArray.join(', ')}`);
+            if (!chosen) return;
+
+            // Procura custo original na loja
+            let skObj = null;
+            Object.values(skillShop).forEach(cat => {
+                const found = cat.find(s => s.nome.toLowerCase() === chosen.toLowerCase());
+                if (found) skObj = found;
+            });
+
+            if (!skObj) return alert("Habilidade não encontrada na loja padrão para calcular o custo. Ensine manualmente.");
+
+            teachSourceIdx = sourceIdx;
+            // 25% desconto = 75% custo
+            teachSkillData = {
+                nome: skObj.nome,
+                req: { s: Math.round(skObj.req.s * 0.75), o: Math.round(skObj.req.o * 0.75), c: Math.round(skObj.req.c * 0.75), p: Math.round(skObj.req.p * 0.75) }
+            };
+
+            document.getElementById('teach-skill-name').innerText = teachSkillData.nome;
+            document.getElementById('teach-skill-cost').innerText = `S:${teachSkillData.req.s} O:${teachSkillData.req.o} C:${teachSkillData.req.c} P:${teachSkillData.req.p}`.replace(/[A-Z]:0/g, '').trim();
+
+            const targetSelect = document.getElementById('teach-target');
+            targetSelect.innerHTML = appData.snapshots[activeChap]
+                .map((char, i) => i !== sourceIdx ? `<option value="${i}">${char.nome}</option>` : '')
+                .join('');
+
+            document.getElementById('teach-skill-modal').classList.remove('hidden');
+        }
+
+        function executeTeachSkill() {
+            const targetIdx = parseInt(document.getElementById('teach-target').value);
+            const target = appData.snapshots[activeChap][targetIdx];
+            const r = teachSkillData.req;
+
+            if (target.skills.s >= r.s && target.skills.o >= r.o && target.skills.c >= r.c && target.skills.p >= r.p) {
+                
+                // Busca os slots da tabela APR do Alvo
+                let arr = (target.skills.apr || '').split('\n');
+                while(arr.length < 10) arr.push('');
+                
+                let placed = false;
+                for(let k = 0; k < 10; k++) {
+                    if(arr[k].trim() === '') {
+                        arr[k] = teachSkillData.nome.toUpperCase();
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if(!placed) {
+                    return alert(`${target.nome} não possui slots disponíveis em APR (limite de 10).`);
+                }
+
+                target.skills.s -= r.s; target.skills.o -= r.o; target.skills.c -= r.c; target.skills.p -= r.p;
+                target.skills.apr = arr.join('\n');
+
+                logMsg(`${appData.snapshots[activeChap][teachSourceIdx].nome} ensinou ${teachSkillData.nome} para ${target.nome}!`);
+                saveData(); renderTab();
+                document.getElementById('teach-skill-modal').classList.add('hidden');
+            } else {
+                alert(`${target.nome} não possui XPs suficientes!`);
+            }
+        }
+
+        // =========================================================
+        // CRUD BÁSICO E CUSTOM CHAR
+        // =========================================================
+        function confirmAddChar() {
+            let nome = document.getElementById('new-char-name').value;
+            let cor = document.getElementById('new-char-color').value;
+            let font = document.getElementById('new-char-font').value;
+
+            if (nome.trim() !== "") {
+                appData.snapshots[activeChap].push({
+                    id: nome, nome: nome, classFont: font, color: cor,
+                    resumo: { hp: 100, hpMax: 100, sta: 50, staMax: 50, atk: 10, def: 10, agi: 10, iq: 100 },
+                    status: { cond: '', neu: 100, neuMax: 100, o2: 100, o2Max: 100, temp: 0 },
+                    inv: { cabeca: '', torso: '', pernas: '', maoe: '', maod: '', itens: '', peso: 0, amizade: '', dinheiro: 0 },
+                    skills: { s: 0, o: 0, c: 0, p: 0, nat: '', apr: '', apd: '' }
+                });
+                saveData(); renderTab(); document.getElementById('add-char-modal').classList.add('hidden');
+                document.getElementById('new-char-name').value = '';
+            }
+        }
+
+        function delCharacter(index) {
+            if (confirm("Erradicar Cobaia/NPC?")) {
+                appData.snapshots[activeChap].splice(index, 1);
+                saveData(); renderTab();
+            }
+        }
+
+        function openEditChar(index, type = 'char') {
+            let c;
+            if (type === 'char') {
+                c = appData.snapshots[activeChap][index];
+            } else if (type === 'friend') {
+                c = appData.extraFriends[index];
+            } else if (type === 'enemy') {
+                c = appData.extraEnemies[index];
+            }
+            document.getElementById('edit-char-type').value = type;
+            document.getElementById('edit-char-index').value = index;
+            document.getElementById('edit-char-name').value = c.nome;
+            document.getElementById('edit-char-color').value = c.color || '#000000';
+            document.getElementById('edit-char-font').value = c.classFont || 'char-Custom';
+
+            const titleSpan = document.querySelector('#edit-char-modal .title-bar span');
+            if (titleSpan) {
+                if (type === 'char') titleSpan.innerText = 'EDITAR EMPREGADO';
+                else if (type === 'friend') titleSpan.innerText = 'EDITAR AMIGO';
+                else if (type === 'enemy') titleSpan.innerText = 'EDITAR INIMIGO';
+            }
+
+            document.getElementById('edit-char-modal').classList.remove('hidden');
+        }
+
+        function confirmEditChar() {
+            const index = document.getElementById('edit-char-index').value;
+            const type = document.getElementById('edit-char-type').value || 'char';
+            let c;
+            if (type === 'char') {
+                c = appData.snapshots[activeChap][index];
+            } else if (type === 'friend') {
+                c = appData.extraFriends[index];
+            } else if (type === 'enemy') {
+                c = appData.extraEnemies[index];
+            }
+            c.nome = document.getElementById('edit-char-name').value;
+            c.color = document.getElementById('edit-char-color').value;
+            c.classFont = document.getElementById('edit-char-font').value;
+            saveData(); renderTab(); document.getElementById('edit-char-modal').classList.add('hidden');
+        }
+
+        function addAct() { let n = prompt("Nome do Ato:"); if (n) { appData.acts.push({ id: 'a' + Date.now(), name: n }); saveData(); renderSidebar(); } }
+        function editAct() {
+            if (!activeAct) return alert("Selecione um ato para renomear.");
+            let act = appData.acts.find(a => a.id === activeAct);
+            let n = prompt("Novo nome do Ato:", act.name);
+            if (n) { act.name = n; saveData(); renderSidebar(); }
+        }
+        function delAct() {
+            if (activeAct && confirm("Deletar Ato?")) {
+                const deletedChapterIds = appData.chapters
+                    .filter(c => c.actId === activeAct)
+                    .map(c => c.id);
+                deletedChapterIds.forEach(chapId => delete appData.snapshots[chapId]);
+                appData.acts = appData.acts.filter(a => a.id !== activeAct);
+                appData.chapters = appData.chapters.filter(c => c.actId !== activeAct);
+                activeAct = null;
+                activeChap = null;
+                saveData();
+                saveUiState();
+                renderSidebar();
+                closeMainWindow();
+            }
+        }
+
+        function addChapter() { if (!activeAct) return alert("Selecione ato"); let n = prompt("Capítulo:"); if (n) { appData.chapters.push({ id: 'c' + Date.now(), actId: activeAct, name: n }); saveData(); renderSidebar(); } }
+        function editChapter() {
+            if (!activeChap) return alert("Selecione um capítulo para renomear.");
+            let chap = appData.chapters.find(c => c.id === activeChap);
+            let n = prompt("Novo nome do Capítulo:", chap.name);
+            if (n) { chap.name = n; saveData(); renderSidebar(); }
+        }
+        function delChapter() { if (activeChap && confirm("Deletar Cap?")) { appData.chapters = appData.chapters.filter(c => c.id !== activeChap); delete appData.snapshots[activeChap]; activeChap = null; saveData(); saveUiState(); renderSidebar(); closeMainWindow(); } }
+
+        // =========================================================
+        // MÚSICA (Audio API)
+        // =========================================================
+        function loadMusic(e, category) {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/'));
+            audioCategories[category] = files;
+            currentAudioIndex[category] = 0;
+            const trackEl = document.getElementById(`current-track-${category}`);
+            if (trackEl) {
+                trackEl.innerText = files.length > 0 ? files[0].name : 'Nenhuma música carregada';
+            }
+            renderTab();
+        }
+        function setAudioVolume(category, value) {
+            const volume = Math.max(0, Math.min(1, Number(value) || 0));
+            audioVolumes[category] = volume;
+            const player = audioPlayers[category];
+            if (player) player.volume = volume;
+        }
+
+        function playCurrentMusic(category) {
+            const currentList = audioCategories[category];
+            if (currentList.length === 0) {
+                const trackEl = document.getElementById(`current-track-${category}`);
+                if (trackEl) trackEl.innerText = 'Nenhuma música carregada';
+                return;
+            }
+            let file = currentList[currentAudioIndex[category]];
+            const player = audioPlayers[category];
+            player.volume = audioVolumes[category] ?? 1;
+            player.src = URL.createObjectURL(file);
+            const trackEl = document.getElementById(`current-track-${category}`);
+            if (trackEl) trackEl.innerText = file.name;
+            player.play();
+        }
+        function pauseCurrentMusic(category) {
+            const player = audioPlayers[category];
+            if (player) {
+                player.pause();
+            }
+        }
+        function clearMusicQueue(category) {
+            audioCategories[category] = [];
+            currentAudioIndex[category] = 0;
+            const player = audioPlayers[category];
+            player.pause();
+            player.src = '';
+            const trackEl = document.getElementById(`current-track-${category}`);
+            if (trackEl) trackEl.innerText = 'Nenhuma música carregada';
+            renderTab();
+        }
+        function nextMusic(category) {
+            const currentList = audioCategories[category];
+            if (currentList.length > 0) {
+                currentAudioIndex[category] = (currentAudioIndex[category] + 1) % currentList.length;
+                updateTrackDisplay(category);
+            }
+        }
+        function prevMusic(category) {
+            const currentList = audioCategories[category];
+            if (currentList.length > 0) {
+                currentAudioIndex[category] = (currentAudioIndex[category] - 1 + currentList.length) % currentList.length;
+                updateTrackDisplay(category);
+            }
+        }
+        function updateTrackDisplay(category) {
+            const currentList = audioCategories[category];
+            const trackEl = document.getElementById(`current-track-${category}`);
+            if (trackEl) {
+                if (currentList.length > 0) {
+                    const file = currentList[currentAudioIndex[category]];
+                    trackEl.innerText = file.name;
+                } else {
+                    trackEl.innerText = 'Nenhuma música carregada';
+                }
+            }
+        }
+        
+        function toggleLoop(category) {
+            loopEnabled[category] = !loopEnabled[category];
+            const btn = document.getElementById(`loop-btn-${category}`);
+            if (btn) {
+                btn.textContent = loopEnabled[category] ? 'LOOP: ON' : 'LOOP: OFF';
+                if (loopEnabled[category]) {
+                    btn.style.borderTop = '2px solid var(--vapor-cyan)';
+                    btn.style.borderLeft = '2px solid var(--vapor-cyan)';
+                    btn.style.borderRight = '2px solid var(--vapor-cyan)';
+                    btn.style.borderBottom = '2px solid var(--vapor-cyan)';
+                } else {
+                    btn.style.borderTop = '';
+                    btn.style.borderLeft = '';
+                    btn.style.borderRight = '';
+                    btn.style.borderBottom = '';
+                }
+            }
+        }
+        
+        function playSoundEffect(soundName) {
+            // Map sound names to their audio element IDs
+            const soundMap = {
+                'snd_rudebuster_swing': 'sfx-snd_rudebuster_swing',
+                'monitorbeep': 'sfx-monitorbeep'
+            };
+            const elId = soundMap[soundName.toLowerCase()];
+            if (!elId) return;
+            try {
+                const audio = document.getElementById(elId);
+                if (audio) {
+                    // Ensure audio is loaded before playing
+                    audio.load();
+                    audio.currentTime = 0;
+                    audio.volume = 1.0;
+                    const playPromise = audio.play();
+                    // Handle autoplay rejection gracefully
+                    if (playPromise !== undefined) {
+                        playPromise.catch(function(err) {
+                            console.warn(`Audio play failed for ${elId}:`, err);
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn(`Não foi possível tocar ${elId}:`, e);
+            }
+        }
+
+        // INIT
+        const validTabs = ['resumo', 'status', 'inventario', 'skill-table', 'skill-path', 'extras', 'salvar'];
+        const validExtraTabs = ['som', 'amigos', 'pets', 'inimigos', 'lojas', 'visualizacao'];
+        
+        if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
+        if (validTabs.includes(savedUiState.activeTab)) activeTab = savedUiState.activeTab;
+        if (validExtraTabs.includes(savedUiState.activeExtraTab)) activeExtraTab = savedUiState.activeExtraTab;
+        
+        // FORÇAR SEMPRE FECHADO NO LOGIN / RECARREGAMENTO:
+        activeChap = null; 
+        
+        renderSidebar();
+        closeMainWindow(); // Garante o fechamento total da tela principal ao carregar a página
+    </script>
+</body>
+</html>
