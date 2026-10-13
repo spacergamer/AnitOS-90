@@ -1330,8 +1330,8 @@
             localStorage.setItem('MGR_DATA', JSON.stringify(appData));
             if (!remoteCampaignId || !remoteCampaignReady) return;
             const snapshot = JSON.stringify(appData);
-            remoteSaveFailed = false;
             remoteSaveQueue = remoteSaveQueue.then(async () => {
+                remoteSaveFailed = false;
                 const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), {
                     method: 'PATCH',
                     credentials: 'same-origin',
