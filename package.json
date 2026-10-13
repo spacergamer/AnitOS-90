@@ -1,11 +1,12 @@
 {
-  "name": "anitos-dice-rooms",
+  "name": "anitos-90",
   "version": "1.0.0",
   "private": true,
-  "description": "Light Fade Dice Rooms multiplayer",
+  "description": "AnitOS '90 — ANITOPEBOARD e salas RGN multiplayer",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --check server.js && node --check auth.js && node scripts/check-inline.js"
   },
   "engines": {
     "node": ">=20"
