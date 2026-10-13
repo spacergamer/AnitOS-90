@@ -4,6 +4,7 @@ const {Server}=require("socket.io");
 const {randomInt,randomBytes}=require("node:crypto");
 const {Pool}=require("pg");
 const path=require("node:path");
+const {initializeAuthSchema,registerAuthRoutes}=require("./auth");
 
 const app=express();
 const server=http.createServer(app);
@@ -19,6 +20,8 @@ const MAX_PLAYERS_PER_ROOM=20;
 const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 let rateChecks=0;
 let persistQueue=Promise.resolve();
+
+registerAuthRoutes(app,express,db);
 
 // Recursos do lobby RGN legado.
 app.use("/img",express.static(path.join(__dirname,"img")));
@@ -70,6 +73,7 @@ function persistState(){
 async function initializePersistence(){
  if(!db){console.warn("[persistence] DATABASE_URL não definido; usando apenas memória.");return;}
  await db.query(`CREATE TABLE IF NOT EXISTS anitos_state(id smallint PRIMARY KEY CHECK(id=1),state jsonb NOT NULL,updated_at timestamptz NOT NULL DEFAULT NOW())`);
+ await initializeAuthSchema(db);
  const result=await db.query("SELECT state FROM anitos_state WHERE id=1");
  const saved=result.rows[0]?.state;
  if(Array.isArray(saved)){
