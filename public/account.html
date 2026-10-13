@@ -198,6 +198,31 @@ function campaignCard(campaign) {
     manage.style.marginTop = "8px";
     manage.addEventListener("click", () => openMasterManager(campaign));
     card.append(manage);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Excluir campanha e fichas";
+    remove.style.marginTop = "8px";
+    remove.addEventListener("click", async () => {
+      const confirmation = window.prompt(
+        "EXCLUSÃO PERMANENTE\nIsso apagará a campanha, os vínculos com jogadores e todas as fichas remotas. O backup local MGR_DATA não será apagado.\n\nDigite exatamente o nome da campanha para confirmar:",
+        ""
+      );
+      if (confirmation !== campaign.title) {
+        if (confirmation !== null) message("campaignMessage", "Exclusão cancelada: o nome não corresponde.", "muted");
+        return;
+      }
+      remove.disabled = true;
+      try {
+        await api("/api/campaigns/" + encodeURIComponent(campaign.id), {method:"DELETE"});
+        message("campaignMessage", "Campanha excluída. O backup local MGR_DATA permanece neste navegador.", "success");
+        await loadCampaigns();
+      } catch (error) {
+        message("campaignMessage", error.message, "error");
+      } finally {
+        remove.disabled = false;
+      }
+    });
+    card.append(remove);
   } else {
     const view = document.createElement("button");
     view.type = "button";
