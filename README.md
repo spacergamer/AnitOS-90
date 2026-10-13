@@ -47,7 +47,7 @@ As sessões RGN desconectadas podem ser recuperadas durante uma janela de 30 seg
 
 ## Estado da integração
 
-**Implementado no código:** login e criação de contas Mestre/Jogador; campanhas persistentes; ANITOPEBOARD carregado por campanha remota e salvo no banco; importação inicial confirmada do `MGR_DATA` local sem apagar o backup; RGN em rota separada; criação/edição/atribuição de fichas pela central; visualização de fichas atribuídas somente para o jogador; sincronização explícita de personagens do capítulo aberto; atualização periódica da visualização do jogador.
+**Implementado no código:** login e criação de contas Mestre/Jogador; campanhas persistentes com exclusão confirmada pelo nome; ANITOPEBOARD carregado por campanha remota e salvo no banco; importação inicial confirmada do `MGR_DATA` local sem apagar o backup; RGN em rota separada; criação/edição/atribuição de fichas pela central; visualização de fichas atribuídas somente para o jogador; sincronização explícita de personagens do capítulo aberto; atualização periódica da visualização do jogador. A exclusão remove a campanha remota, os vínculos e as fichas associadas, mas não apaga o backup local do navegador.
 
 **Validação restante:** confirmar o deploy ativo no Render e executar o fluxo completo com duas contas reais e o Supabase de produção. O acesso direto ao ANITOPEBOARD sem uma campanha agora retorna à central de contas, para evitar abrir o dashboard integrado em modo local/anônimo. O RGN legado continua acessível sem conta, conforme a compatibilidade existente.
 
