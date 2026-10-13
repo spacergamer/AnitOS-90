@@ -28,6 +28,7 @@ button:disabled{opacity:.5;cursor:wait}
 .card{background:#fff;border:2px inset var(--dark);padding:12px;min-width:0}
 .code{font-size:30px;letter-spacing:3px;background:#111;color:var(--cyan);padding:4px 8px;display:inline-block}
 .notice{padding:8px;border:1px solid #777;background:#eee;margin:10px 0}.error{color:#8b0000}.success{color:#005b20}
+.sheet-data{white-space:pre-wrap;overflow-wrap:anywhere;background:#111;color:var(--cyan);padding:12px;max-height:360px;overflow:auto;font:18px 'VT323',monospace}.sheet-card h3{margin:0 0 8px;font-size:26px}
 [hidden]{display:none!important}
 @media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
 </style>
@@ -84,6 +85,10 @@ button:disabled{opacity:.5;cursor:wait}
 <p id="campaignMessage" class="muted">Carregando campanhas…</p>
 <div id="campaignList" class="grid"></div>
 </div>
+</section>
+<section class="window" id="sheetWindow" hidden>
+<div class="bar"><span id="sheetTitle">FICHAS ATRIBUÍDAS</span><button id="closeSheets" type="button">Voltar</button></div>
+<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><div id="sheetList" class="grid"></div></div>
 </section>
 </main>
 <script>
@@ -172,10 +177,58 @@ function campaignCard(campaign) {
     open.textContent = "Abrir campanha no ANITOPEBOARD";
     open.style.marginTop = "12px";
     card.append(open);
+  } else {
+    const view = document.createElement("button");
+    view.type = "button";
+    view.textContent = "Ver minhas fichas";
+    view.style.marginTop = "12px";
+    view.addEventListener("click", () => openAssignedSheets(campaign));
+    card.append(view);
   }
   const id = document.createElement("p"); id.className = "muted"; id.textContent = "ID: " + escapeText(campaign.id);
   card.append(id);
   return card;
+}
+$("closeSheets").addEventListener("click", () => {
+  $("sheetWindow").hidden = true;
+  $("appWindow").hidden = false;
+});
+function renderSheetValue(value) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "string") return value;
+  try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+}
+async function openAssignedSheets(campaign) {
+  $("appWindow").hidden = true;
+  $("sheetWindow").hidden = false;
+  $("sheetTitle").textContent = "FICHAS — " + campaign.title;
+  $("sheetList").replaceChildren();
+  message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
+  try {
+    const result = await api("/api/campaigns/" + encodeURIComponent(campaign.id) + "/characters");
+    $("sheetList").replaceChildren();
+    if (!result.characters.length) {
+      message("sheetMessage", "Nenhuma ficha foi atribuída a você nesta campanha.");
+      return;
+    }
+    message("sheetMessage", result.characters.length + " ficha(s) disponível(is) em modo somente leitura.", "success");
+    for (const character of result.characters) {
+      const card = document.createElement("article");
+      card.className = "card sheet-card";
+      const heading = document.createElement("h3");
+      heading.textContent = character.name || "Personagem sem nome";
+      const campaignLabel = document.createElement("p");
+      campaignLabel.className = "muted";
+      campaignLabel.textContent = "Ficha vinculada à campanha · somente leitura";
+      const data = document.createElement("pre");
+      data.className = "sheet-data";
+      data.textContent = renderSheetValue(character.data);
+      card.append(heading, campaignLabel, data);
+      $("sheetList").append(card);
+    }
+  } catch (error) {
+    message("sheetMessage", error.message, "error");
+  }
 }
 async function loadCampaigns() {
   try {
