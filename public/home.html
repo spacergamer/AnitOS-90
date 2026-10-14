@@ -97,8 +97,6 @@ $("logout").addEventListener("click", async () => {
   currentUser = null;
   $("appWindow").hidden = true;
   window.location.replace("/login.html");
-  $("authForm").reset();
-  setMode("login");
 });
 $("createCampaign").addEventListener("submit", async event => {
   event.preventDefault();
@@ -433,7 +431,6 @@ async function loadCampaigns() {
 }
 async function showApp(user) {
   currentUser = user;
-  $("authWindow").hidden = true;
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: " + user.displayName;
   $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · " + user.email;
@@ -446,8 +443,7 @@ async function showApp(user) {
     const result = await api("/api/auth/me");
     await showApp(result.user);
   } catch {
-    $("appWindow").hidden = true;
-    $("authWindow").hidden = false;
+    window.location.replace("/login.html");
   }
 })();
 </script>
