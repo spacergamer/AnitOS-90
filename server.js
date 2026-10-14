@@ -35,8 +35,12 @@ app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(boardDir,"lightfade.html")
 app.use("/anitopeboard",express.static(boardDir));
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
-app.get("/rgn",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
-app.get("/",(_q,r)=>r.redirect(302,"/account"));
+app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
+app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
+app.get("/board.html",(q,r)=>r.redirect(302,"/anitopeboard/"+q.url.slice("/board.html".length)));
+app.get("/room.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","room.html")));
+app.get("/rgn",(_q,r)=>r.redirect(302,"/room.html"));
+app.get("/",(_q,r)=>r.redirect(302,"/login.html"));
 
 function code(){
  let c;
