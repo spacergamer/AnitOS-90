@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANITOPE RNG — Menu</title>
+<link rel="icon" href="/anitopeboard/img/as.ico">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--win:#c0c0c0;--light:#fff;--dark:#808080;--black:#000;--blue:#000080;--cyan:#05ffa1;--teal:#008080}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--teal),#000033);font-family:'VT323',monospace;font-size:22px;color:#111;padding:24px}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;background:linear-gradient(transparent 50%,rgba(0,0,0,.12) 50%);background-size:100% 4px}
+main{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.window{background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light);padding:4px;margin:0 0 18px}
+.bar{background:linear-gradient(90deg,var(--blue),#1084d0);color:white;padding:4px 8px;font-weight:bold;display:flex;justify-content:space-between;gap:10px}
+.content{padding:18px}
+h1{font-size:38px;margin:0 0 4px}h2{font-size:30px;margin:0 0 10px}p{margin:6px 0}
+small,.muted{color:#444;font-size:19px}
+label{display:block;margin:10px 0 3px}
+input,select{width:100%;font:inherit;padding:5px;border:2px inset var(--dark);background:#fff}
+button,.button{font:inherit;background:var(--win);border-top:2px solid var(--light);border-left:2px solid var(--light);border-right:2px solid var(--black);border-bottom:2px solid var(--black);padding:5px 12px;cursor:pointer;color:#111;text-decoration:none;display:inline-block}
+button:active,.button:active{border:2px inset var(--dark)}
+button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+.tabs{display:flex;gap:5px;margin:12px 0}.tabs button{flex:1}.tabs .active{background:#fff;border-bottom:0;border-top:3px solid var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:#fff;border:2px inset var(--dark);padding:12px;min-width:0}
+.code{font-size:30px;letter-spacing:3px;background:#111;color:var(--cyan);padding:4px 8px;display:inline-block}
+.notice{padding:8px;border:1px solid #777;background:#eee;margin:10px 0}.error{color:#8b0000}.success{color:#005b20}
+.sheet-data{white-space:pre-wrap;overflow-wrap:anywhere;background:#111;color:var(--cyan);padding:12px;max-height:360px;overflow:auto;font:18px 'VT323',monospace}.sheet-card h3{margin:0 0 8px;font-size:26px}
+.sheet-data{max-height:none;white-space:normal}.sheet-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.sheet-field{min-width:0;padding:8px;background:#e5e5e5;border:2px inset #888;overflow-wrap:anywhere}.sheet-field>strong{display:block;color:#333;border-bottom:1px solid #999;margin-bottom:5px}.sheet-value{white-space:pre-wrap;overflow-wrap:anywhere;color:#005b50}.sheet-group{grid-column:1/-1;padding:8px;border:1px solid #888;background:#d4d4d4}.sheet-group-title{font-size:20px;font-weight:bold;margin-bottom:8px}.sheet-empty{color:#555;font-style:italic}
+textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;border:2px inset var(--dark);resize:vertical}.char-json{min-height:180px}
+[hidden]{display:none!important}
+@media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<main>
+<section class="window">
+<div class="bar"><span>ANITOPE SCIENCE — TERMINAL DE ACESSO</span><span>■ ×</span></div>
+<div class="content">
+<h1>ANITOPEBOARD / RGN</h1>
+<p>Uma conta. Campanhas persistentes. Interfaces independentes.</p>
+<p class="muted">A Ciência Salvando Vidas desde 1972.</p>
+</div>
+</section>
+
+<section class="window" id="appWindow" hidden>
+<div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><button id="logout" type="button">Encerrar sessão</button></div>
+<div class="content">
+<p id="roleLabel"></p>
+<div class="grid">
+<form class="card" id="createCampaign" hidden>
+<h2>Nova campanha</h2>
+<label for="campaignTitle">Nome da campanha</label><input id="campaignTitle" maxlength="100" required placeholder="Ex.: Light Fade — Ato I">
+<button type="submit" style="margin-top:10px">Criar campanha</button>
+</form>
+<form class="card" id="joinCampaign" hidden>
+<h2>Entrar em campanha</h2>
+<label for="joinCode">Código do Mestre</label><input id="joinCode" maxlength="8" required placeholder="8 caracteres" autocomplete="off">
+<button type="submit" style="margin-top:10px">Entrar</button>
+</form>
+<div class="card">
+<h2>Atalhos</h2>
+<p><a class="button" href="#campaignList">Selecionar campanha do ANITOPEBOARD</a></p>
+<p><a class="button" href="/room.html">Abrir RGN</a></p>
+<p class="muted">O ANITOPEBOARD abre dentro de uma campanha persistente do Mestre. O RGN continua em uma aba separada. Jogadores não podem abrir o painel completo.</p>
+</div>
+</div>
+<h2 style="margin-top:22px">Minhas campanhas</h2>
+<p id="campaignMessage" class="muted">Carregando campanhas…</p>
+<div id="campaignList" class="grid"></div>
+</div>
+</section>
+<section class="window" id="sheetWindow" hidden>
+<div class="bar"><span id="sheetTitle">FICHAS ATRIBUÍDAS</span><button id="closeSheets" type="button">Voltar</button></div>
+<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><p id="sheetUpdated" class="muted">Atualização automática a cada 15 segundos.</p><div id="sheetList" class="grid"></div></div>
+</section>
+<section class="window" id="masterWindow" hidden>
+<div class="bar"><span id="masterTitle">ADMINISTRAÇÃO DE FICHAS</span><button id="closeMaster" type="button">Voltar</button></div>
+<div class="content">
+<p id="masterMessage" class="muted">Painel do Mestre: crie fichas e atribua cada uma a um jogador da campanha.</p>
+<form class="card" id="createCharacterForm">
+<h2>Nova ficha</h2>
+<label for="newCharacterName">Nome do personagem</label><input id="newCharacterName" maxlength="100" required placeholder="Nome do personagem">
+<label for="newCharacterData">Dados iniciais em JSON</label><textarea id="newCharacterData" class="char-json" spellcheck="false">{}</textarea>
+<button type="submit" style="margin-top:10px">Criar ficha</button>
+</form>
+<h2 style="margin-top:22px">Fichas da campanha</h2><div id="masterCharacterList" class="grid"></div>
+</div>
+</section>
+</main>
+<script>const $ = id => document.getElementById(id);
+$("logout").addEventListener("click", async () => {
+  try { await api("/api/auth/logout", {method:"POST",body:"{}"}); } catch {}
+  currentUser = null;
+  $("appWindow").hidden = true;
+  window.location.replace("/login.html");
+});
+$("createCampaign").addEventListener("submit", async event => {
+  event.preventDefault();
+  try {
+    await api("/api/campaigns", {method:"POST",body:JSON.stringify({title:$("campaignTitle").value})});
+    $("campaignTitle").value = "";
+    await loadCampaigns();
+  } catch (error) { message("campaignMessage", error.message, "error"); }
+});
+$("joinCampaign").addEventListener("submit", async event => {
+  event.preventDefault();
+  try {
+    await api("/api/campaigns/join", {method:"POST",body:JSON.stringify({joinCode:$("joinCode").value})});
+    $("joinCode").value = "";
+    await loadCampaigns();
+    message("campaignMessage", "Você entrou na campanha.", "success");
+  } catch (error) { message("campaignMessage", error.message, "error"); }
+});
+function escapeText(value) { return String(value ?? ""); }
+function campaignCard(campaign) {
+  const card = document.createElement("article");
+  card.className = "card";
+  const title = document.createElement("h2"); title.textContent = campaign.title;
+  const role = document.createElement("p"); role.textContent = campaign.is_owner ? "Você é o Mestre" : "Você participa como Jogador";
+  card.append(title, role);
+  if (campaign.is_owner) {
+    const label = document.createElement("p"); label.textContent = "Código para jogadores:";
+    const code = document.createElement("span"); code.className = "code"; code.textContent = campaign.join_code;
+    card.append(label, code);
+    const open = document.createElement("a");
+    open.href = "/board.html?campaign=" + encodeURIComponent(campaign.id);
+    open.className = "button";
+    open.textContent = "Abrir campanha no ANITOPEBOARD";
+    open.style.marginTop = "12px";
+    card.append(open);
+    const manage = document.createElement("button");
+    manage.type = "button";
+    manage.textContent = "Gerenciar fichas e jogadores";
+    manage.style.marginTop = "8px";
+    manage.addEventListener("click", () => openMasterManager(campaign));
+    card.append(manage);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Excluir campanha e fichas";
+    remove.style.marginTop = "8px";
+    remove.addEventListener("click", async () => {
+      const confirmation = window.prompt(
+        "EXCLUSÃO PERMANENTE\nIsso apagará a campanha, os vínculos com jogadores e todas as fichas remotas. O backup local MGR_DATA não será apagado.\n\nDigite exatamente o nome da campanha para confirmar:",
+        ""
+      );
+      if (confirmation !== campaign.title) {
+        if (confirmation !== null) message("campaignMessage", "Exclusão cancelada: o nome não corresponde.", "muted");
+        return;
+      }
+      remove.disabled = true;
+      try {
+        await api("/api/campaigns/" + encodeURIComponent(campaign.id), {method:"DELETE"});
+        message("campaignMessage", "Campanha excluída. O backup local MGR_DATA permanece neste navegador.", "success");
+        await loadCampaigns();
+      } catch (error) {
+        message("campaignMessage", error.message, "error");
+      } finally {
+        remove.disabled = false;
+      }
+    });
+    card.append(remove);
+  } else {
+    const view = document.createElement("button");
+    view.type = "button";
+    view.textContent = "Ver minhas fichas";
+    view.style.marginTop = "12px";
+    view.addEventListener("click", () => openAssignedSheets(campaign));
+    card.append(view);
+  }
+  const id = document.createElement("p"); id.className = "muted"; id.textContent = "ID: " + escapeText(campaign.id);
+  card.append(id);
+  return card;
+}
+let assignedSheetTimer = null;
+let assignedSheetCampaign = null;
+let assignedSheetViewToken = 0;
+$("closeSheets").addEventListener("click", () => {
+  assignedSheetViewToken++;
+  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  assignedSheetTimer = null;
+  assignedSheetCampaign = null;
+  $("sheetWindow").hidden = true;
+  $("appWindow").hidden = false;
+});
+function renderSheetData(value) {
+  const root = document.createElement("div");
+  root.className = "sheet-fields";
+  const appendValue = (parent, label, item, depth) => {
+    const field = document.createElement("div");
+    field.className = "sheet-field";
+    const title = document.createElement("strong");
+    title.textContent = label;
+    field.append(title);
+    if (item === null || item === undefined) {
+      const text = document.createElement("div");
+      text.className = "sheet-value";
+      text.textContent = "—";
+      field.append(text);
+    } else if (typeof item === "object" && depth < 7) {
+      const entries = Array.isArray(item) ? item.map((entry, index) => [String(index + 1), entry]) : Object.entries(item);
+      if (!entries.length) {
+        const empty = document.createElement("div");
+        empty.className = "sheet-empty";
+        empty.textContent = Array.isArray(item) ? "Lista vazia" : "Sem dados";
+        field.append(empty);
+      } else {
+        field.classList.add("sheet-group");
+        const nested = document.createElement("div");
+        nested.className = "sheet-fields";
+        for (const [key, child] of entries.slice(0, 100)) appendValue(nested, key, child, depth + 1);
+        if (entries.length > 100) {
+          const rest = document.createElement("div");
+          rest.className = "sheet-empty";
+          rest.textContent = "Mais " + (entries.length - 100) + " itens omitidos.";
+          nested.append(rest);
+        }
+        field.append(nested);
+      }
+    } else {
+      const text = document.createElement("div");
+      text.className = "sheet-value";
+      text.textContent = typeof item === "string" ? item : String(item);
+      field.append(text);
+    }
+    parent.append(field);
+  };
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+    if (!entries.length) {
+      const empty = document.createElement("p");
+      empty.className = "sheet-empty";
+      empty.textContent = "Esta ficha ainda não tem atributos preenchidos.";
+      root.append(empty);
+    } else {
+      for (const [key, item] of entries.slice(0, 100)) appendValue(root, key, item, 0);
+      if (entries.length > 100) {
+        const rest = document.createElement("p");
+        rest.className = "sheet-empty";
+        rest.textContent = "Mais " + (entries.length - 100) + " campos omitidos.";
+        root.append(rest);
+      }
+    }
+  } else {
+    appendValue(root, "Ficha", value, 0);
+  }
+  return root;
+}
+async function openAssignedSheets(campaign) {
+  const viewToken = ++assignedSheetViewToken;
+  if (assignedSheetTimer) clearInterval(assignedSheetTimer);
+  assignedSheetTimer = null;
+  assignedSheetCampaign = campaign;
+  $("appWindow").hidden = true;
+  $("sheetWindow").hidden = false;
+  $("sheetTitle").textContent = "FICHAS — " + campaign.title;
+  $("sheetList").replaceChildren();
+  message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
+  await refreshAssignedSheets(true);
+  // Do not create a timer if the player closed or switched views during the request.
+  if (viewToken !== assignedSheetViewToken || assignedSheetCampaign?.id !== campaign.id || $("sheetWindow").hidden) return;
+  assignedSheetTimer = setInterval(() => {
+    if (viewToken !== assignedSheetViewToken || !assignedSheetCampaign || $("sheetWindow").hidden) return;
+    refreshAssignedSheets(false);
+  }, 15000);
+}
+async function refreshAssignedSheets(showLoading) {
+  const campaign = assignedSheetCampaign;
+  if (!campaign) return;
+  if (showLoading) message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
+  try {
+    const result = await api("/api/campaigns/" + encodeURIComponent(campaign.id) + "/characters");
+    if (assignedSheetCampaign?.id !== campaign.id || $("sheetWindow").hidden) return;
+    const characters = Array.isArray(result.characters) ? result.characters : [];
+    const previous = new Map(Array.from($("sheetList").children).map(card => [card.dataset.characterId, card]));
+    if (!characters.length) {
+      $("sheetList").replaceChildren();
+      message("sheetMessage", "Nenhuma ficha foi atribuída a você nesta campanha.");
+      $("sheetUpdated").textContent = "Verificado em " + new Date().toLocaleTimeString();
+      return;
+    }
+    const next = [];
+    for (const character of characters) {
+      let card = previous.get(character.id);
+      if (!card) {
+        card = document.createElement("article");
+        card.className = "card sheet-card";
+        card.dataset.characterId = character.id;
+        const heading = document.createElement("h3");
+        const campaignLabel = document.createElement("p");
+        campaignLabel.className = "muted";
+        const data = document.createElement("div");
+        data.className = "sheet-data";
+        card.append(heading, campaignLabel, data);
+      }
+      card.querySelector("h3").textContent = character.name || "Personagem sem nome";
+      card.querySelector("p").textContent = "Ficha vinculada à campanha · somente leitura" +
+        (character.updated_at ? " · salva em " + new Date(character.updated_at).toLocaleString() : "");
+      const data = card.querySelector(".sheet-data");
+      data.replaceChildren(renderSheetData(character.data));
+      next.push(card);
+    }
+    $("sheetList").replaceChildren(...next);
+    message("sheetMessage", characters.length + " ficha(s) disponível(is) em modo somente leitura.", "success");
+    $("sheetUpdated").textContent = "Última verificação: " + new Date().toLocaleTimeString() + " · atualização automática a cada 15 segundos.";
+  } catch (error) {
+    if (showLoading || !$("sheetList").children.length) message("sheetMessage", error.message, "error");
+    $("sheetUpdated").textContent = "Falha na atualização: " + new Date().toLocaleTimeString();
+  }
+}
+
+let managedCampaign = null;
+let managedMembers = [];
+$("closeMaster").addEventListener("click", () => {
+  $("masterWindow").hidden = true;
+  $("appWindow").hidden = false;
+});
+$("createCharacterForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!managedCampaign) return;
+  let data;
+  try {
+    data = JSON.parse($("newCharacterData").value || "{}");
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Os dados precisam ser um objeto JSON.");
+  } catch (error) {
+    message("masterMessage", "JSON inválido: " + error.message, "error");
+    return;
+  }
+  const submit = $("createCharacterForm").querySelector('button[type="submit"]');
+  submit.disabled = true;
+  try {
+    await api("/api/campaigns/" + encodeURIComponent(managedCampaign.id) + "/characters", {
+      method:"POST", body:JSON.stringify({name:$("newCharacterName").value, data})
+    });
+    $("newCharacterName").value = "";
+    $("newCharacterData").value = "{}";
+    message("masterMessage", "Ficha criada. Agora você pode atribuí-la a um jogador.", "success");
+    await refreshMasterCharacters();
+  } catch (error) {
+    message("masterMessage", error.message, "error");
+  } finally { submit.disabled = false; }
+});
+async function openMasterManager(campaign) {
+  managedCampaign = campaign;
+  $("appWindow").hidden = true;
+  $("sheetWindow").hidden = true;
+  $("masterWindow").hidden = false;
+  $("masterTitle").textContent = "FICHAS — " + campaign.title;
+  $("masterCharacterList").replaceChildren();
+  message("masterMessage", "Carregando jogadores e fichas…");
+  try {
+    const membersResult = await api("/api/campaigns/" + encodeURIComponent(campaign.id) + "/members");
+    managedMembers = membersResult.members || [];
+    await refreshMasterCharacters();
+  } catch (error) { message("masterMessage", error.message, "error"); }
+}
+async function refreshMasterCharacters() {
+  if (!managedCampaign) return;
+  try {
+    const result = await api("/api/campaigns/" + encodeURIComponent(managedCampaign.id) + "/characters");
+    const list = $("masterCharacterList");
+    list.replaceChildren();
+    const characters = result.characters || [];
+    if (!characters.length) {
+      message("masterMessage", "Nenhuma ficha cadastrada ainda. Crie a primeira no formulário acima.");
+      return;
+    }
+    message("masterMessage", characters.length + " ficha(s) cadastrada(s). Atribuições são salvas no servidor.", "success");
+    for (const character of characters) {
+      const card = document.createElement("article");
+      card.className = "card";
+      const heading = document.createElement("h2");
+      heading.textContent = character.name || "Personagem sem nome";
+      const label = document.createElement("label");
+      label.textContent = "Jogador responsável";
+      const select = document.createElement("select");
+      select.append(new Option("Não atribuída", ""));
+      for (const member of managedMembers) select.append(new Option(member.display_name + " (" + member.email + ")", member.id));
+      select.value = character.assigned_player_id || "";
+      const jsonLabel = document.createElement("label");
+      jsonLabel.textContent = "Dados da ficha (JSON)";
+      const json = document.createElement("textarea");
+      json.className = "char-json";
+      json.spellcheck = false;
+      json.value = JSON.stringify(character.data ?? {}, null, 2);
+      const save = document.createElement("button");
+      save.type = "button";
+      save.textContent = "Salvar ficha e atribuição";
+      save.style.marginTop = "10px";
+      save.addEventListener("click", async () => {
+        let data;
+        try {
+          data = JSON.parse(json.value || "{}");
+          if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Use um objeto JSON.");
+        } catch (error) {
+          message("masterMessage", "JSON inválido em " + heading.textContent + ": " + error.message, "error");
+          return;
+        }
+        save.disabled = true;
+        try {
+          await api("/api/characters/" + encodeURIComponent(character.id), {
+            method:"PATCH", body:JSON.stringify({data})
+          });
+          await api("/api/characters/" + encodeURIComponent(character.id) + "/assign", {
+            method:"POST", body:JSON.stringify({playerId:select.value || null})
+          });
+          message("masterMessage", "Ficha e atribuição de " + heading.textContent + " salvas.", "success");
+        } catch (error) { message("masterMessage", error.message, "error"); }
+        finally { save.disabled = false; }
+      });
+      card.append(heading, label, select, jsonLabel, json, save);
+      list.append(card);
+    }
+  } catch (error) { message("masterMessage", error.message, "error"); }
+}
+
+async function loadCampaigns() {
+  try {
+    const result = await api("/api/campaigns");
+    $("campaignList").replaceChildren();
+    if (!result.campaigns.length) {
+      message("campaignMessage", "Nenhuma campanha vinculada à conta ainda.");
+      return;
+    }
+    message("campaignMessage", result.campaigns.length + " campanha(s) encontrada(s).");
+    for (const campaign of result.campaigns) $("campaignList").append(campaignCard(campaign));
+  } catch (error) { message("campaignMessage", error.message, "error"); }
+}
+async function showApp(user) {
+  currentUser = user;
+  $("appWindow").hidden = false;
+  $("welcome").textContent = "USUÁRIO: " + user.displayName;
+  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · " + user.email;
+  $("createCampaign").hidden = user.role !== "master";
+  $("joinCampaign").hidden = user.role !== "player";
+  await loadCampaigns();
+}
+(async function boot() {
+  try {
+    const result = await api("/api/auth/me");
+    await showApp(result.user);
+  } catch {
+    window.location.replace("/login.html");
+  }
+})();
+</script>
+</body>
+</html>

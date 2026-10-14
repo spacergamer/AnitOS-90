@@ -3004,7 +3004,7 @@
             if (!remoteCampaignId) {
                 // O dashboard integrado nunca deve abrir em modo local/anônimo.
                 // A campanha é o escopo de segurança e persistência do Mestre.
-                window.location.replace('/account?reason=select-campaign');
+                window.location.replace('/home.html?reason=select-campaign');
                 return;
             }
             try {
@@ -3013,7 +3013,7 @@
                 if (!response.ok || !payload.campaign) throw new Error(payload.error || 'Faça login para abrir esta campanha.');
                 if (!payload.campaign.is_owner) {
                     alert('O ANITOPEBOARD completo é exclusivo do Mestre. Entre na conta de Jogador para acessar as fichas atribuídas.');
-                    window.location.href = '/account';
+                    window.location.href = '/home.html';
                     return;
                 }
                 const remoteData = payload.campaign.data;
@@ -3029,7 +3029,7 @@
                     const importLocal = confirm('Esta campanha ainda não tem dados no banco. Deseja copiar para ela os dados MGR_DATA deste navegador? Isso preserva o armazenamento local e cria uma cópia na campanha.');
                     if (!importLocal) {
                         alert('Campanha remota não alterada. Você voltou à central para escolher outra ação.');
-                        window.location.href = '/account';
+                        window.location.href = '/home.html';
                         return;
                     }
                     remoteCampaignReady = true;
@@ -3086,7 +3086,7 @@
             } catch (error) {
                 console.error('[ANITOPEBOARD] Não foi possível abrir a campanha:', error);
                 alert(error.message || 'Não foi possível abrir a campanha. Faça login e tente novamente.');
-                window.location.href = '/account';
+                window.location.href = '/home.html';
             }
         }
         initializeCampaignSession();

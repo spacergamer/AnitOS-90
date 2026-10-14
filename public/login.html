@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANITOPE RNG — Conta</title>
+<link rel="icon" href="/anitopeboard/img/as.ico">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--win:#c0c0c0;--light:#fff;--dark:#808080;--black:#000;--blue:#000080;--cyan:#05ffa1;--teal:#008080}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--teal),#000033);font-family:'VT323',monospace;font-size:22px;color:#111;padding:24px}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;background:linear-gradient(transparent 50%,rgba(0,0,0,.12) 50%);background-size:100% 4px}
+main{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.window{background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light);padding:4px;margin:0 0 18px}
+.bar{background:linear-gradient(90deg,var(--blue),#1084d0);color:white;padding:4px 8px;font-weight:bold;display:flex;justify-content:space-between;gap:10px}
+.content{padding:18px}
+h1{font-size:38px;margin:0 0 4px}h2{font-size:30px;margin:0 0 10px}p{margin:6px 0}
+small,.muted{color:#444;font-size:19px}
+label{display:block;margin:10px 0 3px}
+input,select{width:100%;font:inherit;padding:5px;border:2px inset var(--dark);background:#fff}
+button,.button{font:inherit;background:var(--win);border-top:2px solid var(--light);border-left:2px solid var(--light);border-right:2px solid var(--black);border-bottom:2px solid var(--black);padding:5px 12px;cursor:pointer;color:#111;text-decoration:none;display:inline-block}
+button:active,.button:active{border:2px inset var(--dark)}
+button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+.tabs{display:flex;gap:5px;margin:12px 0}.tabs button{flex:1}.tabs .active{background:#fff;border-bottom:0;border-top:3px solid var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:#fff;border:2px inset var(--dark);padding:12px;min-width:0}
+.code{font-size:30px;letter-spacing:3px;background:#111;color:var(--cyan);padding:4px 8px;display:inline-block}
+.notice{padding:8px;border:1px solid #777;background:#eee;margin:10px 0}.error{color:#8b0000}.success{color:#005b20}
+.sheet-data{white-space:pre-wrap;overflow-wrap:anywhere;background:#111;color:var(--cyan);padding:12px;max-height:360px;overflow:auto;font:18px 'VT323',monospace}.sheet-card h3{margin:0 0 8px;font-size:26px}
+.sheet-data{max-height:none;white-space:normal}.sheet-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.sheet-field{min-width:0;padding:8px;background:#e5e5e5;border:2px inset #888;overflow-wrap:anywhere}.sheet-field>strong{display:block;color:#333;border-bottom:1px solid #999;margin-bottom:5px}.sheet-value{white-space:pre-wrap;overflow-wrap:anywhere;color:#005b50}.sheet-group{grid-column:1/-1;padding:8px;border:1px solid #888;background:#d4d4d4}.sheet-group-title{font-size:20px;font-weight:bold;margin-bottom:8px}.sheet-empty{color:#555;font-style:italic}
+textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;border:2px inset var(--dark);resize:vertical}.char-json{min-height:180px}
+[hidden]{display:none!important}
+@media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
+</style>
+</head><body>
+<main>
+<section class="window">
+<div class="bar"><span>ANITOPE SCIENCE — TERMINAL DE ACESSO</span><span>■ ×</span></div>
+<div class="content">
+<h1>ANITOPEBOARD / RGN</h1>
+<p>Uma conta. Campanhas persistentes. Interfaces independentes.</p>
+<p class="muted">A Ciência Salvando Vidas desde 1972.</p>
+</div>
+</section>
+
+<section class="window" id="authWindow">
+<div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
+<div class="content">
+<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
+<form id="authForm">
+<div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" name="displayName" maxlength="48" autocomplete="name"></div>
+<label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" required autocomplete="email">
+<label for="password">Senha</label><input id="password" name="password" type="password" minlength="10" maxlength="200" required autocomplete="current-password"><p id="passwordHint" class="muted" hidden>Na criação da conta: mínimo de 12 caracteres, com maiúscula, minúscula, número e símbolo.</p>
+<div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
+<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/room.html">Abrir RGN</a></div>
+<p id="authMessage" role="status" class="muted"></p>
+</form>
+</div>
+</section>
+
+</main>
+<script>
+
+const $ = id => document.getElementById(id);
+let mode = "login";
+let currentUser = null;
+async function api(url, options = {}) {
+  const response = await fetch(url, {credentials:"same-origin", ...options, headers:{"Content-Type":"application/json", ...(options.headers||{})}});
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "O servidor não conseguiu concluir a operação.");
+  return payload;
+}
+function message(id, text, type = "") {
+  const node = $(id); node.textContent = text; node.className = type || "muted";
+}
+function setMode(next) {
+  mode = next;
+  $("loginTab").classList.toggle("active", mode === "login");
+  $("registerTab").classList.toggle("active", mode === "register");
+  $("nameField").hidden = mode !== "register";
+  $("roleField").hidden = mode !== "register";
+  $("displayName").required = mode === "register";
+  $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
+  $("password").minLength = mode === "register" ? 12 : 10;
+  $("passwordHint").hidden = mode !== "register";
+  $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
+  message("authMessage", "");
+}
+$("loginTab").addEventListener("click", () => setMode("login"));
+$("registerTab").addEventListener("click", () => setMode("register"));
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const body = {email:$("email").value, password:$("password").value};
+  if (mode === "register") {
+    body.displayName = $("displayName").value;
+    body.role = $("role").value;
+  }
+  $("submitAuth").disabled = true;
+  message("authMessage", mode === "register" ? "Criando conta…" : "Verificando credenciais…");
+  try {
+    const result = await api("/api/auth/" + mode, {method:"POST", body:JSON.stringify(body)});
+    window.location.href = "/home.html";
+  } catch (error) {
+    message("authMessage", error.message, "error");
+  } finally {
+    $("submitAuth").disabled = false;
+  }
+});
+
+(async function boot(){try{await api("/api/auth/me");window.location.replace("/home.html");}catch{}})();
+</script>
+</body>
+</html>
