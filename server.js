@@ -26,11 +26,13 @@ registerAuthRoutes(app,express,db);
 // Recursos do lobby RGN legado.
 app.use("/img",express.static(path.join(__dirname,"img")));
 
-// ANITOPEBOARD: módulo independente, com recursos próprios (img/, aud/).
+// ANITOPEBOARD: resolva a página principal antes do middleware estático.
+// Isso evita que o redirect automático de diretório do express.static interfira
+// na rota raiz do dashboard. Os arquivos de img/ e aud/ continuam estáticos.
 const boardDir=path.join(__dirname,"AnitOS '89");
 app.get("/anitopeboard",(_q,r)=>r.redirect(302,"/anitopeboard/"));
-app.use("/anitopeboard",express.static(boardDir));
 app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(boardDir,"lightfade.html")));
+app.use("/anitopeboard",express.static(boardDir));
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/rgn",(_q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
