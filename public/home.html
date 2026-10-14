@@ -127,7 +127,7 @@ function campaignCard(campaign) {
     const code = document.createElement("span"); code.className = "code"; code.textContent = campaign.join_code;
     card.append(label, code);
     const open = document.createElement("a");
-    open.href = "/anitopeboard/?campaign=" + encodeURIComponent(campaign.id);
+    open.href = "/board.html?campaign=" + encodeURIComponent(campaign.id);
     open.className = "button";
     open.textContent = "Abrir campanha no ANITOPEBOARD";
     open.style.marginTop = "12px";
