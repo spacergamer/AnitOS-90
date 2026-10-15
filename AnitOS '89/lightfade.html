@@ -1177,7 +1177,9 @@
             ]
         };
 
-        let appData = JSON.parse(localStorage.getItem('MGR_DATA')) || {
+        const remoteCampaignId = new URLSearchParams(window.location.search).get('campaign');
+        const campaignLocalKey = remoteCampaignId ? 'MGR_DATA_CAMPAIGN_' + remoteCampaignId : 'MGR_DATA';
+        let appData = JSON.parse(localStorage.getItem(campaignLocalKey)) || {
             acts: [{ id: 'Ato I', name: 'Ato I' }, { id: 'Ato II', name: 'Ato II' }],
             chapters: [
                 { id: 'c0', actId: 'Ato I', name: '0 - Teste de Negligência' },
@@ -1311,7 +1313,6 @@
         });
 
         // Keep the browser backup while synchronizing only an explicitly selected campaign.
-        const remoteCampaignId = new URLSearchParams(window.location.search).get('campaign');
         let remoteCampaignReady = false;
         let remoteSaveQueue = Promise.resolve();
         let remoteSaveFailed = false;
@@ -1327,7 +1328,7 @@
         // Remote campaign state is initialized above the first possible save.
 
         function saveData() {
-            localStorage.setItem('MGR_DATA', JSON.stringify(appData));
+            localStorage.setItem(campaignLocalKey, JSON.stringify(appData));
             if (!remoteCampaignId || !remoteCampaignReady) return;
             const snapshot = JSON.stringify(appData);
             remoteSaveQueue = remoteSaveQueue.then(async () => {
@@ -3023,7 +3024,7 @@
                     appData.extraEnemies = normalizeExtraList(appData.extraEnemies || [], 'Inimigo');
                     appData.extraPets = normalizeExtraList(appData.extraPets || [], 'Pet');
                     appData.shops = Array.isArray(appData.shops) ? appData.shops : [];
-                    localStorage.setItem('MGR_DATA', JSON.stringify(appData));
+                    localStorage.setItem(campaignLocalKey, JSON.stringify(appData));
                     remoteCampaignReady = true;
                 } else {
                     const importLocal = confirm('Esta campanha ainda não tem dados no banco. Deseja copiar para ela os dados MGR_DATA deste navegador? Isso preserva o armazenamento local e cria uma cópia na campanha.');
@@ -3032,6 +3033,13 @@
                         window.location.href = '/home.html';
                         return;
                     }
+                    // Import only after explicit confirmation. Keep the legacy MGR_DATA
+                    // untouched as a recoverable backup; this campaign gets its own local key.
+                    appData = JSON.parse(localStorage.getItem('MGR_DATA')) || appData;
+                    appData.extraFriends = normalizeExtraList(appData.extraFriends || [], 'Amigo');
+                    appData.extraEnemies = normalizeExtraList(appData.extraEnemies || [], 'Inimigo');
+                    appData.extraPets = normalizeExtraList(appData.extraPets || [], 'Pet');
+                    appData.shops = Array.isArray(appData.shops) ? appData.shops : [];
                     remoteCampaignReady = true;
                     saveData();
                     await remoteSaveQueue;
