@@ -1638,10 +1638,39 @@
             autoHideExtraStats();
         }
 
+        async function refreshBoardFromServer() {
+            const statusLabel = document.getElementById('remote-save-label');
+            if (!remoteCampaignId || !remoteCampaignReady) return;
+            if (statusLabel) statusLabel.textContent = 'ATUALIZANDO CAMPANHA…';
+            try {
+                await remoteSaveQueue;
+                if (remoteSaveFailed) throw new Error('Há alterações que ainda não foram salvas. Aguarde e tente novamente.');
+                const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), { credentials: 'same-origin' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.campaign) throw new Error(payload.error || 'Não foi possível atualizar a campanha.');
+                const remoteData = payload.campaign.data;
+                if (!remoteData || !Array.isArray(remoteData.acts) || !Array.isArray(remoteData.chapters) || !remoteData.snapshots) throw new Error('A campanha não retornou dados válidos para atualização.');
+                appData = remoteData;
+                appData.extraFriends = normalizeExtraList(appData.extraFriends || [], 'Amigo');
+                appData.extraEnemies = normalizeExtraList(appData.extraEnemies || [], 'Inimigo');
+                appData.extraPets = normalizeExtraList(appData.extraPets || [], 'Pet');
+                appData.shops = Array.isArray(appData.shops) ? appData.shops : [];
+                if (!appData.snapshots[activeChap]) activeChap = appData.chapters[0]?.id || null;
+                localStorage.setItem(campaignLocalKey, JSON.stringify(appData));
+                renderSidebar();
+                renderTab();
+                if (statusLabel) statusLabel.textContent = "CAMPANHA ATUALIZADA • PRESSIONE ' PARA ATUALIZAR";
+            } catch (error) {
+                if (statusLabel) statusLabel.textContent = 'FALHA AO ATUALIZAR • ' + (error.message || 'tente novamente');
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
-            const el = document.getElementById('log-flutuante');
-            if (e.key === "'" && el && !el.classList.contains('hidden')) {
-                clearLog();
+            const target = e.target;
+            const typing = target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+            if (e.key === "'" && !typing && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                e.preventDefault();
+                refreshBoardFromServer();
             }
             if (e.key === '\\') {
                 e.preventDefault();
@@ -3201,7 +3230,7 @@
                 status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:7px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 24px);';
                 const statusLabel = document.createElement('span');
                 statusLabel.id = 'remote-save-label';
-                statusLabel.textContent = 'SALVAMENTO AUTOMÁTICO ATIVO • PARA RECARREGAR, PRESSIONE F5';
+                statusLabel.textContent = "SALVAMENTO AUTOMÁTICO ATIVO • PRESSIONE ' PARA ATUALIZAR";
                 status.appendChild(statusLabel);
                 const homeButton = document.createElement('button');
                 homeButton.type = 'button';
