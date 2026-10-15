@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ANITOPE RNG — Conta</title>
+<title>AnitOS '90</title>
 <link rel="icon" href="/anitopeboard/img/as.ico">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
@@ -39,8 +39,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <section class="window">
 <div class="bar"><span>ANITOPE SCIENCE — TERMINAL DE ACESSO</span><span>■ ×</span></div>
 <div class="content">
-<h1>ANITOPEBOARD / RGN</h1>
-<p>Uma conta. Campanhas persistentes. Interfaces independentes.</p>
+<h1>AnitOS '90</h1>
 <p class="muted">A Ciência Salvando Vidas desde 1972.</p>
 </div>
 </section>
@@ -53,8 +52,8 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="nameField" hidden><label for="displayName">Nome de usuário (@)</label><input id="displayName" name="displayName" maxlength="32" minlength="2" pattern="@?[A-Za-z0-9_.-]{2,32}" placeholder="seunome" autocomplete="username"><p class="muted">Único na plataforma. Use 2–32 letras, números, ponto, hífen ou sublinhado; não inclua espaços.</p></div>
 <label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" required autocomplete="email">
 <label for="password">Senha</label><input id="password" name="password" type="password" minlength="10" maxlength="200" required autocomplete="current-password"><p id="passwordHint" class="muted" hidden>Na criação da conta: mínimo de 12 caracteres, com maiúscula, minúscula, número e símbolo.</p>
-<div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
-<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/room.html">Abrir RGN</a></div>
+<div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="master">Mestre</option><option value="player">Jogador</option></select></div>
+<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
 </form>
 </div>
