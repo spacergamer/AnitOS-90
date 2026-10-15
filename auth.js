@@ -549,9 +549,9 @@ function registerAuthRoutes(app, express, db) {
         const member = await client.query(
           `SELECT u.id FROM anitos_users u
            JOIN anitos_campaign_members m ON m.user_id=u.id
-           WHERE m.campaign_id=$1 AND ${playerEmail ? "lower(u.email)=$3" : "lower(u.display_name)=$3"} AND u.role='player'
+           WHERE m.campaign_id=$1 AND ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"} AND u.role='player'
            LIMIT 1`,
-          [character.rows[0].campaign_id, req.user.id, playerEmail || playerHandle]
+          [character.rows[0].campaign_id, playerEmail || playerHandle]
         );
         if (!member.rows[0]) {
           if (ownsClient) await client.query("ROLLBACK");
