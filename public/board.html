@@ -1946,7 +1946,7 @@
             }
         }
 
-        async function assignBoardCharacter(index) {
+        async function assignBoardCharacter(index, removeAssignment = false) {
             const chapterId = activeChap;
             const character = appData.snapshots?.[chapterId]?.[index];
             if (!remoteCampaignId || !chapterId || !character) {
@@ -1954,7 +1954,9 @@
                 return;
             }
             const currentHandle = boardAssignments[String(character.id || '')] || '';
-            const rawHandle = prompt(currentHandle ? 'Atribuído a @' + currentHandle + '. Digite outro @ para transferir ou deixe vazio para retirar a atribuição:' : 'Digite o @nome do jogador que já participa desta campanha. Deixe vazio para remover a atribuição:', currentHandle);
+            if (removeAssignment && !currentHandle) return;
+            if (removeAssignment && !confirm('Retirar a atribuição de @' + currentHandle + '?')) return;
+            const rawHandle = removeAssignment ? '' : prompt(currentHandle ? 'Atribuído a @' + currentHandle + '. Digite outro @ para transferir ou deixe vazio para retirar a atribuição:' : 'Digite o @nome do jogador que já participa desta campanha.', currentHandle);
             if (rawHandle === null) return;
             const playerHandle = rawHandle.trim().replace(/^@/, '');
             try {
@@ -2014,7 +2016,8 @@
                                 <div>
                                     <button class="btn btn-small" onclick="openEditChar(${i})" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
                                     <span style="font-size:14px; color:#000080; font-weight:bold; margin-right:5px;">${c.assignedHandle ? '@' + c.assignedHandle : 'Sem atribuição'}</span>
-                                    <button class="btn btn-small" onclick="assignBoardCharacter(${i})" style="font-size:11px; padding:2px 5px;">${c.assignedHandle ? 'RETIRAR / TROCAR @' : 'ATRIBUIR @'}</button>
+                                    <button class="btn btn-small" onclick="assignBoardCharacter(${i})" style="font-size:11px; padding:2px 5px;">${c.assignedHandle ? 'TROCAR @' : 'ATRIBUIR @'}</button>
+                                    ${c.assignedHandle ? '<button class="btn btn-small" onclick="assignBoardCharacter(' + i + ', true)" style="font-size:11px; padding:2px 5px;">RETIRAR</button>' : ''}
                                     <button class="del-btn" onclick="delCharacter(${i})">X Deletar</button>
                                 </div>
                             </div>
