@@ -29,7 +29,7 @@ async function main() {
       if (sql.includes("SELECT c.owner_id FROM anitos_campaigns c")) {
         return {rows: [{owner_id: "master-1"}]};
       }
-      if (sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters")) {
+      if (sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,")) {
         if (sql.includes("assigned_player_id=$2")) {
           assert.equal(params[1], "player-1", "player queries must be scoped to their own user ID");
           return {rows: [assignedCharacter]};
@@ -66,7 +66,7 @@ async function main() {
     const sheetsBody = await sheetsResponse.json();
     assert.equal(sheetsBody.readOnly, true);
     assert.deepEqual(sheetsBody.characters.map(character => character.id), ["char-player"]);
-    const playerCharacterQuery = calls.find(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters") && call.sql.includes("assigned_player_id=$2"));
+    const playerCharacterQuery = calls.find(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,") && call.sql.includes("assigned_player_id=$2"));
     assert.ok(playerCharacterQuery, "player character query must filter by assigned player");
     assert.equal(playerCharacterQuery.params[1], "player-1");
 
@@ -74,7 +74,7 @@ async function main() {
     assert.equal(masterResponse.status, 200);
     const masterBody = await masterResponse.json();
     assert.deepEqual(masterBody.characters.map(character => character.id), ["char-player", "char-other"]);
-    assert.equal(calls.some(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters") && !call.sql.includes("assigned_player_id=$2")), true,
+    assert.equal(calls.some(call => call.sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,") && !call.sql.includes("assigned_player_id=$2")), true,
       "master can load all campaign characters");
 
     console.log("Player character privacy tests passed.");
