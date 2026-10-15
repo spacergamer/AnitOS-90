@@ -561,7 +561,9 @@ function registerAuthRoutes(app, express, db) {
       }
       if (playerId) {
         const member = await client.query(
-          "SELECT id FROM anitos_campaign_members WHERE campaign_id=$1 AND user_id=$2",
+          `SELECT u.id FROM anitos_campaign_members m
+           JOIN anitos_users u ON u.id=m.user_id
+           WHERE m.campaign_id=$1 AND m.user_id=$2 AND u.role='player'`,
           [character.rows[0].campaign_id, playerId]
         );
         if (!member.rows[0]) {
