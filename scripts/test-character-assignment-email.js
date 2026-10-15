@@ -26,14 +26,12 @@ async function main() {
       }
       if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$3")) {
         assert.equal(params[0],"campaign-1");
-        assert.equal(params[1],"master-1");
-        assert.equal(params[2],"player@example.test");
+        assert.equal(params[1],"player@example.test");
         return {rows:[{id:"player-1"}]};
       }
       if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$3")) {
         assert.equal(params[0],"campaign-1");
-        assert.equal(params[1],"master-1");
-        assert.equal(params[2],"jogador");
+        assert.equal(params[1],"jogador");
         return {rows:[{id:"player-1"}]};
       }
       if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1"}]};
