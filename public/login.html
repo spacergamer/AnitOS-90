@@ -50,7 +50,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="content">
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
 <form id="authForm">
-<div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" name="displayName" maxlength="48" autocomplete="name"></div>
+<div id="nameField" hidden><label for="displayName">Nome de usuário (@)</label><input id="displayName" name="displayName" maxlength="32" minlength="2" pattern="[A-Za-z0-9_.-]{2,32}" placeholder="seunome" autocomplete="username"><p class="muted">Único na plataforma. Use 2–32 letras, números, ponto, hífen ou sublinhado; não inclua espaços.</p></div>
 <label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" required autocomplete="email">
 <label for="password">Senha</label><input id="password" name="password" type="password" minlength="10" maxlength="200" required autocomplete="current-password"><p id="passwordHint" class="muted" hidden>Na criação da conta: mínimo de 12 caracteres, com maiúscula, minúscula, número e símbolo.</p>
 <div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
@@ -94,7 +94,7 @@ $("authForm").addEventListener("submit", async event => {
   event.preventDefault();
   const body = {email:$("email").value, password:$("password").value};
   if (mode === "register") {
-    body.displayName = $("displayName").value;
+    body.displayName = $("displayName").value.trim().replace(/^@/, "");
     body.role = $("role").value;
   }
   $("submitAuth").disabled = true;
