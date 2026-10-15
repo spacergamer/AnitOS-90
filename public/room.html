@@ -4,6 +4,25 @@
 <link rel="apple-touch-icon" href="/img/as.png">
 <style>
 :root{color-scheme:dark;--bg:#080d0c;--panel:#101715;--p2:#151e1a;--text:#e8f1e9;--muted:#8fa297;--line:#26372e;--a:#69f0a2;--ink:#06140b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,sans-serif}.wrap{max-width:1000px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:20px;gap:12px}.brand{color:var(--a);font-weight:900;letter-spacing:.1em}.muted,.tiny{color:var(--muted);font-size:12px}.hero{padding:34px 0 24px}.hero h1{font-size:clamp(32px,6vw,54px);line-height:1;margin:8px 0 12px}.hero em{font-style:normal;color:var(--a)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:16px}.panel h2{font-size:18px;margin:0 0 12px}.field{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin:13px 0 6px}input{width:100%;background:var(--p2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit}button{cursor:pointer;border:1px solid var(--a);border-radius:8px;padding:12px;font:inherit;font-weight:800;background:var(--a);color:var(--ink)}.btn{width:100%;margin-top:13px}.secondary{background:transparent;color:var(--a)}.status{border:1px solid var(--line);border-radius:99px;padding:8px 10px;color:var(--muted);font-size:11px}.hidden{display:none!important}#room{display:none}#room.active{display:block}.roomtop{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}.code{color:var(--a);border:1px dashed var(--a);padding:9px 12px;border-radius:8px;font-weight:900;letter-spacing:.15em}.roomgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.dice{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.die{background:var(--p2);color:var(--text);border-color:var(--line)}.die.selected{color:var(--a);border-color:var(--a)}.event,.player{display:flex;align-items:center;gap:10px;padding:11px;background:var(--p2);border:1px solid var(--line);border-radius:9px;margin:8px 0}.event .d{color:var(--a);font-weight:900;min-width:34px}.event .info{flex:1}.event small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.result{font-size:23px;font-weight:900;color:var(--a)}.toast{color:var(--a);min-height:20px;margin-top:10px;font-size:12px}.foot{padding:18px 0;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}.chat-messages{height:240px;max-height:36vh;overflow:auto;background:#fff;border:2px inset var(--win-border-dark);padding:6px}.chat-message{padding:5px 4px;border-bottom:1px dotted #aaa;overflow-wrap:anywhere}.chat-meta{display:flex;justify-content:space-between;gap:6px;color:#555;font-size:16px}.chat-meta strong{color:var(--title-blue)}.chat-text{font-size:19px;white-space:pre-wrap;overflow-wrap:anywhere}.chat-form{display:flex;gap:6px;margin-top:7px}.chat-form input{flex:1;min-width:0}.chat-empty{color:#555;padding:8px 3px;font-size:18px}@media(max-width:700px){.wrap{padding:15px}.grid,.roomgrid{grid-template-columns:1fr}.panel{padding:17px}.top{align-items:flex-start}}
+
+/* Character sheet: readable, grouped presentation inspired by ANITOPEBOARD. */
+.sheet-card{--sheet-accent:#000080;background:#f0f0f0;color:#111;border:2px solid #808080;box-shadow:inset 1px 1px #fff,2px 2px #aaa;padding:12px;margin:10px 0;font-family:'VT323',monospace;font-size:19px}
+.sheet-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid var(--sheet-accent);padding-bottom:8px;margin-bottom:12px}
+.sheet-name{font-size:30px;font-weight:bold;overflow-wrap:anywhere}
+.sheet-summary{white-space:pre-wrap;overflow-wrap:anywhere;color:#333;margin-top:4px}
+.sheet-section{border:1px solid #808080;background:#fff;padding:9px;margin-top:10px}
+.sheet-section-title{font-size:20px;font-weight:bold;background:var(--sheet-accent);color:#fff;padding:3px 7px;margin:-9px -9px 9px}
+.sheet-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.sheet-stat{border:2px inset #808080;background:#fff;padding:8px;min-width:0}
+.sheet-stat-label{font-size:16px;color:#444;text-transform:uppercase}
+.sheet-stat-value{font-size:28px;font-weight:bold;color:var(--sheet-accent);overflow-wrap:anywhere}
+.sheet-stat-value small{font-size:17px;color:#555;font-weight:normal}
+.sheet-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.sheet-field{border:1px solid #bbb;background:#f8f8f8;padding:6px;min-width:0;overflow-wrap:anywhere}
+.sheet-field strong{display:block;color:#444;font-size:16px;text-transform:uppercase}
+.sheet-field span{display:block;font-size:19px;white-space:pre-wrap}
+.sheet-empty{color:#666;font-style:italic}
+@media(max-width:640px){.sheet-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-card{padding:8px}.sheet-name{font-size:26px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -214,13 +233,44 @@ const campaignId=new URLSearchParams(window.location.search).get("campaign")||""
 let campaignUser=null,campaignInfo=null;
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
 function msg(id,t){$(id).textContent=t||""}
-function renderSheetValue(value){
- const root=document.createElement("div");root.style.display="grid";root.style.gridTemplateColumns="repeat(auto-fit,minmax(180px,1fr))";root.style.gap="8px";
- const append=(parent,key,item,depth)=>{const card=document.createElement("div");card.style.border="2px inset #808080";card.style.padding="6px";card.style.background="#fff";const label=document.createElement("strong");label.textContent=key;card.append(label);const content=document.createElement("div");content.style.whiteSpace="pre-wrap";content.style.overflowWrap="anywhere";if(item&&typeof item==="object"&&depth<5){const entries=Array.isArray(item)?item.map((v,i)=>[String(i+1),v]):Object.entries(item);if(!entries.length)content.textContent="—";else entries.slice(0,80).forEach(([k,v])=>append(content,k,v,depth+1))}else content.textContent=item==null?"—":typeof item==="string"?item:String(item);card.append(content);parent.append(card)};
- if(value&&typeof value==="object"&&!Array.isArray(value)){const entries=Object.entries(value);if(!entries.length)root.textContent="Ficha sem atributos preenchidos.";else entries.slice(0,100).forEach(([k,v])=>append(root,k,v,0))}else append(root,"Ficha",value,0);return root;
-}
+function renderSheetValue(value, fallbackName){
+  const data=value&&typeof value==="object"&&!Array.isArray(value)?value:{};
+  const summary=data.resumo&&typeof data.resumo==="object"?data.resumo:data;
+  const status=data.status&&typeof data.status==="object"?data.status:data;
+  const inventory=data.inv&&typeof data.inv==="object"?data.inv:data;
+  const skills=data.skills&&typeof data.skills==="object"?data.skills:data;
+  const pick=(group,key)=>group[key]!==undefined&&group[key]!==null?group[key]:(data[key]!==undefined&&data[key]!==null?data[key]:undefined);
+  const has=(group,key)=>pick(group,key)!==undefined&&pick(group,key)!=="";
+  const display=(v)=>v===undefined||v===null||v===""?"—":typeof v==="object"?Array.isArray(v)?v.map(x=>typeof x==="object"?JSON.stringify(x):String(x)).join(", "):Object.entries(v).map(([k,x])=>k+": "+(x==null?"—":String(x))).join("\n"):String(v);
+  const root=document.createElement("article");root.className="sheet-card";
+  const accent=typeof data.color==="string"&&/^#[0-9a-f]{6}$/i.test(data.color)?data.color:"#000080";root.style.setProperty("--sheet-accent",accent);
+  const header=document.createElement("header");header.className="sheet-header";
+  const identity=document.createElement("div");
+  const title=document.createElement("div");title.className="sheet-name";title.textContent=String(data.nome||data.name||fallbackName||"Personagem");
+  identity.append(title);
+  const summaryValue=data.resumo&&typeof data.resumo!=="object"?data.resumo:undefined;
+  if(summaryValue!==undefined&&summaryValue!==""){const p=document.createElement("div");p.className="sheet-summary";p.textContent=display(summaryValue);identity.append(p)}
+  const id=document.createElement("div");id.className="sheet-field";const idLabel=document.createElement("strong");idLabel.textContent="Ficha";const idValue=document.createElement("span");idValue.textContent=String(data.id||"ANITOPE");id.append(idLabel,idValue);
+  header.append(identity,id);root.append(header);
+  const makeSection=(label)=>{const section=document.createElement("section");section.className="sheet-section";const heading=document.createElement("div");heading.className="sheet-section-title";heading.textContent=label;section.append(heading);root.append(section);return section};
+  const addField=(parent,label,val)=>{if(val===undefined||val===null||val==="")return;const field=document.createElement("div");field.className="sheet-field";const strong=document.createElement("strong");strong.textContent=label;const span=document.createElement("span");span.textContent=display(val);field.append(strong,span);parent.append(field)};
+  const statDefs=[["HP","hp","hpMax",summary],["STA","sta","staMax",summary],["NEU","neu","neuMax",status],["O₂","o2","o2Max",status],["ATK","atk",null,summary],["DEF","def",null,summary],["AGI","agi",null,summary],["IQ","iq",null,summary]];
+  const stats=statDefs.filter(([label,key,maxKey,group])=>has(group,key));
+  if(stats.length){const section=makeSection("STATUS VITAL");const grid=document.createElement("div");grid.className="sheet-stats";for(const [label,key,maxKey,group] of stats){const card=document.createElement("div");card.className="sheet-stat";const l=document.createElement("div");l.className="sheet-stat-label";l.textContent=label;const v=document.createElement("div");v.className="sheet-stat-value";v.textContent=display(pick(group,key));if(maxKey&&has(group,maxKey)){const max=document.createElement("small");max.textContent=" / "+display(pick(group,maxKey));v.append(max)}card.append(l,v);grid.append(card)}section.append(grid)}
+  const conditionDefs=[["Condição","cond",status],["Temperatura","temp",status],["Estado","status",data]];
+  if(conditionDefs.some(([label,key,group])=>has(group,key))){const section=makeSection("CONDIÇÃO");const grid=document.createElement("div");grid.className="sheet-fields";conditionDefs.forEach(([label,key,group])=>addField(grid,label,pick(group,key)));section.append(grid)}
+  const inventoryDefs=[["Cabeça","cabeca"],["Torso","torso"],["Pernas","pernas"],["Mão esquerda","maoe"],["Mão direita","maod"],["Peso","peso"],["Itens","itens"],["Amizade","amizade"],["Dinheiro","dinheiro"]];
+  if(inventoryDefs.some(([label,key])=>has(inventory,key))){const section=makeSection("INVENTÁRIO");const grid=document.createElement("div");grid.className="sheet-fields";inventoryDefs.forEach(([label,key])=>addField(grid,label,pick(inventory,key)));section.append(grid)}
+  const skillDefs=[["S","s"],["O","o"],["C","c"],["P","p"],["Naturais","nat"],["Aprendendo","apr"],["Aprendidas","apd"]];
+  if(skillDefs.some(([label,key])=>has(skills,key)||has(data,key))){const section=makeSection("HABILIDADES");const grid=document.createElement("div");grid.className="sheet-fields";skillDefs.forEach(([label,key])=>addField(grid,label,pick(skills,key)));section.append(grid)}
+  const known=new Set(["id","nome","name","color","classFont","resumo","hp","hpMax","iq","agi","atk","def","sta","staMax","skills","s","o","c","p","apd","apr","nat","status","o2","neu","cond","temp","o2Max","neuMax","inv","maod","maoe","peso","itens","torso","cabeca","pernas","amizade","dinheiro"]);
+  const extras=Object.entries(data).filter(([key,val])=>!known.has(key)&&val!==undefined&&val!==null&&val!=="");
+  if(extras.length){const section=makeSection("OUTRAS INFORMAÇÕES");const grid=document.createElement("div");grid.className="sheet-fields";extras.forEach(([key,val])=>addField(grid,key,val));section.append(grid)}
+  if(root.children.length===1){const empty=document.createElement("p");empty.className="sheet-empty";empty.textContent="Esta ficha ainda não possui atributos preenchidos.";root.append(empty)}
+  return root;
+ }
 async function refreshCampaignSheet(){
- if(!campaignId)return;try{const response=await fetch("/api/campaigns/"+encodeURIComponent(campaignId)+"/characters",{credentials:"same-origin"});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"Não foi possível carregar sua ficha.");const characters=Array.isArray(payload.characters)?payload.characters:[];$("campaignSheetData").replaceChildren();if(campaignUser?.role==="master")$("campaignSheetStatus").textContent="Perfil Mestre: gerencie e atribua fichas pelo menu da campanha.";else if(!characters.length)$("campaignSheetStatus").textContent="Nenhuma ficha foi atribuída a esta conta nesta campanha.";else{for(const character of characters){const title=document.createElement("h3");title.textContent=character.name||"Personagem";$("campaignSheetData").append(title,renderSheetValue(character.data))}$("campaignSheetStatus").textContent=characters.length+" ficha(s) vinculada(s) · somente leitura · verificado "+new Date().toLocaleTimeString("pt-BR")}}catch(error){$("campaignSheetStatus").textContent=error.message}
+ if(!campaignId)return;try{const response=await fetch("/api/campaigns/"+encodeURIComponent(campaignId)+"/characters",{credentials:"same-origin"});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"Não foi possível carregar sua ficha.");const characters=Array.isArray(payload.characters)?payload.characters:[];$("campaignSheetData").replaceChildren();if(campaignUser?.role==="master")$("campaignSheetStatus").textContent="Perfil Mestre: gerencie e atribua fichas pelo menu da campanha.";else if(!characters.length)$("campaignSheetStatus").textContent="Nenhuma ficha foi atribuída a esta conta nesta campanha.";else{for(const character of characters){const title=document.createElement("h3");title.textContent=character.name||"Personagem";$("campaignSheetData").append(renderSheetValue(character.data,character.name))}$("campaignSheetStatus").textContent=characters.length+" ficha(s) vinculada(s) · somente leitura · verificado "+new Date().toLocaleTimeString("pt-BR")}}catch(error){$("campaignSheetStatus").textContent=error.message}
 }
 async function initializeCampaignContext(){
  if(!campaignId)return;$("campaignSheetPanel").classList.remove("hidden");$("campaignSheetStatus").textContent="Validando acesso à campanha...";
