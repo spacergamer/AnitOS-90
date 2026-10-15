@@ -790,13 +790,14 @@
                 <div class="campaign-tools">
                     <label>Arquivo da Campanha:</label>
                     <div class="flex-row" style="margin-top:5px;">
-                        <button onclick="exportCampaign()">Exportar Backup</button>
+                        <button onclick="saveCampaignNow('campaign')">Salvar Campanha Agora</button>
+                        <button onclick="exportCampaign()">Exportar Backup JSON</button>
                         <button onclick="document.getElementById('campaign-import-file').click()">Importar
                             Backup</button>
                     </div>
                     <input type="file" id="campaign-import-file" accept="application/json,.json" class="hidden"
                         onchange="importCampaign(event)">
-                    <small>Os boards salvam no navegador. Use backup JSON ao fim de cada sessão.</small>
+                    <small id="campaign-save-feedback" role="status" aria-live="polite">Alterações são salvas automaticamente.</small>
                 </div>
             </div>
         </div>
@@ -816,6 +817,7 @@
                 <div class="tab" onclick="switchTab('skill-path')">Skill Path</div>
                 <div class="tab" onclick="switchTab('extras')">Extras</div>
                 <div class="tab" onclick="switchTab('salvar')">Salvar</div>
+                <div class="tab" onclick="switchTab('dados')">DADOS</div>
             </div>
 
             <div class="window-content" id="tab-content" style="padding-bottom: 20px;">
@@ -1316,6 +1318,7 @@
         let remoteCampaignReady = false;
         let remoteSaveQueue = Promise.resolve();
         let remoteSaveFailed = false;
+        let remoteSaveRevision = 0;
 
         if (Object.keys(appData.snapshots).length === 0) {
             appData.snapshots['c0'] = JSON.parse(JSON.stringify(defaultChars));
@@ -1328,9 +1331,15 @@
         // Remote campaign state is initialized above the first possible save.
 
         function saveData() {
+            // Atualiza o cache local imediatamente e envia as edições ao servidor em fila.
             localStorage.setItem(campaignLocalKey, JSON.stringify(appData));
             if (!remoteCampaignId || !remoteCampaignReady) return;
             const snapshot = JSON.stringify(appData);
+            const revision = ++remoteSaveRevision;
+            const statusLabel = document.getElementById('remote-save-label');
+            if (statusLabel) statusLabel.textContent = 'SALVANDO ALTERAÇÕES…';
+            const campaignFeedback = document.getElementById('campaign-save-feedback');
+            if (campaignFeedback) campaignFeedback.textContent = 'Salvando alterações no servidor…';
             remoteSaveQueue = remoteSaveQueue.then(async () => {
                 remoteSaveFailed = false;
                 const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), {
@@ -1343,14 +1352,50 @@
                     const result = await response.json().catch(() => ({}));
                     throw new Error(result.error || 'Falha ao salvar a campanha remota.');
                 }
+                if (revision === remoteSaveRevision) {
+                    const savedAt = new Date().toLocaleTimeString('pt-BR');
+                    const label = document.getElementById('remote-save-label');
+                    if (label) label.textContent = 'SALVO NO SERVIDOR • ' + savedAt;
+                    const feedback = document.getElementById('campaign-save-feedback');
+                    if (feedback) feedback.textContent = 'Último salvamento: ' + savedAt;
+                }
             }).catch(error => {
                 remoteSaveFailed = true;
                 console.error('[ANITOPEBOARD] Falha ao sincronizar campanha:', error);
-                const statusLabel = document.getElementById('remote-save-label');
-                const status = document.getElementById('remote-save-status');
-                if (statusLabel) statusLabel.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
-                else if (status) status.textContent = 'ERRO DE SINCRONIZAÇÃO — exporte um backup e confira sua conexão.';
+                const label = document.getElementById('remote-save-label');
+                if (revision === remoteSaveRevision) {
+                    if (label) label.textContent = 'ERRO AO SALVAR — exporte um backup e confira sua conexão.';
+                    const feedback = document.getElementById('campaign-save-feedback');
+                    if (feedback) feedback.textContent = 'Falha no servidor. Exporte um backup e tente novamente.';
+                }
+                if (label) label.title = error.message || 'Falha de sincronização';
             });
+        }
+
+        async function saveCampaignNow(scope) {
+            const feedback = document.getElementById('save-action-status') || document.getElementById('campaign-save-feedback');
+            if (!remoteCampaignId || !remoteCampaignReady) {
+                if (feedback) feedback.textContent = 'A campanha ainda está carregando. Tente novamente em instantes.';
+                return;
+            }
+            if (scope === 'chapter' && (!activeChap || !appData.snapshots[activeChap])) {
+                if (feedback) feedback.textContent = 'Selecione um capítulo válido antes de salvá-lo.';
+                return;
+            }
+            if (feedback) feedback.textContent = 'Salvando ' + (scope === 'chapter' ? 'capítulo' : 'campanha') + ' no servidor…';
+            saveData();
+            await remoteSaveQueue;
+            if (remoteSaveFailed) {
+                if (feedback) feedback.textContent = 'Não foi possível salvar. Exporte um backup JSON antes de tentar novamente.';
+                return;
+            }
+            const savedAt = new Date().toLocaleTimeString('pt-BR');
+            const chapter = scope === 'chapter' ? getActiveChapter() : null;
+            feedback && (feedback.textContent = scope === 'chapter' && chapter
+                ? 'Capítulo "' + chapter.name + '" salvo na campanha às ' + savedAt + '.'
+                : 'Campanha inteira salva às ' + savedAt + '.');
+            const label = document.getElementById('remote-save-label');
+            if (label) label.textContent = 'SALVO NO SERVIDOR • ' + savedAt;
         }
 
         function saveUiState() {
@@ -1818,6 +1863,7 @@
             const container = document.getElementById('tab-content');
             if (activeTab === 'extras') return renderExtras(container);
             if (activeTab === 'salvar') return renderSaveTab(container);
+            if (activeTab === 'dados') return renderDataTab(container);
 
             const chars = appData.snapshots[activeChap];
             let html = `<button onclick="document.getElementById('add-char-modal').classList.remove('hidden')" style="margin-bottom:10px;">+ ADICIONAR EMPREGADO</button>`;
@@ -1948,6 +1994,15 @@
             const act = chapter ? appData.acts.find(a => a.id === chapter.actId) : null;
             container.innerHTML = `
                 <div class="char-card">
+                    <div class="section-title">SALVAMENTO</div>
+                    <p>As alterações são salvas automaticamente na campanha. Este botão força uma sincronização imediata do capítulo atual com o servidor.</p>
+                    <div class="flex-row" style="margin-top:12px; flex-wrap:wrap;">
+                        <button onclick="saveCampaignNow('chapter')">Salvar Capítulo Agora</button>
+                        <button onclick="saveCampaignNow('campaign')">Salvar Campanha Inteira</button>
+                    </div>
+                    <p id="save-action-status" role="status" aria-live="polite">Pronto para salvar.</p>
+                </div>
+                <div class="char-card">
                     <div class="section-title">JSON DO CAPÍTULO</div>
                     <div class="status-grid">
                         <div class="status-block"><strong>Ato:</strong> ${act ? act.name : 'Nenhum'}</div>
@@ -1964,6 +2019,20 @@
                     <p style="margin-top:10px; font-size:12px;">
                         O JSON do capítulo guarda os status, inventário, XP e skills do snapshot atual. Amigos, inimigos, lojas e sons continuam no backup da campanha inteira.
                     </p>
+                </div>
+            `;
+        }
+
+        function renderDataTab(container) {
+            container.innerHTML = `
+                <div class="char-card">
+                    <div class="section-title">DADOS — ANITOPE RNG</div>
+                    <p>Abra o RGN em outra aba para manter esta campanha aberta. Assim você pode continuar editando o ANITOPEBOARD e alternar para a sala de dados quando precisar.</p>
+                    <div class="flex-row" style="margin-top:14px; flex-wrap:wrap;">
+                        <a class="btn" href="/room.html" target="_blank" rel="noopener noreferrer">ABRIR RGN EM NOVA ABA ↗</a>
+                        <button onclick="saveCampaignNow('campaign')">Salvar Campanha Agora</button>
+                    </div>
+                    <p style="margin-top:12px;font-size:12px;">O RGN abre como uma interface separada. A vinculação automática da sala ao código desta campanha não faz parte desta etapa.</p>
                 </div>
             `;
         }
@@ -2991,7 +3060,7 @@
         }
 
         // INIT
-        const validTabs = ['resumo', 'status', 'inventario', 'skill-table', 'skill-path', 'extras', 'salvar'];
+        const validTabs = ['resumo', 'status', 'inventario', 'skill-table', 'skill-path', 'extras', 'salvar', 'dados'];
         const validExtraTabs = ['som', 'amigos', 'pets', 'inimigos', 'lojas', 'visualizacao'];
         
         if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
