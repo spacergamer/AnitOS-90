@@ -40,7 +40,9 @@ assert.match(server, /campaignId:typeof data\.campaignId==="string"\?data\.campa
 
 // ANITOPEBOARD content lives in board.html and serves legacy relative assets from /anitopeboard/.
 assert.match(board, /assignBoardCharacter\(\$\{i\}\)/);
-assert.match(board, /PRESSIONE F5/);
+assert.match(board, /PRESSIONE.*PARA ATUALIZAR/);
+assert.match(board, /e\.key === "\x27"/);
+assert.match(board, /async function refreshBoardFromServer\(\)/);
 assert.match(board, /<base href=/);
 assert.match(board, /href="img\/as\.ico"/);
 assert.match(board, /ANITOPEBOARD/);
