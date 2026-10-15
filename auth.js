@@ -545,9 +545,10 @@ function registerAuthRoutes(app, express, db) {
         return sendError(res, 404, "Ficha não encontrada ou sem permissão.");
       }
       let playerId = legacyPlayerId || null;
+      let assignedPlayerHandle = null;
       if (playerEmail || playerHandle) {
         const member = await client.query(
-          `SELECT u.id FROM anitos_users u
+          `SELECT u.id,u.display_name FROM anitos_users u
            JOIN anitos_campaign_members m ON m.user_id=u.id
            WHERE m.campaign_id=$1 AND ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"} AND u.role='player'
            LIMIT 1`,
@@ -558,10 +559,11 @@ function registerAuthRoutes(app, express, db) {
           return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
         }
         playerId = member.rows[0].id;
+        assignedPlayerHandle = member.rows[0].display_name;
       }
       if (playerId) {
         const member = await client.query(
-          `SELECT u.id FROM anitos_campaign_members m
+          `SELECT u.id,u.display_name FROM anitos_campaign_members m
            JOIN anitos_users u ON u.id=m.user_id
            WHERE m.campaign_id=$1 AND m.user_id=$2 AND u.role='player'`,
           [character.rows[0].campaign_id, playerId]
@@ -570,6 +572,7 @@ function registerAuthRoutes(app, express, db) {
           if (ownsClient) await client.query("ROLLBACK");
           return sendError(res, 404, "O jogador não participa desta campanha.");
         }
+        assignedPlayerHandle = member.rows[0].display_name;
         // Move the player's assignment instead of allowing a second character in the same campaign.
         await client.query(
           `UPDATE anitos_characters SET assigned_player_id=NULL,updated_at=now()
@@ -587,6 +590,7 @@ function registerAuthRoutes(app, express, db) {
         if (ownsClient) await client.query("ROLLBACK");
         return sendError(res, 404, "Ficha não encontrada ou sem permissão.");
       }
+      result.rows[0].assigned_player_handle = playerId ? assignedPlayerHandle : null;
       if (ownsClient) await client.query("COMMIT");
       res.json({character: result.rows[0]});
     } catch (err) {
