@@ -29,7 +29,7 @@ async function main() {
       if (sql.includes("SELECT c.owner_id FROM anitos_campaigns c")) {
         return {rows: [{owner_id: "master-1"}]};
       }
-      if (sql.includes("SELECT id,campaign_id,name,data,assigned_player_id,")) {
+      if (sql.includes("SELECT ch.id,ch.campaign_id,ch.name,ch.data,ch.assigned_player_id,")) {
         if (sql.includes("assigned_player_id=$2")) {
           assert.equal(params[1], "player-1", "player queries must be scoped to their own user ID");
           return {rows: [assignedCharacter]};
