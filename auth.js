@@ -550,6 +550,7 @@ function registerAuthRoutes(app, express, db) {
       result.rows[0].assigned_player_handle = playerId ? assignedPlayerHandle : null;
       res.json({character: result.rows[0]});
     } catch (err) {
+      if (err.code === "23505") return sendError(res, 409, "Este jogador já tem um personagem atribuído nesta campanha.");
       console.error("[characters] Falha ao atribuir:", err.message);
       sendError(res, 500, "Não foi possível atribuir a ficha.");
     }
