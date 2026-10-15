@@ -65,7 +65,7 @@ function state(r){
 function sync(r){io.to(r.code).emit("room:state",state(r))}
 function snapshot(){
  return [...rooms.values()].map(r=>({
-  code:r.code,title:r.title,rolls:r.rolls,chat:Array.isArray(r.chat)?r.chat.slice(-100):[],bannedNames:[...(r.bannedNames||[])],
+  code:r.code,title:r.title,campaignId:r.campaignId||null,rolls:r.rolls,chat:Array.isArray(r.chat)?r.chat.slice(-100):[],bannedNames:[...(r.bannedNames||[])],
   players:[...r.players.values()].map(p=>({
    id:p.id,recoveryToken:p.recoveryToken,name:p.name,admin:p.admin,connected:p.connected
   }))
@@ -86,7 +86,7 @@ async function initializePersistence(){
  if(Array.isArray(saved)){
   for(const data of saved){
    if(!data||typeof data.code!=="string"||!Array.isArray(data.players))continue;
-   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[],chat:Array.isArray(data.chat)?data.chat.slice(-100):[],bannedNames:new Set(Array.isArray(data.bannedNames)?data.bannedNames:[])};
+   const r={code:data.code,title:String(data.title||"Sessão sem título").slice(0,36),campaignId:typeof data.campaignId==="string"?data.campaignId:null,players:new Map(),rolls:Array.isArray(data.rolls)?data.rolls.slice(0,100):[],chat:Array.isArray(data.chat)?data.chat.slice(-100):[],bannedNames:new Set(Array.isArray(data.bannedNames)?data.bannedNames:[])};
    for(const old of data.players){
     if(!old||typeof old.id!=="string"||typeof old.recoveryToken!=="string")continue;
     const p={id:old.id,recoveryToken:old.recoveryToken,name:name(old.name),admin:Boolean(old.admin),connected:false,socketId:null,resumeTimer:null,resumeExpiresAt:Date.now()+RESUME_WINDOW_MS};
