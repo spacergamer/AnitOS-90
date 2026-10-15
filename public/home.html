@@ -443,7 +443,8 @@ async function showApp(user) {
     const result = await api("/api/auth/me");
     await showApp(result.user);
   } catch {
-    window.location.replace("/login.html");
+    // O parâmetro impede que a página de login redirecione de volta automaticamente.
+    window.location.replace("/login.html?reason=session");
   }
 })();
 </script>
