@@ -421,7 +421,7 @@ socket.on("connect",()=>{
   $("status").textContent="Reconectando à sessão...";
   msg("roomMsg","Reconectando à sessão...");
   updateRollButton();
-  socket.emit("room:resume",{token:resumeToken});
+  socket.emit("room:resume",{token:resumeToken,...(campaignId?{campaignId}:{})});
  }else{
   renderStatus();
   if(room)returnToLobby("A sessão anterior não pôde ser recuperada. Entre novamente pelo lobby.");
