@@ -24,6 +24,12 @@ async function main() {
         assert.equal(params[2],"player@example.test");
         return {rows:[{id:"player-1"}]};
       }
+      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$3")) {
+        assert.equal(params[0],"character-1");
+        assert.equal(params[1],"master-1");
+        assert.equal(params[2],"jogador");
+        return {rows:[{id:"player-1"}]};
+      }
       if (sql.includes("UPDATE anitos_characters ch SET assigned_player_id")) {
         return {rows:[{id:"character-1",campaign_id:"campaign-1",name:"Personagem",assigned_player_id:params[0]}]};
       }
@@ -40,15 +46,18 @@ async function main() {
     const assigned=await post("/api/characters/character-1/assign",masterToken,{playerEmail:" PLAYER@EXAMPLE.TEST "});
     assert.equal(assigned.status,200,"Master should assign by case-insensitive email");
     assert.equal((await assigned.json()).character.assigned_player_id,"player-1");
+    const byHandle=await post("/api/characters/character-1/assign",masterToken,{playerHandle:"@Jogador"});
+    assert.equal(byHandle.status,200,"Master should assign by case-insensitive @handle");
+    assert.equal((await byHandle.json()).character.assigned_player_id,"player-1");
     const invalid=await post("/api/characters/character-1/assign",masterToken,{playerEmail:"not-an-email"});
     assert.equal(invalid.status,400,"Invalid email must be rejected");
     const playerAssign=await post("/api/characters/character-1/assign",playerToken,{playerEmail:"player@example.test"});
     assert.equal(playerAssign.status,403,"Players must not assign character sheets");
     const playerEdit=await patch("/api/characters/character-1",playerToken,{data:{hp:999}});
     assert.equal(playerEdit.status,403,"Players must not edit character sheet values or items");
-    assert.equal(calls.filter(c=>c.sql.includes("UPDATE anitos_characters ch SET assigned_player_id")).length,1,
+    assert.equal(calls.filter(c=>c.sql.includes("UPDATE anitos_characters ch SET assigned_player_id")).length,2,
       "Only the authorized Master's assignment should update the database");
-    console.log("Character assignment-by-email and player read-only tests passed.");
+    console.log("Character assignment-by-email/@handle and player read-only tests passed.");
   } finally {await new Promise((resolve,reject)=>server.close(err=>err?reject(err):resolve()))}
 }
 main().catch(error=>{console.error(error);process.exitCode=1});
