@@ -4,8 +4,8 @@ const express = require("express");
 const {registerAuthRoutes} = require("../auth");
 
 async function main() {
-  const masterToken = "m".repeat(64);
-  const playerToken = "p".repeat(64);
+  const masterToken = "a".repeat(64);
+  const playerToken = "b".repeat(64);
   const hashes = new Map([
     [crypto.createHash("sha256").update(masterToken).digest("hex"), {id:"master-1",email:"master@example.test",display_name:"Mestre",role:"master"}],
     [crypto.createHash("sha256").update(playerToken).digest("hex"), {id:"player-1",email:"player@example.test",display_name:"Jogador",role:"player"}]
