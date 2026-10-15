@@ -120,6 +120,14 @@ async function initializeAuthSchema(db) {
     );
     CREATE INDEX IF NOT EXISTS anitos_characters_campaign_idx ON anitos_characters(campaign_id);
     CREATE INDEX IF NOT EXISTS anitos_characters_assigned_idx ON anitos_characters(assigned_player_id);
+    WITH ranked_assignments AS (
+      SELECT id, row_number() OVER (PARTITION BY campaign_id, assigned_player_id ORDER BY created_at, id) AS assignment_rank
+      FROM anitos_characters WHERE assigned_player_id IS NOT NULL
+    )
+    UPDATE anitos_characters ch SET assigned_player_id=NULL
+      FROM ranked_assignments r WHERE ch.id=r.id AND r.assignment_rank>1;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_characters_one_per_player_idx
+      ON anitos_characters(campaign_id, assigned_player_id) WHERE assigned_player_id IS NOT NULL;
     ALTER TABLE anitos_characters ADD COLUMN IF NOT EXISTS source_key text;
     CREATE UNIQUE INDEX IF NOT EXISTS anitos_characters_source_key_idx
       ON anitos_characters(campaign_id, source_key) WHERE source_key IS NOT NULL;
@@ -450,8 +458,8 @@ function registerAuthRoutes(app, express, db) {
       if (!campaign.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const owner = campaign.rows[0].owner_id === req.user.id;
       const result = owner
-        ? await db.query("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 ORDER BY created_at", [req.params.id])
-        : await db.query("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 AND assigned_player_id=$2 ORDER BY created_at", [req.params.id, req.user.id]);
+        ? await db.query("SELECT ch.id,ch.campaign_id,ch.name,ch.data,ch.assigned_player_id,u.display_name AS assigned_player_handle,ch.source_key,ch.created_at,ch.updated_at FROM anitos_characters ch LEFT JOIN anitos_users u ON u.id=ch.assigned_player_id WHERE ch.campaign_id=$1 ORDER BY ch.created_at", [req.params.id])
+        : await db.query("SELECT ch.id,ch.campaign_id,ch.name,ch.data,ch.assigned_player_id,u.display_name AS assigned_player_handle,ch.created_at,ch.updated_at FROM anitos_characters ch LEFT JOIN anitos_users u ON u.id=ch.assigned_player_id WHERE ch.campaign_id=$1 AND ch.assigned_player_id=$2 ORDER BY ch.created_at", [req.params.id, req.user.id]);
       res.json({characters: result.rows, readOnly: !owner});
     } catch (err) {
       console.error("[characters] Falha ao listar:", err.message);
