@@ -1318,6 +1318,7 @@
         let remoteCampaignReady = false;
         let remoteSaveQueue = Promise.resolve();
         let remoteSaveFailed = false;
+        let remoteSyncFailed = false;
         let remoteSaveRevision = 0;
 
         if (Object.keys(appData.snapshots).length === 0) {
@@ -1336,6 +1337,7 @@
             if (!remoteCampaignId || !remoteCampaignReady) return;
             const snapshot = JSON.stringify(appData);
             const revision = ++remoteSaveRevision;
+            const chapterToSync = activeChap && Array.isArray(appData.snapshots[activeChap]) ? activeChap : null;
             const statusLabel = document.getElementById('remote-save-label');
             if (statusLabel) statusLabel.textContent = 'SALVANDO ALTERAÇÕES…';
             const campaignFeedback = document.getElementById('campaign-save-feedback');
@@ -1353,11 +1355,38 @@
                     throw new Error(result.error || 'Falha ao salvar a campanha remota.');
                 }
                 if (revision === remoteSaveRevision) {
+                    remoteSyncFailed = false;
                     const savedAt = new Date().toLocaleTimeString('pt-BR');
                     const label = document.getElementById('remote-save-label');
-                    if (label) label.textContent = 'SALVO NO SERVIDOR • ' + savedAt;
                     const feedback = document.getElementById('campaign-save-feedback');
-                    if (feedback) feedback.textContent = 'Último salvamento: ' + savedAt;
+                    if (chapterToSync) {
+                        try {
+                            const syncResponse = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/sync-board-characters', {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ chapterId: chapterToSync })
+                            });
+                            const syncResult = await syncResponse.json().catch(() => ({}));
+                            if (!syncResponse.ok) throw new Error(syncResult.error || 'Falha ao sincronizar as fichas.');
+                            if (revision === remoteSaveRevision) {
+                                const syncedAt = new Date().toLocaleTimeString('pt-BR');
+                                if (label) label.textContent = 'SALVO + FICHAS SINCRONIZADAS • ' + syncedAt;
+                                if (feedback) feedback.textContent = 'Campanha salva e ' + syncResult.synced + ' ficha(s) sincronizada(s) às ' + syncedAt + '.';
+                            }
+                        } catch (syncError) {
+                            remoteSyncFailed = true;
+                            console.error('[ANITOPEBOARD] Campanha salva, mas a sincronização das fichas falhou:', syncError);
+                            if (revision === remoteSaveRevision) {
+                                if (label) label.textContent = 'CAMPANHA SALVA • FALHA AO SINCRONIZAR FICHAS';
+                                if (feedback) feedback.textContent = 'As alterações da campanha foram salvas, mas as fichas não sincronizaram. Confira a conexão e tente novamente.';
+                                if (label) label.title = syncError.message || 'Falha ao sincronizar fichas';
+                            }
+                        }
+                    } else {
+                        if (label) label.textContent = 'SALVO NO SERVIDOR • ' + savedAt;
+                        if (feedback) feedback.textContent = 'Último salvamento: ' + savedAt;
+                    }
                 }
             }).catch(error => {
                 remoteSaveFailed = true;
@@ -1387,6 +1416,10 @@
             await remoteSaveQueue;
             if (remoteSaveFailed) {
                 if (feedback) feedback.textContent = 'Não foi possível salvar. Exporte um backup JSON antes de tentar novamente.';
+                return;
+            }
+            if (remoteSyncFailed) {
+                if (feedback) feedback.textContent = 'A campanha foi salva, mas a sincronização das fichas falhou. Confira a conexão e tente novamente.';
                 return;
             }
             const savedAt = new Date().toLocaleTimeString('pt-BR');
@@ -1772,7 +1805,11 @@
                     const chap = appData.chapters.find(c => c.id === chapId);
                     return chap ? `<option value="${chapId}">${chap.name}</option>` : '';
                 }).join('');
-            } else openMainWindow();
+            } else {
+                openMainWindow();
+                // Abrir um capítulo também sincroniza suas fichas existentes com o servidor.
+                saveData();
+            }
         }
 
         function executeImport() {
