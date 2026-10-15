@@ -2029,10 +2029,10 @@
                     <div class="section-title">DADOS — ANITOPE RNG</div>
                     <p>Abra o RGN em outra aba para manter esta campanha aberta. Assim você pode continuar editando o ANITOPEBOARD e alternar para a sala de dados quando precisar.</p>
                     <div class="flex-row" style="margin-top:14px; flex-wrap:wrap;">
-                        <a class="btn" href="/room.html" target="_blank" rel="noopener noreferrer">ABRIR RGN EM NOVA ABA ↗</a>
+                        <a class="btn" href="/room.html?campaign=${encodeURIComponent(remoteCampaignId)}" target="_blank" rel="noopener noreferrer">ABRIR RGN EM NOVA ABA ↗</a>
                         <button onclick="saveCampaignNow('campaign')">Salvar Campanha Agora</button>
                     </div>
-                    <p style="margin-top:12px;font-size:12px;">O RGN abre como uma interface separada. A vinculação automática da sala ao código desta campanha não faz parte desta etapa.</p>
+                    <p style="margin-top:12px;font-size:12px;">O RGN abre em uma interface separada, já vinculada a esta campanha. O Mestre pode criar uma sala ou compartilhar o código com os jogadores participantes.</p>
                 </div>
             `;
         }
