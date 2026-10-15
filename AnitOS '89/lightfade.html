@@ -3008,6 +3008,11 @@
                 window.location.replace('/home.html?reason=select-campaign');
                 return;
             }
+            // A interface completa do ANITOPEBOARD é exclusiva para desktop.
+            if (window.matchMedia && window.matchMedia('(max-width: 760px)').matches) {
+                window.location.replace('/home.html?reason=desktop');
+                return;
+            }
             try {
                 const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId), { credentials: 'same-origin' });
                 const payload = await response.json().catch(() => ({}));
