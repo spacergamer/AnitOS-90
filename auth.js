@@ -83,6 +83,8 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
+    ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_salt text;
+    ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_hash text;
     CREATE TABLE IF NOT EXISTS anitos_campaign_members (
       campaign_id text NOT NULL REFERENCES anitos_campaigns(id) ON DELETE CASCADE,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -235,13 +237,16 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/campaigns", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem criar campanhas.");
     const title = String(req.body?.title || "").trim().replace(/\s+/g, " ").slice(0, 100);
+    const campaignPassword = typeof req.body?.campaignPassword === "string" ? req.body.campaignPassword : "";
     if (title.length < 2) return sendError(res, 400, "O título deve ter pelo menos 2 caracteres.");
+    if (campaignPassword.length < 8 || campaignPassword.length > 128) return sendError(res, 400, "A senha da campanha precisa ter entre 8 e 128 caracteres.");
     try {
-      const id = crypto.randomUUID();
-      const joinCode = crypto.randomBytes(4).toString("hex").toUpperCase();
+      const id = crypto.randomUUID(), joinCode = crypto.randomBytes(4).toString("hex").toUpperCase();
+      const joinPasswordSalt = crypto.randomBytes(16).toString("hex");
+      const joinPasswordHash = (await scrypt(campaignPassword, joinPasswordSalt, 64)).toString("hex");
       const result = await db.query(
-        "INSERT INTO anitos_campaigns(id,owner_id,title,join_code) VALUES($1,$2,$3,$4) RETURNING id,owner_id,title,join_code,created_at,updated_at",
-        [id, req.user.id, title, joinCode]
+        "INSERT INTO anitos_campaigns(id,owner_id,title,join_code,join_password_salt,join_password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,owner_id,title,join_code,created_at,updated_at",
+        [id, req.user.id, title, joinCode, joinPasswordSalt, joinPasswordHash]
       );
       res.status(201).json({campaign: {...result.rows[0], is_owner: true}});
     } catch (err) {
@@ -253,15 +258,18 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/campaigns/join", requireAuth, async (req, res) => {
     if (req.user.role !== "player") return sendError(res, 403, "Somente Jogadores podem entrar em campanhas por código.");
     const joinCode = String(req.body?.joinCode || "").trim().toUpperCase();
+    const campaignPassword = typeof req.body?.campaignPassword === "string" ? req.body.campaignPassword : "";
     if (!/^[A-F0-9]{8}$/.test(joinCode)) return sendError(res, 400, "Código de campanha inválido.");
+    if (!campaignPassword || campaignPassword.length > 128) return sendError(res, 400, "Informe a senha da campanha.");
     try {
-      const result = await db.query("SELECT id FROM anitos_campaigns WHERE join_code=$1", [joinCode]);
+      const result = await db.query("SELECT id,join_password_salt,join_password_hash FROM anitos_campaigns WHERE join_code=$1", [joinCode]);
       if (!result.rows[0]) return sendError(res, 404, "Campanha não encontrada. Confira o código.");
-      await db.query(
-        "INSERT INTO anitos_campaign_members(campaign_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
-        [result.rows[0].id, req.user.id]
-      );
-      res.json({ok: true, campaignId: result.rows[0].id});
+      const c = result.rows[0];
+      if (!c.join_password_salt || !c.join_password_hash) return sendError(res, 409, "Esta campanha ainda não tem senha. Peça ao Mestre para definir uma senha.");
+      const candidate = await scrypt(campaignPassword, c.join_password_salt, 64), expected = Buffer.from(c.join_password_hash, "hex");
+      if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected)) return sendError(res, 403, "Senha da campanha incorreta.");
+      await db.query("INSERT INTO anitos_campaign_members(campaign_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [c.id, req.user.id]);
+      res.json({ok: true, campaignId: c.id});
     } catch (err) {
       console.error("[campaigns] Falha ao entrar:", err.message);
       sendError(res, 500, "Não foi possível entrar na campanha.");
@@ -285,6 +293,18 @@ function registerAuthRoutes(app, express, db) {
       console.error("[campaigns] Falha ao carregar:", err.message);
       sendError(res, 500, "Não foi possível carregar a campanha.");
     }
+  });
+
+  app.patch("/api/campaigns/:id/password", requireAuth, async (req, res) => {
+    if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem alterar a senha da campanha.");
+    const password = typeof req.body?.campaignPassword === "string" ? req.body.campaignPassword : "";
+    if (password.length < 8 || password.length > 128) return sendError(res, 400, "A senha da campanha precisa ter entre 8 e 128 caracteres.");
+    try {
+      const salt = crypto.randomBytes(16).toString("hex"), hash = (await scrypt(password, salt, 64)).toString("hex");
+      const result = await db.query("UPDATE anitos_campaigns SET join_password_salt=$1,join_password_hash=$2,updated_at=now() WHERE id=$3 AND owner_id=$4 RETURNING id", [salt, hash, req.params.id, req.user.id]);
+      if (!result.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
+      res.json({ok:true});
+    } catch(err) { console.error("[campaigns] Falha ao alterar senha:",err.message); sendError(res,500,"Não foi possível alterar a senha da campanha."); }
   });
 
   app.patch("/api/campaigns/:id", requireAuth, async (req, res) => {
