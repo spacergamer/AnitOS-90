@@ -1926,6 +1926,26 @@
             return html;
         }
 
+        const boardAssignments = Object.create(null);
+        let boardAssignmentLoadedKey = '';
+        async function loadBoardAssignments(force = false) {
+            if (!remoteCampaignId || !activeChap) return;
+            const key = String(remoteCampaignId) + ':' + String(activeChap);
+            if (!force && boardAssignmentLoadedKey === key) return;
+            boardAssignmentLoadedKey = key;
+            try {
+                const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/characters', { credentials: 'same-origin' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Falha ao carregar atribuições.');
+                Object.keys(boardAssignments).forEach(k => delete boardAssignments[k]);
+                (payload.characters || []).forEach(item => {
+                    if (item.source_key) boardAssignments[String(item.source_key)] = item.assigned_player_handle || '';
+                });
+            } catch (error) {
+                console.warn('[ANITOPEBOARD] Não foi possível carregar atribuições:', error.message);
+            }
+        }
+
         async function assignBoardCharacter(index) {
             const chapterId = activeChap;
             const character = appData.snapshots?.[chapterId]?.[index];
@@ -1933,7 +1953,8 @@
                 alert('Abra um capítulo e selecione um personagem válido.');
                 return;
             }
-            const rawHandle = prompt('Digite o @nome do jogador que já participa desta campanha. Deixe vazio para remover a atribuição:', '');
+            const currentHandle = boardAssignments[String(character.id || '')] || '';
+            const rawHandle = prompt(currentHandle ? 'Atribuído a @' + currentHandle + '. Digite outro @ para transferir ou deixe vazio para retirar a atribuição:' : 'Digite o @nome do jogador que já participa desta campanha. Deixe vazio para remover a atribuição:', currentHandle);
             if (rawHandle === null) return;
             const playerHandle = rawHandle.trim().replace(/^@/, '');
             try {
@@ -1958,7 +1979,10 @@
                 });
                 const assignResult = await assignResponse.json().catch(() => ({}));
                 if (!assignResponse.ok) throw new Error(assignResult.error || 'Não foi possível atribuir a ficha.');
-                alert(playerHandle ? 'Ficha de ' + (character.nome || 'personagem') + ' atribuída a @' + playerHandle + '.' : 'Atribuição removida da ficha.');
+                boardAssignments[String(character.id || '')] = assignResult.character?.assigned_player_handle || (playerHandle ? playerHandle : '');
+                await loadBoardAssignments(true);
+                renderTab();
+                alert(playerHandle ? 'Ficha de ' + (character.nome || 'personagem') + ' atribuída a @' + (assignResult.character?.assigned_player_handle || playerHandle) + '.' : 'Atribuição removida da ficha.');
             } catch (error) {
                 alert(error.message || 'Falha ao atribuir a ficha.');
             }
@@ -1979,7 +2003,8 @@
                                 <div class="${c.classFont}" style="color:${c.color || ''};">${c.nome}</div>
                                 <div>
                                     <button class="btn btn-small" onclick="openEditChar(${i})" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
-                                    <button class="btn btn-small" onclick="assignBoardCharacter(${i})" style="font-size:11px; padding:2px 5px;">ATRIBUIR @</button>
+                                    <span style="font-size:14px; color:#000080; font-weight:bold; margin-right:5px;">${c.assignedHandle ? '@' + c.assignedHandle : 'Sem atribuição'}</span>
+                                    <button class="btn btn-small" onclick="assignBoardCharacter(${i})" style="font-size:11px; padding:2px 5px;">${c.assignedHandle ? 'RETIRAR / TROCAR @' : 'ATRIBUIR @'}</button>
                                     <button class="del-btn" onclick="delCharacter(${i})">X Deletar</button>
                                 </div>
                             </div>
