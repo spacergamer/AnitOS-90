@@ -31,13 +31,13 @@ app.use("/img",express.static(path.join(__dirname,"img")));
 // na rota raiz do dashboard. Os arquivos de img/ e aud/ continuam estáticos.
 const boardDir=path.join(__dirname,"AnitOS '89");
 app.get("/anitopeboard",(_q,r)=>r.redirect(302,"/anitopeboard/"));
-app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(boardDir,"lightfade.html")));
+app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
 app.use("/anitopeboard",express.static(boardDir));
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
 app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
-app.get("/board.html",(q,r)=>r.redirect(302,"/anitopeboard/"+q.url.slice("/board.html".length)));
+app.get("/board.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
 app.get("/room.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","room.html")));
 app.get("/rgn",(_q,r)=>r.redirect(302,"/room.html"));
 app.get("/",(_q,r)=>r.redirect(302,"/login.html"));
