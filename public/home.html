@@ -473,6 +473,16 @@ async function refreshMasterCharacters() {
   } catch (error) { message("masterMessage", error.message, "error"); }
 }
 
+document.addEventListener('keydown', event => {
+  const target = event.target;
+  const typing = target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  if (event.key !== "'" || typing || event.ctrlKey || event.altKey || event.metaKey) return;
+  event.preventDefault();
+  if (!$('masterWindow').hidden && managedCampaign) refreshMasterCharacters();
+  else if (!$('sheetWindow').hidden && assignedSheetCampaign) refreshAssignedSheets(true);
+  else if (!$('appWindow').hidden) loadCampaigns();
+});
+
 async function loadCampaigns() {
   try {
     const result = await api("/api/campaigns");
