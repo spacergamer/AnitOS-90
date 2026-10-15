@@ -478,17 +478,36 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/characters/:id/assign", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem atribuir fichas.");
-    const playerId = String(req.body?.playerId || "");
+    const playerEmail = typeof req.body?.playerEmail === "string" ? req.body.playerEmail.trim().toLowerCase() : "";
+    const legacyPlayerId = String(req.body?.playerId || "");
+    if (playerEmail && (playerEmail.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(playerEmail))) {
+      return sendError(res, 400, "Informe um email válido para o jogador.");
+    }
     try {
+      let playerId = legacyPlayerId || null;
+      if (playerEmail) {
+        const member = await db.query(
+          `SELECT u.id FROM anitos_users u
+           JOIN anitos_campaign_members m ON m.user_id=u.id
+           JOIN anitos_characters ch ON ch.campaign_id=m.campaign_id
+           WHERE ch.id=$1 AND ch.owner_id=$2 AND lower(u.email)=$3 AND u.role='player'
+           LIMIT 1`,
+          [req.params.id, req.user.id, playerEmail]
+        );
+        if (!member.rows[0]) return sendError(res, 404, "Não existe um jogador com esse email participando desta campanha.");
+        playerId = member.rows[0].id;
+      }
       const result = await db.query(
         `UPDATE anitos_characters ch SET assigned_player_id=$1,updated_at=now()
          WHERE ch.id=$2 AND ch.owner_id=$3
-           AND ($1 IS NULL OR EXISTS (
+           AND ($1::text IS NULL OR EXISTS (
              SELECT 1 FROM anitos_campaign_members m
+             JOIN anitos_users u ON u.id=m.user_id
              WHERE m.campaign_id=ch.campaign_id AND m.user_id=$1
+               AND u.role='player'
            ))
          RETURNING ch.id,ch.campaign_id,ch.name,ch.assigned_player_id`,
-        [playerId || null, req.params.id, req.user.id]
+        [playerId, req.params.id, req.user.id]
       );
       if (!result.rows[0]) return sendError(res, 404, "Ficha ou jogador não encontrado na campanha.");
       res.json({character: result.rows[0]});
