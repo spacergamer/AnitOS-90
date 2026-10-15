@@ -515,9 +515,10 @@ function registerAuthRoutes(app, express, db) {
     if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um @nome válido.");
     try {
       let playerId = legacyPlayerId || null;
+      let assignedPlayerHandle = null;
       if (playerEmail || playerHandle) {
         const member = await db.query(
-          `SELECT u.id FROM anitos_users u
+          `SELECT u.id,u.display_name FROM anitos_users u
            JOIN anitos_campaign_members m ON m.user_id=u.id
            JOIN anitos_characters ch ON ch.campaign_id=m.campaign_id
            WHERE ch.id=$1 AND ch.owner_id=$2 AND (${playerEmail ? "lower(u.email)=$3" : "lower(u.display_name)=$3"}) AND u.role='player'
@@ -526,6 +527,7 @@ function registerAuthRoutes(app, express, db) {
         );
         if (!member.rows[0]) return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
         playerId = member.rows[0].id;
+        assignedPlayerHandle = member.rows[0].display_name || null;
       }
       const result = await db.query(
         `UPDATE anitos_characters ch SET assigned_player_id=$1,updated_at=now()
@@ -536,10 +538,16 @@ function registerAuthRoutes(app, express, db) {
              WHERE m.campaign_id=ch.campaign_id AND m.user_id=$1
                AND u.role='player'
            ))
+           AND ($1::text IS NULL OR NOT EXISTS (
+             SELECT 1 FROM anitos_characters other
+             WHERE other.campaign_id=ch.campaign_id
+               AND other.assigned_player_id=$1 AND other.id<>ch.id
+           ))
          RETURNING ch.id,ch.campaign_id,ch.name,ch.assigned_player_id`,
         [playerId, req.params.id, req.user.id]
       );
-      if (!result.rows[0]) return sendError(res, 404, "Ficha ou jogador não encontrado na campanha.");
+      if (!result.rows[0]) return sendError(res, 409, "Ficha não encontrada ou este jogador já possui um personagem nesta campanha.");
+      result.rows[0].assigned_player_handle = playerId ? assignedPlayerHandle : null;
       res.json({character: result.rows[0]});
     } catch (err) {
       console.error("[characters] Falha ao atribuir:", err.message);
