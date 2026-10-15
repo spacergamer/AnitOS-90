@@ -54,12 +54,14 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <form class="card" id="createCampaign" hidden>
 <h2>Nova campanha</h2>
 <label for="campaignTitle">Nome da campanha</label><input id="campaignTitle" maxlength="100" required placeholder="Ex.: Light Fade — Ato I">
-<button type="submit" style="margin-top:10px">Criar campanha</button>
+<label for="campaignPassword">Senha da campanha (mín. 8 caracteres)</label><input id="campaignPassword" type="password" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="Compartilhe com os jogadores">
+<button type="submit style="margin-top:10px">Criar campanha</button>
 </form>
 <form class="card" id="joinCampaign" hidden>
 <h2>Entrar em campanha</h2>
-<label for="joinCode">Código do Mestre</label><input id="joinCode" maxlength="8" required placeholder="8 caracteres" autocomplete="off">
-<button type="submit" style="margin-top:10px">Entrar</button>
+<label for="joinCode">Código da campanha</label><input id="joinCode" maxlength="8" required placeholder="8 caracteres" autocomplete="off">
+<label for="joinPassword">Senha da campanha</label><input id="joinPassword" type="password" maxlength="128" required autocomplete="current-password" placeholder="Senha compartilhada pelo Mestre">
+<button type="submit style="margin-top:10px">Entrar</button>
 </form>
 <div class="card">
 <h2>Atalhos</h2>
@@ -121,8 +123,9 @@ $("createCampaign").addEventListener("submit", async event => {
   submit.disabled = true;
   message("campaignMessage", "Criando campanha…");
   try {
-    await api("/api/campaigns", {method:"POST",body:JSON.stringify({title:$("campaignTitle").value})});
+    await api("/api/campaigns", {method:"POST",body:JSON.stringify({title:$("campaignTitle").value,campaignPassword:$("campaignPassword").value})});
     $("campaignTitle").value = "";
+    $("campaignPassword").value = "";
     await loadCampaigns();
     message("campaignMessage", "Campanha criada! Abra-a pelo botão no cartão da campanha para entrar no ANITOPEBOARD.", "success");
   } catch (error) {
@@ -134,8 +137,9 @@ $("createCampaign").addEventListener("submit", async event => {
 $("joinCampaign").addEventListener("submit", async event => {
   event.preventDefault();
   try {
-    await api("/api/campaigns/join", {method:"POST",body:JSON.stringify({joinCode:$("joinCode").value})});
+    await api("/api/campaigns/join", {method:"POST",body:JSON.stringify({joinCode:$("joinCode").value,campaignPassword:$("joinPassword").value})});
     $("joinCode").value = "";
+    $("joinPassword").value = "";
     await loadCampaigns();
     message("campaignMessage", "Você entrou na campanha.", "success");
   } catch (error) { message("campaignMessage", error.message, "error"); }
@@ -157,6 +161,8 @@ function campaignCard(campaign) {
     open.textContent = "Abrir campanha no ANITOPEBOARD";
     open.style.marginTop = "12px";
     card.append(open);
+    const roomLink=document.createElement("a");roomLink.href="/room.html?campaign="+encodeURIComponent(campaign.id);roomLink.className="button";roomLink.textContent="Abrir sala RGN da campanha";roomLink.style.marginTop="8px";card.append(roomLink);
+    const changePassword=document.createElement("button");changePassword.type="button";changePassword.textContent="Alterar senha da campanha";changePassword.style.marginTop="8px";changePassword.addEventListener("click",async()=>{const password=window.prompt("Nova senha da campanha (mínimo 8 caracteres):");if(password===null)return;try{await api("/api/campaigns/"+encodeURIComponent(campaign.id)+"/password",{method:"PATCH",body:JSON.stringify({campaignPassword:password})});message("campaignMessage","Senha da campanha atualizada. Compartilhe a nova senha com os jogadores.","success")}catch(error){message("campaignMessage",error.message,"error")}});card.append(changePassword);
     const manage = document.createElement("button");
     manage.type = "button";
     manage.textContent = "Gerenciar fichas e jogadores";
@@ -189,6 +195,7 @@ function campaignCard(campaign) {
     });
     card.append(remove);
   } else {
+    const roomLink=document.createElement("a");roomLink.href="/room.html?campaign="+encodeURIComponent(campaign.id);roomLink.className="button";roomLink.textContent="Entrar / criar sala RGN";roomLink.style.marginTop="12px";card.append(roomLink);
     const view = document.createElement("button");
     view.type = "button";
     view.textContent = "Ver minhas fichas";
