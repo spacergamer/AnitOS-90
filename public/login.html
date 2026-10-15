@@ -100,8 +100,10 @@ $("authForm").addEventListener("submit", async event => {
   $("submitAuth").disabled = true;
   message("authMessage", mode === "register" ? "Criando conta…" : "Verificando credenciais…");
   try {
-    const result = await api("/api/auth/" + mode, {method:"POST", body:JSON.stringify(body)});
-    window.location.href = "/home.html";
+    await api("/api/auth/" + mode, {method:"POST", body:JSON.stringify(body)});
+    // Confirme que o navegador recebeu e está enviando a sessão antes de navegar.
+    await api("/api/auth/me");
+    window.location.replace("/home.html");
   } catch (error) {
     message("authMessage", error.message, "error");
   } finally {
@@ -109,7 +111,19 @@ $("authForm").addEventListener("submit", async event => {
   }
 });
 
-(async function boot(){try{await api("/api/auth/me");window.location.replace("/home.html");}catch{}})();
+(async function boot(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("reason") === "session") {
+    message("authMessage", "A sessão não foi reconhecida pelo menu. Entre novamente; se persistir, o servidor não está mantendo o cookie de autenticação.", "error");
+    return;
+  }
+  try {
+    await api("/api/auth/me");
+    // Evita um redirecionamento automático infinito se o menu rejeitar a sessão.
+    const check = await fetch("/api/auth/me", {credentials:"same-origin"});
+    if (check.ok) window.location.replace("/home.html");
+  } catch {}
+})();
 </script>
 </body>
 </html>
