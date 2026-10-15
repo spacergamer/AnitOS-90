@@ -1995,6 +1995,16 @@
             if (activeTab === 'dados') return renderDataTab(container);
 
             const chars = appData.snapshots[activeChap];
+            const assignmentKey = String(remoteCampaignId || '') + ':' + String(activeChap || '');
+            if (remoteCampaignId && activeChap && boardAssignmentLoadedKey !== assignmentKey) {
+                loadBoardAssignments().then(() => {
+                    if (chars === appData.snapshots[activeChap]) {
+                        chars.forEach(c => { c.assignedHandle = boardAssignments[String(c.id || '')] || ''; });
+                        renderTab();
+                    }
+                });
+            }
+            chars.forEach(c => { c.assignedHandle = boardAssignments[String(c.id || '')] || c.assignedHandle || ''; });
             let html = `<button onclick="document.getElementById('add-char-modal').classList.remove('hidden')" style="margin-bottom:10px;">+ ADICIONAR EMPREGADO</button>`;
 
             chars.forEach((c, i) => {
