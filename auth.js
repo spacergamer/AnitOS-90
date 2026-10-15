@@ -480,7 +480,7 @@ function registerAuthRoutes(app, express, db) {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem atribuir fichas.");
     const playerEmail = typeof req.body?.playerEmail === "string" ? req.body.playerEmail.trim().toLowerCase() : "";
     const legacyPlayerId = String(req.body?.playerId || "");
-    if (playerEmail && (playerEmail.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(playerEmail))) {
+    if (playerEmail && (playerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail))) {
       return sendError(res, 400, "Informe um email válido para o jogador.");
     }
     try {
