@@ -1,7 +1,7 @@
 const express=require("express");
 const http=require("http");
 const {Server}=require("socket.io");
-const {randomInt,randomBytes}=require("node:crypto");
+const {randomInt,randomBytes,createHash}=require("node:crypto");
 const {Pool}=require("pg");
 const path=require("node:path");
 const {initializeAuthSchema,registerAuthRoutes}=require("./auth");
@@ -57,6 +57,7 @@ function state(r){
   players:[...r.players.values()].map(p=>({
    id:p.id,name:p.name,admin:p.admin,connected:p.connected
   })),
+  campaignId:r.campaignId||null,
   rolls:r.rolls.slice(0,100),
   chat:Array.isArray(r.chat)?r.chat.slice(-100):[]
  };
@@ -173,16 +174,32 @@ function expireDisconnectedPlayer(r,p){
  if(p.resumeTimer.unref)p.resumeTimer.unref();
 }
 
+io.use(async(socket,next)=>{
+ try{
+  const raw=(socket.handshake.headers.cookie||"").split(";").map(x=>x.trim()).map(x=>x.startsWith("anitos_session=")?x.slice(15):"").find(Boolean)||"";
+  if(raw&&db){let token=raw;try{token=decodeURIComponent(raw)}catch{}const hash=createHash("sha256").update(token).digest("hex");const result=await db.query("SELECT user_id FROM anitos_sessions WHERE token_hash=$1 AND expires_at>now()",[hash]);if(result.rows[0])socket.data.userId=result.rows[0].user_id}
+  next();
+ }catch(err){next(new Error("Não foi possível validar a sessão da conta."))}
+});
+async function canAccessCampaign(userId,campaignId){
+ if(!db||!userId||!campaignId)return false;
+ const result=await db.query("SELECT c.id FROM anitos_campaigns c LEFT JOIN anitos_campaign_members m ON m.campaign_id=c.id AND m.user_id=$1 WHERE c.id=$2 AND (c.owner_id=$1 OR m.user_id=$1) LIMIT 1",[userId,campaignId]);
+ return Boolean(result.rows[0]);
+}
+
 io.on("connection",s=>{
  s.on("system:ping",(_sentAt,ack)=>{if(typeof ack==="function")ack(Date.now())});
- s.on("room:create",p=>{
+ s.on("room:create",async p=>{
   if(!allowEvent(s,"room:create",3,60_000)||!allowEvent(s,"room:create",10,60_000,"ip"))return;
   if(rooms.size>=MAX_ROOMS)return error(s,"O servidor atingiu o limite de salas. Tente novamente mais tarde.");
+  const campaignId=String(p?.campaignId||"").trim();
+  if(campaignId&&!await canAccessCampaign(s.data.userId,campaignId))return error(s,"Entre na campanha com sua conta antes de criar uma sala.");
   leave(s);
   const c=code();
   const r={
    code:c,
    title:String(p?.title||"Sessão sem título").trim().slice(0,36)||"Sessão sem título",
+   campaignId:campaignId||null,
    players:new Map(),
    rolls:[],
    chat:[],
@@ -202,10 +219,12 @@ io.on("connection",s=>{
   rooms.set(c,r);
   connectPlayer(s,r,player);
  });
- s.on("room:join",p=>{
+ s.on("room:join",async p=>{
   if(!allowEvent(s,"room:join",10,60_000)||!allowEvent(s,"room:join",30,60_000,"ip"))return;
   const c=String(p?.code||"").trim().toUpperCase(),r=rooms.get(c);
   if(!r)return error(s,"Sala não encontrada. Confira o código.");
+  const requestedCampaignId=String(p?.campaignId||"").trim();
+  if(r.campaignId){if(requestedCampaignId!==r.campaignId)return error(s,"Esta sala pertence a uma campanha. Abra-a pelo menu da campanha correta.");if(!await canAccessCampaign(s.data.userId,r.campaignId))return error(s,"Você não tem acesso a esta campanha com a conta atual.")}else if(requestedCampaignId)return error(s,"Esta sala não pertence à campanha selecionada.");
   const joiningName=name(p?.name).toLocaleLowerCase("pt-BR");
   if(r.bannedNames?.has(joiningName))return error(s,"Este nome foi banido desta sala. Entre em contato com o mestre.");
   if(r.players.size>=MAX_PLAYERS_PER_ROOM)return error(s,"Esta sala atingiu o limite de 20 jogadores.");
