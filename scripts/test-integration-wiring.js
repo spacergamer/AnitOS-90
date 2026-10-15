@@ -18,7 +18,15 @@ assert.match(board, /href="\/room\.html\?campaign=\$\{encodeURIComponent\(remote
 assert.doesNotMatch(board, /vinculação automática da sala ao código desta campanha não faz parte desta etapa/i);
 assert.match(home, /href="\/room\.html\?campaign="\+encodeURIComponent\(campaign\.id\)/);
 assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
-assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
+assert.match(room, /setInterval\(\(\)=>\{if\(room\)refreshCampaignSheet\(\)\},5000\)/);
+
+// Saving or opening a chapter in ANITOPEBOARD must synchronize its character sheets.
+const saveDataStart = board.indexOf("function saveData()");
+const saveChapterStart = board.indexOf("async function saveCampaignNow", saveDataStart);
+assert.ok(saveDataStart >= 0 && saveChapterStart > saveDataStart);
+assert.match(board.slice(saveDataStart, saveChapterStart), /sync-board-characters/);
+assert.match(board.slice(saveDataStart, saveChapterStart), /SALVO \+ FICHAS SINCRONIZADAS/);
+assert.match(board, /Abrir um capítulo também sincroniza suas fichas existentes com o servidor/);
 
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);
