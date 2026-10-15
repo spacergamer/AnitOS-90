@@ -24,12 +24,12 @@ async function main() {
         assert.equal(params[1],"master-1");
         return {rows:[{id:params[0],campaign_id:"campaign-1"}]};
       }
-      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$3")) {
+      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$2")) {
         assert.equal(params[0],"campaign-1");
         assert.equal(params[1],"player@example.test");
         return {rows:[{id:"player-1"}]};
       }
-      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$3")) {
+      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
         assert.equal(params[0],"campaign-1");
         assert.equal(params[1],"jogador");
         return {rows:[{id:"player-1"}]};
