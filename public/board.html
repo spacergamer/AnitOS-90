@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/anitopeboard/">
-    <title>ANITOPEBOARD — AnitOS '89</title>
+    <title>AnitOS '90 — ANITOPEBOARD</title>
     <link rel="icon" type="image/x-icon" href="img/as.ico">
 
     <!-- Fontes -->
@@ -818,7 +818,7 @@
                 <div class="tab" onclick="switchTab('skill-path')">Skill Path</div>
                 <div class="tab" onclick="switchTab('extras')">Extras</div>
                 <div class="tab" onclick="switchTab('salvar')">Salvar</div>
-                <div class="tab" onclick="switchTab('dados')">DADOS</div>
+                <div class="tab" onclick="switchTab('dados')">Dados</div>
             </div>
 
             <div class="window-content" id="tab-content" style="padding-bottom: 20px;">
@@ -1889,6 +1889,11 @@
         }
 
         function switchTab(tab) {
+            if (tab === 'dados') {
+                const url = '/room.html' + (remoteCampaignId ? '?campaign=' + encodeURIComponent(remoteCampaignId) : '');
+                window.open(url, '_blank', 'noopener,noreferrer');
+                return;
+            }
             activeTab = tab;
             saveUiState();
             syncTabs();
@@ -3263,19 +3268,16 @@
                     await remoteSaveQueue;
                     if (remoteSaveFailed) throw new Error('A cópia inicial falhou. Seus dados locais foram preservados; tente novamente.');
                 }
-                const status = document.createElement('div');
+                const status = document.createElement('button');
                 status.id = 'remote-save-status';
-                status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:7px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 24px);';
-                const statusLabel = document.createElement('span');
-                statusLabel.id = 'remote-save-label';
-                statusLabel.textContent = "SALVAMENTO AUTOMÁTICO ATIVO • PRESSIONE ' PARA ATUALIZAR";
-                status.appendChild(statusLabel);
-                const homeButton = document.createElement('button');
-                homeButton.type = 'button';
-                homeButton.textContent = 'MENU PRINCIPAL';
-                homeButton.style.cssText = 'font:inherit;cursor:pointer;padding:4px 7px;';
-                homeButton.addEventListener('click', () => { window.location.href = '/home.html'; });
-                status.appendChild(homeButton);
+                status.type = 'button';
+                status.setAttribute('aria-label', 'Voltar ao menu principal');
+                status.title = 'Menu principal';
+                status.textContent = '⌂';
+                status.style.cssText = 'position:fixed;right:8px;bottom:8px;z-index:10001;width:28px;height:28px;padding:0;border:1px solid #05ffa1;background:#000;color:#05ffa1;font:18px var(--font-sys);cursor:pointer;opacity:.45;';
+                status.addEventListener('click', () => { window.location.href = '/home.html'; });
+                status.addEventListener('mouseenter', () => { status.style.opacity = '1'; });
+                status.addEventListener('mouseleave', () => { status.style.opacity = '.45'; });
                 document.body.appendChild(status);
                 if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
                 renderSidebar();
