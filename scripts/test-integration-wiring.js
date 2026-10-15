@@ -18,7 +18,7 @@ assert.match(board, /href="\/room\.html\?campaign=\$\{encodeURIComponent\(remote
 assert.doesNotMatch(board, /vinculação automática da sala ao código desta campanha não faz parte desta etapa/i);
 assert.match(home, /href="\/room\.html\?campaign="\+encodeURIComponent\(campaign\.id\)/);
 assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
-assert.match(room, /setInterval\(\(\)=>\{if\(room\)refreshCampaignSheet\(\)\},5000\)/);
+assert.match(room, /setInterval\(\(\)=>\{if\(room\)refreshCampaignSheet\(\)\},1000\)/);
 
 // Saving or opening a chapter in ANITOPEBOARD must synchronize its character sheets.
 const saveDataStart = board.indexOf("function saveData()");
@@ -39,6 +39,8 @@ assert.match(server, /campaignId:typeof data\.campaignId==="string"\?data\.campa
 
 
 // ANITOPEBOARD content lives in board.html and serves legacy relative assets from /anitopeboard/.
+assert.match(board, /assignBoardCharacter\(\$\{i\}\)/);
+assert.match(board, /PRESSIONE F5/);
 assert.match(board, /<base href=/);
 assert.match(board, /href="img\/as\.ico"/);
 assert.match(board, /ANITOPEBOARD/);
