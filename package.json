@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --check auth.js && node --check scripts/check-inline.js && node scripts/test-board-sync.js && node scripts/test-board-sync-route.js && node scripts/test-board-sync-access.js && node scripts/test-player-character-privacy.js && node scripts/test-campaign-deletion.js && node scripts/test-password-policy.js && node scripts/check-inline.js"
+    "test": "node --check server.js && node --check auth.js && node --check scripts/check-inline.js && node scripts/test-board-sync.js && node scripts/test-board-sync-route.js && node scripts/test-board-sync-access.js && node scripts/test-player-character-privacy.js && node scripts/test-character-assignment-email.js && node scripts/test-campaign-deletion.js && node scripts/test-password-policy.js && node scripts/check-inline.js"
   },
   "engines": {
     "node": ">=20"

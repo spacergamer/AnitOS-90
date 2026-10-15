@@ -407,11 +407,37 @@ async function refreshMasterCharacters() {
       const heading = document.createElement("h2");
       heading.textContent = character.name || "Personagem sem nome";
       const label = document.createElement("label");
-      label.textContent = "Jogador responsável";
-      const select = document.createElement("select");
-      select.append(new Option("Não atribuída", ""));
-      for (const member of managedMembers) select.append(new Option(member.display_name + " (" + member.email + ")", member.id));
-      select.value = character.assigned_player_id || "";
+      label.textContent = "Email do jogador responsável";
+      const email = document.createElement("input");
+      email.type = "email";
+      email.maxLength = 254;
+      email.autocomplete = "off";
+      email.placeholder = "jogador@exemplo.com";
+      const assignedMember = managedMembers.find(member => member.id === character.assigned_player_id);
+      email.value = assignedMember?.email || "";
+      const assignmentHint = document.createElement("p");
+      assignmentHint.className = "muted";
+      assignmentHint.textContent = "O jogador precisa ter cadastro e já participar desta campanha. Deixe vazio para remover a atribuição.";
+      const assign = document.createElement("button");
+      assign.type = "button";
+      assign.textContent = "Atribuir ficha pelo email";
+      assign.style.marginTop = "8px";
+      assign.addEventListener("click", async () => {
+        if (email.value.trim() && !email.checkValidity()) {
+          message("masterMessage", "Informe um email válido.", "error");
+          email.focus();
+          return;
+        }
+        assign.disabled = true;
+        try {
+          await api("/api/characters/" + encodeURIComponent(character.id) + "/assign", {
+            method:"POST", body:JSON.stringify({playerEmail:email.value.trim()})
+          });
+          message("masterMessage", email.value.trim() ? "Ficha atribuída ao email informado." : "Atribuição removida.", "success");
+          await refreshMasterCharacters();
+        } catch (error) { message("masterMessage", error.message, "error"); }
+        finally { assign.disabled = false; }
+      });
       const jsonLabel = document.createElement("label");
       jsonLabel.textContent = "Dados da ficha (JSON)";
       const json = document.createElement("textarea");
@@ -436,14 +462,11 @@ async function refreshMasterCharacters() {
           await api("/api/characters/" + encodeURIComponent(character.id), {
             method:"PATCH", body:JSON.stringify({data})
           });
-          await api("/api/characters/" + encodeURIComponent(character.id) + "/assign", {
-            method:"POST", body:JSON.stringify({playerId:select.value || null})
-          });
-          message("masterMessage", "Ficha e atribuição de " + heading.textContent + " salvas.", "success");
+          message("masterMessage", "Ficha de " + heading.textContent + " salva.", "success");
         } catch (error) { message("masterMessage", error.message, "error"); }
         finally { save.disabled = false; }
       });
-      card.append(heading, label, select, jsonLabel, json, save);
+      card.append(heading, label, email, assignmentHint, assign, jsonLabel, json, save);
       list.append(card);
     }
   } catch (error) { message("masterMessage", error.message, "error"); }
