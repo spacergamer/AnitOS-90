@@ -24,17 +24,17 @@ async function main() {
         assert.equal(params[1],"master-1");
         return {rows:[{id:params[0],campaign_id:"campaign-1"}]};
       }
-      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$2")) {
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.email)=$2")) {
         assert.equal(params[0],"campaign-1");
         assert.equal(params[1],"player@example.test");
-        return {rows:[{id:"player-1"}]};
+        return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
-      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
         assert.equal(params[0],"campaign-1");
         assert.equal(params[1],"jogador");
-        return {rows:[{id:"player-1"}]};
+        return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
-      if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1"}]};
+      if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1",display_name:"Jogador"}]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")) return {rows:[]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")) {
         return {rows:[{id:params[1],campaign_id:"campaign-1",name:params[1]==="character-2"?"Outro personagem":"Personagem",assigned_player_id:params[0]}]};
