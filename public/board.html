@@ -1897,6 +1897,44 @@
             return html;
         }
 
+        async function assignBoardCharacter(index) {
+            const chapterId = activeChap;
+            const character = appData.snapshots?.[chapterId]?.[index];
+            if (!remoteCampaignId || !chapterId || !character) {
+                alert('Abra um capítulo e selecione um personagem válido.');
+                return;
+            }
+            const rawHandle = prompt('Digite o @nome do jogador que já participa desta campanha. Deixe vazio para remover a atribuição:', '');
+            if (rawHandle === null) return;
+            const playerHandle = rawHandle.trim().replace(/^@/, '');
+            try {
+                await remoteSaveQueue;
+                if (remoteSaveFailed) throw new Error('Há alterações ainda não salvas. Aguarde o salvamento automático e tente novamente.');
+                const syncResponse = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/sync-board-characters', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chapterId })
+                });
+                const syncResult = await syncResponse.json().catch(() => ({}));
+                if (!syncResponse.ok) throw new Error(syncResult.error || 'Não foi possível atualizar a lista de fichas.');
+                const listResponse = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/characters', { credentials: 'same-origin' });
+                const listResult = await listResponse.json().catch(() => ({}));
+                if (!listResponse.ok) throw new Error(listResult.error || 'Não foi possível localizar a ficha no servidor.');
+                const remoteCharacter = (listResult.characters || []).find(item => String(item.source_key || '') === String(character.id || ''));
+                if (!remoteCharacter) throw new Error('A ficha ainda não apareceu no servidor. Tente novamente em alguns segundos.');
+                const assignResponse = await fetch('/api/characters/' + encodeURIComponent(remoteCharacter.id) + '/assign', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerHandle })
+                });
+                const assignResult = await assignResponse.json().catch(() => ({}));
+                if (!assignResponse.ok) throw new Error(assignResult.error || 'Não foi possível atribuir a ficha.');
+                alert(playerHandle ? 'Ficha de ' + (character.nome || 'personagem') + ' atribuída a @' + playerHandle + '.' : 'Atribuição removida da ficha.');
+            } catch (error) {
+                alert(error.message || 'Falha ao atribuir a ficha.');
+            }
+        }
+
         function renderTab() {
             const container = document.getElementById('tab-content');
             if (activeTab === 'extras') return renderExtras(container);
@@ -1912,6 +1950,7 @@
                                 <div class="${c.classFont}" style="color:${c.color || ''};">${c.nome}</div>
                                 <div>
                                     <button class="btn btn-small" onclick="openEditChar(${i})" style="font-size:11px; padding:2px 5px;">Editar Perfil</button>
+                                    <button class="btn btn-small" onclick="assignBoardCharacter(${i})" style="font-size:11px; padding:2px 5px;">ATRIBUIR @</button>
                                     <button class="del-btn" onclick="delCharacter(${i})">X Deletar</button>
                                 </div>
                             </div>
@@ -3162,43 +3201,14 @@
                 status.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:10001;background:#000;color:#05ffa1;padding:7px 10px;border:1px solid #05ffa1;font-family:var(--font-sys);display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 24px);';
                 const statusLabel = document.createElement('span');
                 statusLabel.id = 'remote-save-label';
-                statusLabel.textContent = 'CAMPANHA SINCRONIZADA COM O SERVIDOR';
+                statusLabel.textContent = 'SALVAMENTO AUTOMÁTICO ATIVO • PARA RECARREGAR, PRESSIONE F5';
                 status.appendChild(statusLabel);
-                const syncBoardButton = document.createElement('button');
-                syncBoardButton.type = 'button';
-                syncBoardButton.textContent = 'SINCRONIZAR FICHAS DO CAPÍTULO';
-                syncBoardButton.style.cssText = 'font:inherit;cursor:pointer;background:#05ffa1;color:#000;border:1px solid #05ffa1;padding:4px 7px;';
-                syncBoardButton.addEventListener('click', async () => {
-                    const chapterId = activeChap;
-                    if (!chapterId || !Array.isArray(appData.snapshots[chapterId])) {
-                        alert('Abra um capítulo com personagens antes de sincronizar as fichas.');
-                        return;
-                    }
-                    const originalLabel = syncBoardButton.textContent;
-                    syncBoardButton.disabled = true;
-                    syncBoardButton.textContent = 'SINCRONIZANDO…';
-                    try {
-                        await remoteSaveQueue;
-                        if (remoteSaveFailed) throw new Error('Há alterações que ainda não foram salvas no servidor. Confira a conexão e tente novamente.');
-                        const response = await fetch('/api/campaigns/' + encodeURIComponent(remoteCampaignId) + '/sync-board-characters', {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ chapterId })
-                        });
-                        const result = await response.json().catch(() => ({}));
-                        if (!response.ok) throw new Error(result.error || 'Falha ao sincronizar as fichas.');
-                        statusLabel.textContent = 'FICHAS SINCRONIZADAS: ' + result.synced;
-                        syncBoardButton.textContent = 'SINCRONIZAR NOVAMENTE';
-                    } catch (error) {
-                        alert(error.message || 'Não foi possível sincronizar as fichas.');
-                        syncBoardButton.textContent = originalLabel;
-                    } finally {
-                        syncBoardButton.disabled = false;
-                    }
-                });
-                status.appendChild(document.createTextNode(' '));
-                status.appendChild(syncBoardButton);
+                const homeButton = document.createElement('button');
+                homeButton.type = 'button';
+                homeButton.textContent = 'MENU PRINCIPAL';
+                homeButton.style.cssText = 'font:inherit;cursor:pointer;padding:4px 7px;';
+                homeButton.addEventListener('click', () => { window.location.href = '/home.html'; });
+                status.appendChild(homeButton);
                 document.body.appendChild(status);
                 if (appData.acts.some(a => a.id === savedUiState.activeAct)) activeAct = savedUiState.activeAct;
                 renderSidebar();
