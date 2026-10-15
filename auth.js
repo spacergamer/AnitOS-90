@@ -123,6 +123,23 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_characters ADD COLUMN IF NOT EXISTS source_key text;
     CREATE UNIQUE INDEX IF NOT EXISTS anitos_characters_source_key_idx
       ON anitos_characters(campaign_id, source_key) WHERE source_key IS NOT NULL;
+    -- A campaign may assign at most one character to each player. Keep the most recently updated
+    -- assignment if legacy data already contains duplicates, then enforce the rule in PostgreSQL.
+    WITH ranked_assignments AS (
+      SELECT id, row_number() OVER (
+        PARTITION BY campaign_id, assigned_player_id
+        ORDER BY updated_at DESC, created_at DESC, id
+      ) AS assignment_rank
+      FROM anitos_characters
+      WHERE assigned_player_id IS NOT NULL
+    )
+    UPDATE anitos_characters ch
+      SET assigned_player_id=NULL, updated_at=now()
+      FROM ranked_assignments ranked
+      WHERE ch.id=ranked.id AND ranked.assignment_rank>1;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_characters_one_player_per_campaign_idx
+      ON anitos_characters(campaign_id, assigned_player_id)
+      WHERE assigned_player_id IS NOT NULL;
   `);
 }
 
@@ -450,8 +467,12 @@ function registerAuthRoutes(app, express, db) {
       if (!campaign.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const owner = campaign.rows[0].owner_id === req.user.id;
       const result = owner
-        ? await db.query("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 ORDER BY created_at", [req.params.id])
-        : await db.query("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 AND assigned_player_id=$2 ORDER BY created_at", [req.params.id, req.user.id]);
+        ? await db.query(`SELECT ch.id,ch.campaign_id,ch.name,ch.data,ch.assigned_player_id,u.display_name AS assigned_player_handle,ch.source_key,ch.created_at,ch.updated_at
+           FROM anitos_characters ch LEFT JOIN anitos_users u ON u.id=ch.assigned_player_id
+           WHERE ch.campaign_id=$1 ORDER BY ch.created_at`, [req.params.id])
+        : await db.query(`SELECT ch.id,ch.campaign_id,ch.name,ch.data,ch.assigned_player_id,u.display_name AS assigned_player_handle,ch.created_at,ch.updated_at
+           FROM anitos_characters ch LEFT JOIN anitos_users u ON u.id=ch.assigned_player_id
+           WHERE ch.campaign_id=$1 AND ch.assigned_player_id=$2 ORDER BY ch.created_at`, [req.params.id, req.user.id]);
       res.json({characters: result.rows, readOnly: !owner});
     } catch (err) {
       console.error("[characters] Falha ao listar:", err.message);
@@ -505,37 +526,80 @@ function registerAuthRoutes(app, express, db) {
       return sendError(res, 400, "Informe um email válido para o jogador.");
     }
     if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um @nome válido.");
+    let client;
+    let ownsClient = false;
     try {
+      if (typeof db.connect === "function") {
+        client = await db.connect();
+        ownsClient = true;
+        await client.query("BEGIN");
+      } else {
+        client = db;
+      }
+      const character = await client.query(
+        "SELECT id,campaign_id FROM anitos_characters WHERE id=$1 AND owner_id=$2",
+        [req.params.id, req.user.id]
+      );
+      if (!character.rows[0]) {
+        if (ownsClient) await client.query("ROLLBACK");
+        return sendError(res, 404, "Ficha não encontrada ou sem permissão.");
+      }
       let playerId = legacyPlayerId || null;
       if (playerEmail || playerHandle) {
-        const member = await db.query(
+        const member = await client.query(
           `SELECT u.id FROM anitos_users u
            JOIN anitos_campaign_members m ON m.user_id=u.id
-           JOIN anitos_characters ch ON ch.campaign_id=m.campaign_id
-           WHERE ch.id=$1 AND ch.owner_id=$2 AND (${playerEmail ? "lower(u.email)=$3" : "lower(u.display_name)=$3"}) AND u.role='player'
+           WHERE m.campaign_id=$1 AND ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"} AND u.role='player'
            LIMIT 1`,
-          [req.params.id, req.user.id, playerEmail || playerHandle]
+          [character.rows[0].campaign_id, playerEmail || playerHandle]
         );
-        if (!member.rows[0]) return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
+        if (!member.rows[0]) {
+          if (ownsClient) await client.query("ROLLBACK");
+          return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
+        }
         playerId = member.rows[0].id;
       }
-      const result = await db.query(
-        `UPDATE anitos_characters ch SET assigned_player_id=$1,updated_at=now()
-         WHERE ch.id=$2 AND ch.owner_id=$3
-           AND ($1::text IS NULL OR EXISTS (
-             SELECT 1 FROM anitos_campaign_members m
-             JOIN anitos_users u ON u.id=m.user_id
-             WHERE m.campaign_id=ch.campaign_id AND m.user_id=$1
-               AND u.role='player'
-           ))
-         RETURNING ch.id,ch.campaign_id,ch.name,ch.assigned_player_id`,
+      if (playerId) {
+        const member = await client.query(
+          `SELECT u.id FROM anitos_campaign_members m
+           JOIN anitos_users u ON u.id=m.user_id
+           WHERE m.campaign_id=$1 AND m.user_id=$2 AND u.role='player'`,
+          [character.rows[0].campaign_id, playerId]
+        );
+        if (!member.rows[0]) {
+          if (ownsClient) await client.query("ROLLBACK");
+          return sendError(res, 404, "O jogador não participa desta campanha.");
+        }
+        // Move the player's assignment instead of allowing a second character in the same campaign.
+        await client.query(
+          `UPDATE anitos_characters SET assigned_player_id=NULL,updated_at=now()
+           WHERE campaign_id=$1 AND owner_id=$2 AND assigned_player_id=$3 AND id<>$4`,
+          [character.rows[0].campaign_id, req.user.id, playerId, req.params.id]
+        );
+      }
+      const result = await client.query(
+        `UPDATE anitos_characters SET assigned_player_id=$1,updated_at=now()
+         WHERE id=$2 AND owner_id=$3
+         RETURNING id,campaign_id,name,assigned_player_id`,
         [playerId, req.params.id, req.user.id]
       );
-      if (!result.rows[0]) return sendError(res, 404, "Ficha ou jogador não encontrado na campanha.");
+      if (!result.rows[0]) {
+        if (ownsClient) await client.query("ROLLBACK");
+        return sendError(res, 404, "Ficha não encontrada ou sem permissão.");
+      }
+      if (ownsClient) await client.query("COMMIT");
       res.json({character: result.rows[0]});
     } catch (err) {
+      if (ownsClient && client) {
+        try { await client.query("ROLLBACK"); } catch {}
+      }
+      if (err.code === "23505" && err.constraint === "anitos_characters_one_player_per_campaign_idx") {
+        return sendError(res, 409, "Este jogador já possui uma ficha atribuída nesta campanha. Atualize e tente novamente.");
+      }
       console.error("[characters] Falha ao atribuir:", err.message);
       sendError(res, 500, "Não foi possível atribuir a ficha.");
+    } finally {
+      if (ownsClient && client) client.release();
     }
   });
 }

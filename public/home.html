@@ -417,11 +417,32 @@ async function refreshMasterCharacters() {
       email.value = assignedMember?.display_name ? "@" + assignedMember.display_name : "";
       const assignmentHint = document.createElement("p");
       assignmentHint.className = "muted";
-      assignmentHint.textContent = "Digite o @nome único de um jogador que já participa desta campanha. Deixe vazio para remover a atribuição.";
+      assignmentHint.textContent = "Digite o @nome único de um jogador que já participa desta campanha.";
+      const assignmentStatus = document.createElement("p");
+      assignmentStatus.className = "muted";
+      assignmentStatus.style.fontWeight = "bold";
+      assignmentStatus.textContent = assignedMember?.display_name ? "Atribuído a @" + assignedMember.display_name : "Ficha sem atribuição";
       const assign = document.createElement("button");
       assign.type = "button";
       assign.textContent = "Atribuir ficha";
       assign.style.marginTop = "8px";
+      const removeAssignment = document.createElement("button");
+      removeAssignment.type = "button";
+      removeAssignment.textContent = "Retirar atribuição";
+      removeAssignment.style.margin = "8px 0 0 8px";
+      removeAssignment.disabled = !assignedMember;
+      removeAssignment.addEventListener("click", async () => {
+        if (!assignedMember) return;
+        removeAssignment.disabled = true;
+        try {
+          await api("/api/characters/" + encodeURIComponent(character.id) + "/assign", {
+            method:"POST", body:JSON.stringify({playerHandle:""})
+          });
+          message("masterMessage", "Atribuição de " + (character.name || "personagem") + " removida.", "success");
+          await refreshMasterCharacters();
+        } catch (error) { message("masterMessage", error.message, "error"); }
+        finally { removeAssignment.disabled = false; }
+      });
       assign.addEventListener("click", async () => {
         const handle = email.value.trim().replace(/^@/, "");
         if (handle && !/^[a-z0-9_.-]{2,32}$/i.test(handle)) {
@@ -467,7 +488,7 @@ async function refreshMasterCharacters() {
         } catch (error) { message("masterMessage", error.message, "error"); }
         finally { save.disabled = false; }
       });
-      card.append(heading, label, email, assignmentHint, assign, jsonLabel, json, save);
+      card.append(heading, label, email, assignmentHint, assignmentStatus, assign, removeAssignment, jsonLabel, json, save);
       list.append(card);
     }
   } catch (error) { message("masterMessage", error.message, "error"); }
