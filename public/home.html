@@ -77,7 +77,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </section>
 <section class="window" id="sheetWindow" hidden>
 <div class="bar"><span id="sheetTitle">FICHAS ATRIBUÍDAS</span><button id="closeSheets" type="button">Voltar</button></div>
-<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><p id="sheetUpdated" class="muted">Atualização automática a cada 15 segundos.</p><div id="sheetList" class="grid"></div></div>
+<div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><p id="sheetUpdated" class="muted">Atualização automática a cada 1 segundo.</p><div id="sheetList" class="grid"></div></div>
 </section>
 <section class="window" id="masterWindow" hidden>
 <div class="bar"><span id="masterTitle">ADMINISTRAÇÃO DE FICHAS</span><button id="closeMaster" type="button">Voltar</button></div>
@@ -297,7 +297,7 @@ async function openAssignedSheets(campaign) {
   assignedSheetTimer = setInterval(() => {
     if (viewToken !== assignedSheetViewToken || !assignedSheetCampaign || $("sheetWindow").hidden) return;
     refreshAssignedSheets(false);
-  }, 15000);
+  }, 1000);
 }
 async function refreshAssignedSheets(showLoading) {
   const campaign = assignedSheetCampaign;
@@ -337,7 +337,7 @@ async function refreshAssignedSheets(showLoading) {
     }
     $("sheetList").replaceChildren(...next);
     message("sheetMessage", characters.length + " ficha(s) disponível(is) em modo somente leitura.", "success");
-    $("sheetUpdated").textContent = "Última verificação: " + new Date().toLocaleTimeString() + " · atualização automática a cada 15 segundos.";
+    $("sheetUpdated").textContent = "Última verificação: " + new Date().toLocaleTimeString() + " · atualização automática a cada 1 segundo.";
   } catch (error) {
     if (showLoading || !$("sheetList").children.length) message("sheetMessage", error.message, "error");
     $("sheetUpdated").textContent = "Falha na atualização: " + new Date().toLocaleTimeString();
@@ -407,33 +407,34 @@ async function refreshMasterCharacters() {
       const heading = document.createElement("h2");
       heading.textContent = character.name || "Personagem sem nome";
       const label = document.createElement("label");
-      label.textContent = "Email do jogador responsável";
+      label.textContent = "@nome do jogador responsável";
       const email = document.createElement("input");
-      email.type = "email";
-      email.maxLength = 254;
+      email.type = "text";
+      email.maxLength = 33;
       email.autocomplete = "off";
-      email.placeholder = "jogador@exemplo.com";
+      email.placeholder = "@nome_do_jogador";
       const assignedMember = managedMembers.find(member => member.id === character.assigned_player_id);
-      email.value = assignedMember?.email || "";
+      email.value = assignedMember?.display_name ? "@" + assignedMember.display_name : "";
       const assignmentHint = document.createElement("p");
       assignmentHint.className = "muted";
-      assignmentHint.textContent = "O jogador precisa ter cadastro e já participar desta campanha. Deixe vazio para remover a atribuição.";
+      assignmentHint.textContent = "Digite o @nome único de um jogador que já participa desta campanha. Deixe vazio para remover a atribuição.";
       const assign = document.createElement("button");
       assign.type = "button";
-      assign.textContent = "Atribuir ficha pelo email";
+      assign.textContent = "Atribuir ficha";
       assign.style.marginTop = "8px";
       assign.addEventListener("click", async () => {
-        if (email.value.trim() && !email.checkValidity()) {
-          message("masterMessage", "Informe um email válido.", "error");
+        const handle = email.value.trim().replace(/^@/, "");
+        if (handle && !/^[a-z0-9_.-]{2,32}$/i.test(handle)) {
+          message("masterMessage", "Informe um @nome válido.", "error");
           email.focus();
           return;
         }
         assign.disabled = true;
         try {
           await api("/api/characters/" + encodeURIComponent(character.id) + "/assign", {
-            method:"POST", body:JSON.stringify({playerEmail:email.value.trim()})
+            method:"POST", body:JSON.stringify({playerHandle:handle})
           });
-          message("masterMessage", email.value.trim() ? "Ficha atribuída ao email informado." : "Atribuição removida.", "success");
+          message("masterMessage", handle ? "Ficha atribuída a @" + handle + "." : "Atribuição removida.", "success");
           await refreshMasterCharacters();
         } catch (error) { message("masterMessage", error.message, "error"); }
         finally { assign.disabled = false; }
@@ -487,7 +488,7 @@ async function loadCampaigns() {
 async function showApp(user) {
   currentUser = user;
   $("appWindow").hidden = false;
-  $("welcome").textContent = "USUÁRIO: " + user.displayName;
+  $("welcome").textContent = "USUÁRIO: @" + user.displayName;
   $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · " + user.email;
   $("createCampaign").hidden = user.role !== "master";
   $("joinCampaign").hidden = user.role !== "player";
