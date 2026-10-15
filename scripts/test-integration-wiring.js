@@ -26,7 +26,7 @@ assert.match(server, /app\.get\("\/board\.html"/);
 assert.match(server, /app\.get\("\/anitopeboard\/",/);
 
 // Campaign-scoped rooms must remain scoped after a server restart.
-assert.match(server, /code:r\\.code,title:r\\.title,campaignId:r\\.campaignId\\|\\|null,rolls:/);
-assert.match(server, /campaignId:typeof data\\.campaignId==="string"\\?data\\.campaignId:null,players:new Map\\(\\)/);
+assert.match(server, /code:r\.code,title:r\.title,campaignId:r\.campaignId\|\|null,rolls:/);
+assert.match(server, /campaignId:typeof data\.campaignId==="string"\?data\.campaignId:null,players:new Map\(\)/);
 
 console.log("Integration wiring regression tests passed.");
