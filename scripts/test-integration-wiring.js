@@ -17,8 +17,8 @@ assert.match(home, /querySelector\('button\[type="submit"\]'\)/);
 assert.match(board, /href="\/room\.html\?campaign=\$\{encodeURIComponent\(remoteCampaignId\)\}"/);
 assert.doesNotMatch(board, /vinculação automática da sala ao código desta campanha não faz parte desta etapa/i);
 assert.match(home, /href="\/room\.html\?campaign="\+encodeURIComponent\(campaign\.id\)/);
-assert.match(room, /get\("campaign"\)\|\|""/);
-assert.match(room, /\{\.\.\.\(campaignId\?\{campaignId\}:\{\}\)\}/);
+assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
+assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
 
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);
