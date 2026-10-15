@@ -36,7 +36,7 @@ async function main() {
         assert.equal(params[2],"jogador");
         return {rows:[{id:"player-1"}]};
       }
-      if (sql.includes("SELECT id FROM anitos_campaign_members")) return {rows:[{id:"player-1"}]};
+      if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1"}]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")) return {rows:[]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")) {
         return {rows:[{id:"character-1",campaign_id:"campaign-1",name:"Personagem",assigned_player_id:params[0]}]};
