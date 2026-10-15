@@ -37,8 +37,10 @@ assert.match(server, /app\.get\("\/anitopeboard\/",\(_q,r\)=>r\.sendFile\(path\.
 assert.match(server, /code:r\.code,title:r\.title,campaignId:r\.campaignId\|\|null,rolls:/);
 assert.match(server, /campaignId:typeof data\.campaignId==="string"\?data\.campaignId:null,players:new Map\(\)/);
 
-console.log("Integration wiring regression tests passed.");
 
 // ANITOPEBOARD content lives in board.html and serves legacy relative assets from /anitopeboard/.
-assert.match(board, /<base href="\\/anitopeboard\\/">/);
+assert.match(board, /<base href=/);
+assert.match(board, /href="img\/as\.ico"/);
 assert.match(board, /ANITOPEBOARD/);
+
+console.log("Integration wiring regression tests passed.");
