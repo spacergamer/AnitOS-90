@@ -386,6 +386,13 @@ $("join").onclick=()=>{
  $("character").value=$("playerName").value;
 };
 $("refreshCampaignSheet").onclick=refreshCampaignSheet;
+document.addEventListener("keydown",event=>{
+ const target=event.target;
+ const typing=target&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+ if(event.key!=="'"||typing||event.ctrlKey||event.altKey||event.metaKey)return;
+ event.preventDefault();
+ refreshCampaignSheet();
+});
 $("dice").onclick=e=>{
  const b=e.target.closest("[data-s]");if(!b)return;
  if(dicePool.length>=20)return msg("roomMsg","Limite de 20 dados por rolagem.");
