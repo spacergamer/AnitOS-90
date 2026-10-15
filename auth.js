@@ -83,6 +83,23 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
+    -- Display names now act as public @handles. Normalize legacy names and make them unique.
+    UPDATE anitos_users
+      SET display_name = CASE
+        WHEN length(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')) < 2
+          THEN 'user_' || substr(id, 1, 6)
+        ELSE left(lower(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')), 32)
+      END
+      WHERE display_name !~ '^[A-Za-z0-9_.-]{2,32}$' OR display_name <> lower(display_name);
+    WITH duplicates AS (
+      SELECT id, row_number() OVER (PARTITION BY lower(display_name) ORDER BY created_at, id) AS duplicate_rank
+      FROM anitos_users
+    )
+    UPDATE anitos_users u
+      SET display_name = left(u.display_name, 24) || '_' || substr(u.id, 1, 6)
+      FROM duplicates d
+      WHERE u.id = d.id AND d.duplicate_rank > 1;
+        CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_display_name_lower_idx ON anitos_users (lower(display_name));
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_salt text;
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_hash text;
     CREATE TABLE IF NOT EXISTS anitos_campaign_members (
@@ -151,12 +168,12 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase();
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
+      const displayName = String(req.body?.displayName || "").trim().replace(/^@/, "").toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const role = req.body?.role;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
         return sendError(res, 400, "Informe um e-mail válido.");
-      if (displayName.length < 2) return sendError(res, 400, "Informe um nome com pelo menos 2 caracteres.");
+      if (!/^[a-z0-9_.-]{2,32}$/.test(displayName)) return sendError(res, 400, "Use um @nome único de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
       if (password.length < 12 || password.length > 200)
         return sendError(res, 400, "A senha deve ter entre 12 e 200 caracteres.");
       if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password))
@@ -173,7 +190,10 @@ function registerAuthRoutes(app, express, db) {
       await createSession(id, res);
       return res.status(201).json({user: safeUser(result.rows[0])});
     } catch (err) {
-      if (err.code === "23505") return sendError(res, 409, "Já existe uma conta com esse e-mail.");
+      if (err.code === "23505") {
+        if (err.constraint === "anitos_users_display_name_lower_idx") return sendError(res, 409, "Esse @nome já está em uso. Escolha outro.");
+        return sendError(res, 409, "Já existe uma conta com esse e-mail.");
+      }
       console.error("[auth] Falha ao criar conta:", err.message);
       return sendError(res, 500, "Não foi possível criar a conta.");
     }
@@ -430,7 +450,7 @@ function registerAuthRoutes(app, express, db) {
       if (!campaign.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const owner = campaign.rows[0].owner_id === req.user.id;
       const result = owner
-        ? await db.query("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 ORDER BY created_at", [req.params.id])
+        ? await db.query("SELECT id,campaign_id,name,data,assigned_player_id,source_key,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 ORDER BY created_at", [req.params.id])
         : await db.query("SELECT id,campaign_id,name,data,assigned_player_id,created_at,updated_at FROM anitos_characters WHERE campaign_id=$1 AND assigned_player_id=$2 ORDER BY created_at", [req.params.id, req.user.id]);
       res.json({characters: result.rows, readOnly: !owner});
     } catch (err) {
@@ -479,22 +499,24 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/characters/:id/assign", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem atribuir fichas.");
     const playerEmail = typeof req.body?.playerEmail === "string" ? req.body.playerEmail.trim().toLowerCase() : "";
+    const playerHandle = typeof req.body?.playerHandle === "string" ? req.body.playerHandle.trim().replace(/^@/, "").toLowerCase() : "";
     const legacyPlayerId = String(req.body?.playerId || "");
     if (playerEmail && (playerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail))) {
       return sendError(res, 400, "Informe um email válido para o jogador.");
     }
+    if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um @nome válido.");
     try {
       let playerId = legacyPlayerId || null;
-      if (playerEmail) {
+      if (playerEmail || playerHandle) {
         const member = await db.query(
           `SELECT u.id FROM anitos_users u
            JOIN anitos_campaign_members m ON m.user_id=u.id
            JOIN anitos_characters ch ON ch.campaign_id=m.campaign_id
-           WHERE ch.id=$1 AND ch.owner_id=$2 AND lower(u.email)=$3 AND u.role='player'
+           WHERE ch.id=$1 AND ch.owner_id=$2 AND (${playerEmail ? "lower(u.email)=$3" : "lower(u.display_name)=$3"}) AND u.role='player'
            LIMIT 1`,
-          [req.params.id, req.user.id, playerEmail]
+          [req.params.id, req.user.id, playerEmail || playerHandle]
         );
-        if (!member.rows[0]) return sendError(res, 404, "Não existe um jogador com esse email participando desta campanha.");
+        if (!member.rows[0]) return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
         playerId = member.rows[0].id;
       }
       const result = await db.query(
