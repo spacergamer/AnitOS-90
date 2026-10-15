@@ -18,11 +18,11 @@ async function main() {
         const user=hashes.get(params[0]);
         return {rows:user?[user]:[]};
       }
-      if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$3")) {
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.email)=$3")) {
         assert.equal(params[0],"character-1");
         assert.equal(params[1],"master-1");
         assert.equal(params[2],"player@example.test");
-        return {rows:[{id:"player-1"}]};
+        return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
       if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.display_name)=$3")) {
         assert.equal(params[0],"character-1");
@@ -31,7 +31,8 @@ async function main() {
         return {rows:[{id:"player-1"}]};
       }
       if (sql.includes("UPDATE anitos_characters ch SET assigned_player_id")) {
-        return {rows:[{id:"character-1",campaign_id:"campaign-1",name:"Personagem",assigned_player_id:params[0]}]};
+        if (params[1] === "character-2") return {rows:[]};
+        return {rows:[{id:params[1],campaign_id:"campaign-1",name:"Personagem",assigned_player_id:params[0]}]};
       }
       if (sql.includes("SELECT u.id FROM anitos_users u") && sql.includes("lower(u.email)=$3")) return {rows:[]};
       throw new Error("Unexpected query: "+sql);
@@ -49,6 +50,8 @@ async function main() {
     const byHandle=await post("/api/characters/character-1/assign",masterToken,{playerHandle:"@Jogador"});
     assert.equal(byHandle.status,200,"Master should assign by case-insensitive @handle");
     assert.equal((await byHandle.json()).character.assigned_player_id,"player-1");
+    const duplicate=await post("/api/characters/character-2/assign",masterToken,{playerHandle:"@Jogador"});
+    assert.equal(duplicate.status,409,"A player must not receive a second character in the same campaign");
     const invalid=await post("/api/characters/character-1/assign",masterToken,{playerEmail:"not-an-email"});
     assert.equal(invalid.status,400,"Invalid email must be rejected");
     const playerAssign=await post("/api/characters/character-1/assign",playerToken,{playerEmail:"player@example.test"});
