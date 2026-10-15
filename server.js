@@ -242,7 +242,7 @@ io.on("connection",s=>{
   r.players.set(player.id,player);
   connectPlayer(s,r,player);
  });
- s.on("room:resume",p=>{
+ s.on("room:resume",async p=>{
   if(!allowEvent(s,"room:resume",5,60_000))return;
   const token=String(p?.token||"");
   if(!/^[a-f0-9]{64}$/.test(token)){
@@ -255,6 +255,8 @@ io.on("connection",s=>{
    return;
   }
   const {room:r,player}=found;
+  const requestedCampaignId=String(p?.campaignId||"").trim();
+  if(r.campaignId){if(requestedCampaignId!==r.campaignId||!await canAccessCampaign(s.data.userId,r.campaignId)){s.emit("room:resume:failed","Esta sessão pertence a outra campanha ou sua conta não tem mais acesso.");return}}else if(requestedCampaignId){s.emit("room:resume:failed","A sessão recuperada não pertence à campanha selecionada.");return}
   if(player.connected){
    error(s,"Esta sessão já está conectada em outra aba ou dispositivo.");
    return;
