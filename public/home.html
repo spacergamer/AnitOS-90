@@ -84,17 +84,12 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
       <p id="membershipStatus" class="muted">Status: Jogador comum</p>
       <button type="button" id="acquireMembership" class="acquire-button">Adquirir</button>
       <p id="purchaseMessage" class="muted" aria-live="polite"></p>
-      <section id="membershipChoices" hidden class="membership-choices" aria-label="Escolha como adquirir">
-        <p>Como deseja adquirir o AnitOS '90 Pro?</p>
-        <button type="button" id="buyWithPix" class="choice-button">Comprar · Pix</button>
-        <button type="button" id="useMembershipKey" class="choice-button">Chave</button>
-      </section>
       <form id="membershipForm" hidden class="key-activation" style="margin-top:14px">
-        <label for="membershipKey">Chave de membro registrada</label>
+        <label for="membershipKey">Insira sua chave de membro</label>
         <input id="membershipKey" maxlength="13" autocomplete="off" spellcheck="false" placeholder="XXXXXX-XXXXXX" required>
         <div class="row" style="margin-top:10px">
           <button type="submit">Ativar Premium</button>
-          <button type="button" id="backToChoices">Voltar</button>
+          <button type="button" id="backToMembership">Voltar</button>
         </div>
         <p id="membershipMessage" class="muted" aria-live="polite"></p>
       </form>
@@ -159,7 +154,6 @@ function message(id, text, type = "") {
 function openMembership() {
   $("membershipModal").hidden = false;
   $("purchaseMessage").textContent = "";
-  $("membershipChoices").hidden = true;
   $("membershipForm").hidden = true;
   if (currentUser?.premium) {
     $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
@@ -183,22 +177,16 @@ document.addEventListener("keydown", event => {
 });
 $("acquireMembership").addEventListener("click", () => {
   if (currentUser?.premium) return;
-  $("membershipChoices").hidden = false;
-  $("membershipForm").hidden = true;
-  message("purchaseMessage", "");
-});
-$("buyWithPix").addEventListener("click", () => {
-  message("purchaseMessage", "Compra por Pix selecionada. A geração e confirmação automática do Pix ainda precisam ser conectadas ao provedor de pagamento; nenhuma cobrança foi realizada.", "error");
-});
-$("useMembershipKey").addEventListener("click", () => {
-  $("membershipChoices").hidden = true;
   $("membershipForm").hidden = false;
+  $("membershipKey").hidden = false;
+  $("membershipKey").value = "";
+  message("purchaseMessage", "Ative seu acesso usando uma chave válida.");
+  message("membershipMessage", "");
   $("membershipKey").focus();
 });
-$("backToChoices").addEventListener("click", () => {
+$("backToMembership").addEventListener("click", () => {
   $("membershipForm").hidden = true;
   $("membershipKey").value = "";
-  $("membershipChoices").hidden = false;
   message("membershipMessage", "");
 });
 $("membershipForm").addEventListener("submit", async event => {
