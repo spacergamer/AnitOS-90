@@ -192,6 +192,9 @@ io.on("connection",s=>{
  s.on("room:create",async p=>{
   if(!allowEvent(s,"room:create",3,60_000)||!allowEvent(s,"room:create",10,60_000,"ip"))return;
   if(rooms.size>=MAX_ROOMS)return error(s,"O servidor atingiu o limite de salas. Tente novamente mais tarde.");
+  if(!db||!s.data.userId)return error(s,"Entre na sua conta e ative o ANITOS PREMIUM para criar salas.");
+  const membership=await db.query("SELECT is_premium FROM anitos_users WHERE id=$1",[s.data.userId]);
+  if(!membership.rows[0]?.is_premium)return error(s,"Criar salas é um privilégio Premium. Ative sua chave em Seja Membro no menu inicial.");
   const campaignId=String(p?.campaignId||"").trim();
   if(campaignId&&!await canAccessCampaign(s.data.userId,campaignId))return error(s,"Entre na campanha com sua conta antes de criar uma sala.");
   leave(s);
