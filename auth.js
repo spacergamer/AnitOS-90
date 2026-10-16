@@ -191,10 +191,8 @@ function registerAuthRoutes(app, express, db) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
         return sendError(res, 400, "Informe um e-mail válido.");
       if (!/^[a-z0-9_.-]{2,32}$/.test(displayName)) return sendError(res, 400, "Use um @nome único de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
-      if (password.length < 12 || password.length > 200)
-        return sendError(res, 400, "A senha deve ter entre 12 e 200 caracteres.");
-      if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password))
-        return sendError(res, 400, "Use uma senha forte com letras maiúsculas e minúsculas, número e símbolo.");
+      if (password.length < 1 || password.length > 200)
+        return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
       if (!["master", "player"].includes(role))
         return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
       const salt = crypto.randomBytes(16).toString("hex");
