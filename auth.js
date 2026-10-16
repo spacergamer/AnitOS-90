@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id: row.id, email: row.email, displayName: row.display_name, role: row.role};
+  return {id: row.id, email: row.email, displayName: row.display_name, role: row.role, premium: Boolean(row.is_premium)};
 }
 
 async function initializeAuthSchema(db) {
@@ -67,6 +67,7 @@ async function initializeAuthSchema(db) {
       password_hash text NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now()
     );
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
     CREATE TABLE IF NOT EXISTS anitos_sessions (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -199,7 +200,7 @@ function registerAuthRoutes(app, express, db) {
       const hash = (await scrypt(password, salt, 64)).toString("hex");
       const id = crypto.randomUUID();
       const result = await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,role",
+        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,role,is_premium",
         [id, email, displayName, role, salt, hash]
       );
       await createSession(id, res);
@@ -219,7 +220,7 @@ function registerAuthRoutes(app, express, db) {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const result = await db.query(
-        "SELECT id,email,display_name,role,password_salt,password_hash FROM anitos_users WHERE email=$1",
+        "SELECT id,email,display_name,role,is_premium,password_salt,password_hash FROM anitos_users WHERE email=$1",
         [email]
       );
       const user = result.rows[0];
@@ -237,6 +238,23 @@ function registerAuthRoutes(app, express, db) {
   });
 
   app.get("/api/auth/me", requireAuth, (req, res) => res.json({user: req.user}));
+
+  app.post("/api/membership/activate", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
+    const submitted = typeof req.body?.key === "string" ? req.body.key.trim().toUpperCase() : "";
+    const normalized = submitted.replace(/-/g, "");
+    const configuredKey = String(process.env.ANITOS_PREMIUM_KEY || "XFHWIG-GME6SM").trim().toUpperCase().replace(/-/g, "");
+    if (!/^[A-Z0-9]{12}$/.test(normalized) || normalized !== configuredKey) {
+      return sendError(res, 400, "Chave inválida. Confira os 12 caracteres e tente novamente.");
+    }
+    try {
+      const result = await db.query("UPDATE anitos_users SET is_premium=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium", [req.user.id]);
+      if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
+      return res.json({ok:true,user:safeUser(result.rows[0]),message:"Membro Premium ativado. Aproveite os privilégios duvidosos."});
+    } catch (err) {
+      console.error("[membership] Falha ao ativar Premium:", err.message);
+      return sendError(res, 500, "Não foi possível ativar o Premium agora.");
+    }
+  });
 
   app.post("/api/auth/logout", databaseRequired, async (req, res) => {
     try {
