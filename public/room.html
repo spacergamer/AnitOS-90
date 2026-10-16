@@ -267,7 +267,14 @@ function applyPalette(value,save=true){
 }
 let savedPalette="menta";
 try{const stored=localStorage.getItem(paletteKey);if(paletteOptions.has(stored))savedPalette=stored}catch{}
-applyPalette(savedPalette,false);
+applyPalette("menta",false);
+let premiumPaletteAllowed=false;
+async function initializePremiumPalette(){
+ const control=$("palette");
+ try{const response=await fetch("/api/auth/me",{credentials:"same-origin"});const data=await response.json().catch(()=>({}));premiumPaletteAllowed=Boolean(response.ok&&data.user&&data.user.premium)}catch{premiumPaletteAllowed=false}
+ if(control){control.disabled=!premiumPaletteAllowed;control.title=premiumPaletteAllowed?"Membro Premium: escolha sua paleta":"Somente membros Premium podem mudar a paleta. Ative em Seja Membro no menu inicial.";control.setAttribute("aria-label",control.title)}
+ applyPalette(premiumPaletteAllowed?savedPalette:"menta",false);
+}
 let room=null,playerId=null,resumeToken="",isResuming=false,isRolling=false,rollUnlockTimer=null,pingMs=null,pingTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
 const campaignId=new URLSearchParams(window.location.search).get("campaign")||"";
 let campaignUser=null,campaignInfo=null;
@@ -564,7 +571,8 @@ socket.on("room:closed",m=>{
  saveToken("");
  returnToLobby("A sala foi encerrada.");
 });
-const paletteControl=$("palette");if(paletteControl){paletteControl.value=savedPalette;paletteControl.addEventListener("change",()=>applyPalette(paletteControl.value,true))}
+const paletteControl=$("palette");if(paletteControl){paletteControl.addEventListener("change",()=>{if(!premiumPaletteAllowed){applyPalette("menta",false);return}applyPalette(paletteControl.value,true)})}
+ initializePremiumPalette();
  renderPool();
  updateRollButton();
  initializeCampaignContext();
