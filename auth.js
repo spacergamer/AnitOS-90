@@ -160,7 +160,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.email,u.display_name,u.role
+        `SELECT u.id,u.email,u.display_name,u.role,u.is_premium
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
