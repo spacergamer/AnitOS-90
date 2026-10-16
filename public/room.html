@@ -37,7 +37,7 @@
  color-scheme:light;
 }
 *{box-sizing:border-box}
-html{min-height:100%;background:#008080}
+html{min-height:100%;background:var(--hospital-green)}
 body{
  min-height:100vh;margin:0;overflow-x:hidden;overflow-y:auto;position:relative;
  background-color:var(--hospital-green);
@@ -227,6 +227,7 @@ body.session-active .hero{display:none}
 :root[data-palette="hazard"]{--hospital-green:#9d120b;--title-blue:#c4140b;--vapor-pink:#ffdf00;--vapor-cyan:#fff000;--win-bg:#ffe98a;--win-border-light:#fffbd4;--win-border-dark:#9b6a00;--win-border-darker:#3d1200}
 :root[data-palette="sangue"]{--hospital-green:#250607;--title-blue:#8b0000;--vapor-pink:#ef4444;--vapor-cyan:#ffb4b4;--win-bg:#e2d4d4;--win-border-light:#fff;--win-border-dark:#795252;--win-border-darker:#160000}
 :root[data-palette="lavanda"]{--hospital-green:#8d7bb8;--title-blue:#59418c;--vapor-pink:#c4a7ff;--vapor-cyan:#f0e7ff;--win-bg:#e8e0f6;--win-border-light:#fff;--win-border-dark:#8d7ca8;--win-border-darker:#34244e}
+:root[data-palette] body{background-image:linear-gradient(180deg,var(--hospital-green) 0%,color-mix(in srgb,var(--hospital-green) 55%,#000 45%) 44%,#000 100%)}
 :root[data-palette="acucar"] .hero .muted{background:rgba(0,0,0,.85);color:#fff!important}
 :root[data-palette="hazard"] .hero .muted{background:rgba(100,0,0,.88)}
 :root[data-palette="sangue"] .hero .muted{background:rgba(15,0,0,.9)}
