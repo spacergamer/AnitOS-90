@@ -31,7 +31,23 @@ button:disabled{opacity:.5;cursor:wait}
 .sheet-data{white-space:pre-wrap;overflow-wrap:anywhere;background:#111;color:var(--cyan);padding:12px;max-height:360px;overflow:auto;font:18px 'VT323',monospace}.sheet-card h3{margin:0 0 8px;font-size:26px}
 .sheet-data{max-height:none;white-space:normal}.sheet-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.sheet-field{min-width:0;padding:8px;background:#e5e5e5;border:2px inset #888;overflow-wrap:anywhere}.sheet-field>strong{display:block;color:#333;border-bottom:1px solid #999;margin-bottom:5px}.sheet-value{white-space:pre-wrap;overflow-wrap:anywhere;color:#005b50}.sheet-group{grid-column:1/-1;padding:8px;border:1px solid #888;background:#d4d4d4}.sheet-group-title{font-size:20px;font-weight:bold;margin-bottom:8px}.sheet-empty{color:#555;font-style:italic}
 textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;border:2px inset var(--dark);resize:vertical}.char-json{min-height:180px}
-[hidden]{display:none!important}
+.account-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.modal-backdrop{position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px}
+.membership-window{width:min(100%,480px);max-height:calc(100vh - 36px);overflow:auto;background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);box-shadow:8px 8px 0 rgba(0,0,0,.35);padding:4px}
+.membership-window>.bar{align-items:center}
+.membership-window>.bar button{padding:0 8px;min-width:32px}
+.membership-content{padding:22px}
+.membership-content h2{font-size:36px;margin:4px 0 16px;color:var(--blue)}
+.pro-features{list-style:none;padding:0;margin:0 0 20px}
+.pro-features li{padding:8px 8px 8px 30px;border-bottom:1px solid #999;position:relative}
+.pro-features li:before{content:"✓";position:absolute;left:7px;color:#006b38;font-weight:bold}
+.pro-price{font-size:42px;font-weight:bold;color:#064d2c;margin:18px 0 10px}
+.pro-price span{font-size:18px;color:#444;font-weight:normal}
+.acquire-button{width:100%;font-size:28px;padding:10px;background:#008040;color:white;border:3px outset #8bffc0}
+.acquire-button:active{border-style:inset}
+.key-activation{margin-top:18px;font-size:18px}
+.key-activation summary{cursor:pointer;text-decoration:underline}
+@media(max-width:600px){.account-actions{gap:4px}.account-actions button{font-size:17px;padding:4px}.membership-content{padding:14px}.pro-price{font-size:36px}}[hidden]{display:none!important}
 @media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
 </style>
 </head>
@@ -46,23 +62,39 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </section>
 
 <section class="window" id="appWindow" hidden>
-<div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><button id="logout" type="button">Encerrar sessão</button></div>
+<div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><div class="account-actions"><button type="button" id="showMembership">Seja Membro</button><button id="logout" type="button">Encerrar Sessão</button></div></div>
 <div class="content">
 <p id="roleLabel"></p>
-<section class="card" id="membershipCard" style="margin:12px 0">
-  <h2>ANITOS PREMIUM</h2>
-  <p id="membershipStatus" class="muted">Status: Jogador comum</p>
-  <button type="button" id="showMembership">Seja Membro</button>
-  <form id="membershipForm" hidden style="margin-top:12px">
-    <label for="membershipKey">Chave de membro (12 caracteres)</label>
-    <input id="membershipKey" maxlength="13" autocomplete="off" spellcheck="false" placeholder="XXXXXX-XXXXXX" required>
-    <div class="row" style="margin-top:10px">
-      <button type="submit">Ativar Premium</button>
-      <button type="button" id="cancelMembership">Cancelar</button>
+<div id="membershipModal" class="modal-backdrop" hidden role="presentation">
+  <section class="membership-window" role="dialog" aria-modal="true" aria-labelledby="membershipTitle">
+    <div class="bar"><span>ANITOPE SCIENCE — PLANOS</span><button type="button" id="closeMembership" aria-label="Fechar">×</button></div>
+    <div class="membership-content">
+      <p class="muted">ACESSO ESPECIAL · ANITOPEBOARD</p>
+      <h2 id="membershipTitle">AnitOS '90 Pro</h2>
+      <ul class="pro-features">
+        <li>Customização de Janelas</li>
+        <li>Envio de Emojis no Chat</li>
+        <li>Criação de Salas</li>
+        <li>Atualizações de Primeira Mão</li>
+      </ul>
+      <div class="pro-price">R$ 2,99 <span>pagamento único</span></div>
+      <p id="membershipStatus" class="muted">Status: Jogador comum</p>
+      <button type="button" id="acquireMembership" class="acquire-button">Adquirir</button>
+      <p id="purchaseMessage" class="muted" aria-live="polite"></p>
+      <details class="key-activation">
+        <summary>Já tem uma chave de membro?</summary>
+        <form id="membershipForm" style="margin-top:10px">
+          <label for="membershipKey">Chave de membro</label>
+          <input id="membershipKey" maxlength="13" autocomplete="off" spellcheck="false" placeholder="XXXXXX-XXXXXX" required>
+          <div class="row" style="margin-top:10px">
+            <button type="submit">Ativar Premium</button>
+          </div>
+          <p id="membershipMessage" class="muted" aria-live="polite"></p>
+        </form>
+      </details>
     </div>
-    <p id="membershipMessage" class="muted" aria-live="polite"></p>
-  </form>
-</section>
+  </section>
+</div>
 <div class="grid">
 <form class="card" id="createCampaign" hidden>
 <h2>Nova campanha</h2>
@@ -118,21 +150,31 @@ function message(id, text, type = "") {
   node.textContent = text;
   node.className = type || "muted";
 }
-$("showMembership").addEventListener("click", () => {
+function openMembership() {
+  $("membershipModal").hidden = false;
+  $("purchaseMessage").textContent = "";
   if (currentUser?.premium) {
-    $("membershipForm").hidden = false;
-    $("membershipKey").hidden = true;
-    message("membershipMessage", "Você já é membro Premium. O capitalismo venceu.", "success");
-    return;
+    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
+    $("acquireMembership").textContent = "Você já é Pro ✓";
+    $("acquireMembership").disabled = true;
+  } else {
+    $("membershipStatus").textContent = "Status: Jogador comum";
+    $("acquireMembership").textContent = "Adquirir";
+    $("acquireMembership").disabled = false;
   }
-  $("membershipKey").hidden = false;
-  $("membershipForm").hidden = false;
-  $("membershipKey").focus();
+  $("closeMembership").focus();
+}
+function closeMembership() { $("membershipModal").hidden = true; }
+$("showMembership").addEventListener("click", openMembership);
+$("closeMembership").addEventListener("click", closeMembership);
+$("membershipModal").addEventListener("click", event => {
+  if (event.target === $("membershipModal")) closeMembership();
 });
-$("cancelMembership").addEventListener("click", () => {
-  $("membershipForm").hidden = true;
-  $("membershipKey").value = "";
-  message("membershipMessage", "");
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !$("membershipModal").hidden) closeMembership();
+});
+$("acquireMembership").addEventListener("click", () => {
+  message("purchaseMessage", "O pagamento online ainda não está conectado. Nenhuma cobrança foi realizada.", "error");
 });
 $("membershipForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -147,6 +189,9 @@ $("membershipForm").addEventListener("submit", async event => {
     $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
     $("showMembership").textContent = "Membro Premium ✓";
     $("showMembership").disabled = true;
+    $("acquireMembership").textContent = "Você já é Pro ✓";
+    $("acquireMembership").disabled = true;
+    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
     message("membershipMessage", result.message, "success");
     $("roleLabel").textContent = "Perfil ativo: " + (currentUser.role === "master" ? "Mestre" : "Jogador") + " · @" + currentUser.displayName + " · Premium";
   } catch (error) {
