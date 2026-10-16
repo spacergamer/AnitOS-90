@@ -513,7 +513,7 @@ async function showApp(user) {
   currentUser = user;
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: @" + user.displayName;
-  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · " + user.email;
+  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · @" + user.displayName;
   $("createCampaign").hidden = user.role !== "master";
   $("joinCampaign").hidden = user.role !== "player";
   await loadCampaigns();
