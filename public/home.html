@@ -156,7 +156,7 @@ function openMembership() {
   $("purchaseMessage").textContent = "";
   $("membershipForm").hidden = true;
   if (currentUser?.premium) {
-    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
+    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM";
     $("acquireMembership").textContent = "Você já é Pro ✓";
     $("acquireMembership").disabled = true;
   } else {
@@ -199,12 +199,12 @@ $("membershipForm").addEventListener("submit", async event => {
     currentUser = result.user;
     $("membershipKey").value = "";
     $("membershipKey").hidden = true;
-    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
+    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM";
     $("showMembership").textContent = "Membro Premium ✓";
     $("showMembership").disabled = true;
     $("acquireMembership").textContent = "Você já é Pro ✓";
     $("acquireMembership").disabled = true;
-    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM 👑";
+    $("membershipStatus").textContent = "Status: MEMBRO PREMIUM";
     message("membershipMessage", result.message, "success");
     $("roleLabel").textContent = "Perfil ativo: " + (currentUser.role === "master" ? "Mestre" : "Jogador") + " · @" + currentUser.displayName + " · Premium";
   } catch (error) {
@@ -621,7 +621,7 @@ async function showApp(user) {
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: @" + user.displayName;
   $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · @" + user.displayName + (user.premium ? " · Premium" : "");
-  $("membershipStatus").textContent = user.premium ? "Status: MEMBRO PREMIUM 👑" : "Status: Jogador comum";
+  $("membershipStatus").textContent = user.premium ? "Status: MEMBRO PREMIUM" : "Status: Jogador comum";
   $("showMembership").textContent = user.premium ? "Membro Premium ✓" : "Seja Membro";
   $("showMembership").disabled = Boolean(user.premium);
   $("createCampaign").hidden = user.role !== "master";
