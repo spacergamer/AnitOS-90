@@ -50,7 +50,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="content">
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
 <form id="authForm">
-<div id="nameField" hidden><label for="displayName">Nome de usuário (@)</label><input id="displayName" name="displayName" maxlength="32" minlength="2" pattern="@?[A-Za-z0-9_.-]{2,32}" placeholder="seunome" autocomplete="username"></div>
+<div id="nameField" hidden><label for="displayName">Nome de usuário (@)</label><input id="displayName" name="displayName" maxlength="32" minlength="2" pattern="@?[A-Za-z0-9_.-]{2,32}" placeholder="bob" autocomplete="username"></div>
 <label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" required autocomplete="email">
 <label for="password">Senha</label><div class="password-row"><input id="password" name="password" type="password" maxlength="200" required autocomplete="current-password"><button id="togglePassword" type="button" aria-pressed="false" aria-label="Mostrar senha">Mostrar senha</button></div><p id="passwordHint" class="muted" hidden>Recomendação de segurança: prefira 12 ou mais caracteres, combinando letras maiúsculas e minúsculas, números e símbolos. Isso não é obrigatório.</p>
 <div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="player" selected>Jogador</option><option value="master">Mestre</option></select></div>
