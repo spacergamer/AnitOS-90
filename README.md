@@ -38,4 +38,5 @@ Configure `DATABASE_URL` com uma conexão PostgreSQL para persistir contas e dad
 ---
 
 **Anitope Science - AnitOS '90**
+
 *A Ciência Salvando Vidas desde 1972.*
