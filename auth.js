@@ -243,32 +243,32 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/membership/activate", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
     const submitted = typeof req.body?.key === "string" ? req.body.key.trim().toUpperCase() : "";
     const normalized = submitted.replace(/-/g, "");
-    const configuredKey = String(process.env.ANITOS_PREMIUM_KEY || "").trim().toUpperCase().replace(/-/g, "");
+    const configuredKey = String(process.env.ANITOS_DEV_KEY || "").trim().toUpperCase().replace(/-/g, "");
     if (!/^[A-Z0-9]{12}$/.test(configuredKey)) {
-      return sendError(res, 503, "A ativação por chave está temporariamente indisponível. A configuração do servidor está incompleta.");
+      return sendError(res, 503, "A chave de desenvolvedor está temporariamente indisponível. Configure ANITOS_DEV_KEY no servidor.");
     }
     if (!/^[A-Z0-9]{12}$/.test(normalized) || normalized !== configuredKey) {
-      return sendError(res, 400, "Chave inválida. Confira os 12 caracteres e tente novamente.");
+      return sendError(res, 400, "Chave de desenvolvedor inválida. Confira os 12 caracteres e tente novamente.");
     }
 
     const configuredPassword = String(process.env.ANITOS_DEV_PASSWORD || "");
     if (!configuredPassword) {
-      return sendError(res, 503, "A confirmação de segurança não está configurada no servidor.");
+      return sendError(res, 503, "A confirmação de desenvolvedor não está configurada. Configure ANITOS_DEV_PASSWORD no servidor.");
     }
     const submittedPassword = typeof req.body?.password === "string" ? req.body.password : "";
     if (!submittedPassword) {
-      return res.json({ok:true,requiresPassword:true,message:"Chave reconhecida. Digite a senha de confirmação para ativar DEV + Pro."});
+      return res.json({ok:true,requiresPassword:true,message:"Chave de desenvolvedor reconhecida. Digite a senha para liberar o cargo DEV e o AnitOS Pro."});
     }
     const expectedBuffer = Buffer.from(configuredPassword, "utf8");
     const submittedBuffer = Buffer.from(submittedPassword, "utf8");
     if (expectedBuffer.length !== submittedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, submittedBuffer)) {
-      return sendError(res, 400, "Senha de confirmação incorreta.");
+      return sendError(res, 400, "Senha de desenvolvedor incorreta.");
     }
 
     try {
       const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium,is_dev", [req.user.id]);
       if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
-      return res.json({ok:true,user:safeUser(result.rows[0]),message:"Membro Premium ativado. Aproveite os privilégios duvidosos."});
+      return res.json({ok:true,user:safeUser(result.rows[0]),message:"Cargo DEV e AnitOS Pro ativados com sucesso."});
     } catch (err) {
       console.error("[membership] Falha ao ativar Premium:", err.message);
       return sendError(res, 500, "Não foi possível ativar o Premium agora.");
