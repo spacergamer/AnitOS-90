@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id: row.id, email: row.email, displayName: row.display_name, role: row.role, premium: Boolean(row.is_premium)};
+  return {id: row.id, email: row.email, displayName: row.display_name, role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
 }
 
 async function initializeAuthSchema(db) {
@@ -68,6 +68,8 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now()
     );
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
+    UPDATE anitos_users SET is_dev=true WHERE is_premium=true AND is_dev=false;
     CREATE TABLE IF NOT EXISTS anitos_sessions (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -247,7 +249,7 @@ function registerAuthRoutes(app, express, db) {
       return sendError(res, 400, "Chave inválida. Confira os 12 caracteres e tente novamente.");
     }
     try {
-      const result = await db.query("UPDATE anitos_users SET is_premium=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium", [req.user.id]);
+      const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium,is_dev", [req.user.id]);
       if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0]),message:"Membro Premium ativado. Aproveite os privilégios duvidosos."});
     } catch (err) {
