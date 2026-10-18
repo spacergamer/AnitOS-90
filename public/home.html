@@ -87,8 +87,8 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
       <form id="membershipForm" hidden class="key-activation" style="margin-top:14px">
         <label for="membershipKey">Insira sua chave de membro</label>
         <input id="membershipKey" maxlength="13" autocomplete="off" spellcheck="false" placeholder="XXXXXX-XXXXXX" required>
-        <label for="devPassword">Senha de confirmação</label>
-        <input id="devPassword" type="password" autocomplete="off" placeholder="Senha de confirmação" required>
+        <div id="devPasswordGroup" hidden><label for="devPassword">Senha de confirmação</label>
+        <input id="devPassword" type="password" autocomplete="off" placeholder="Senha de confirmação"></div>
         <div class="row" style="margin-top:10px">
           <button type="submit">Ativar Premium</button>
           <button type="button" id="backToMembership">Voltar</button>
@@ -182,6 +182,9 @@ $("acquireMembership").addEventListener("click", () => {
   $("membershipForm").hidden = false;
   $("membershipKey").hidden = false;
   $("membershipKey").value = "";
+  $("devPassword").value = "";
+  $("devPassword").required = false;
+  $("devPasswordGroup").hidden = true;
   message("purchaseMessage", "Ative seu acesso usando uma chave válida.");
   message("membershipMessage", "");
   $("membershipKey").focus();
@@ -189,6 +192,9 @@ $("acquireMembership").addEventListener("click", () => {
 $("backToMembership").addEventListener("click", () => {
   $("membershipForm").hidden = true;
   $("membershipKey").value = "";
+  $("devPassword").value = "";
+  $("devPassword").required = false;
+  $("devPasswordGroup").hidden = true;
   message("membershipMessage", "");
 });
 $("membershipForm").addEventListener("submit", async event => {
@@ -198,6 +204,13 @@ $("membershipForm").addEventListener("submit", async event => {
   message("membershipMessage", "Validando chave...");
   try {
     const result = await api("/api/membership/activate", {method:"POST",body:JSON.stringify({key:$("membershipKey").value,password:$("devPassword").value})});
+    if (result.requiresPassword) {
+      $("devPasswordGroup").hidden = false;
+      $("devPassword").required = true;
+      $("devPassword").focus();
+      message("membershipMessage", result.message, "success");
+      return;
+    }
     currentUser = result.user;
     $("membershipKey").value = "";
     $("membershipKey").hidden = true;
