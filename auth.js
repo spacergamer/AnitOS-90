@@ -251,6 +251,21 @@ function registerAuthRoutes(app, express, db) {
     if (!/^[A-Z0-9]{12}$/.test(normalized) || normalized !== configuredKey) {
       return sendError(res, 400, "Chave inválida. Confira os 12 caracteres e tente novamente.");
     }
+
+    const configuredPassword = String(process.env.ANITOS_DEV_PASSWORD || "");
+    if (!configuredPassword) {
+      return sendError(res, 503, "A confirmação de segurança não está configurada no servidor.");
+    }
+    const submittedPassword = typeof req.body?.password === "string" ? req.body.password : "";
+    if (!submittedPassword) {
+      return res.json({ok:true,requiresPassword:true,message:"Chave reconhecida. Digite a senha de confirmação para ativar DEV + Pro."});
+    }
+    const expectedBuffer = Buffer.from(configuredPassword, "utf8");
+    const submittedBuffer = Buffer.from(submittedPassword, "utf8");
+    if (expectedBuffer.length !== submittedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, submittedBuffer)) {
+      return sendError(res, 400, "Senha de confirmação incorreta.");
+    }
+
     try {
       const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium,is_dev", [req.user.id]);
       if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
