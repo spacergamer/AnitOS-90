@@ -1,39 +1,55 @@
 # AnitOS '90
+### ANITOPE SCIENCE · Sistemas Operacionais e Ambientes de Pesquisa
 
-O AnitOS '90 nasceu pra deixar as sessões de RPG mais fáceis de organizar — sem precisar abrir um monte de ferramentas diferentes. Aqui ficam o painel das campanhas e as salas pra jogar com a galera, tudo no mesmo projeto.
+**Um ambiente. Uma sessão. Tudo no lugar.**
 
-## O que tem por aqui?
+O AnitOS '90 é o ambiente digital da Anitope Science desenvolvido para dar suporte às operações de campanha, às fichas de personagens e às sessões de RPG. Ele reúne ferramentas que normalmente ficariam espalhadas em diferentes páginas em um só lugar, com acesso por conta e comunicação em tempo real.
 
-### ANITOPEBOARD — AnitOS '89
-O painel das campanhas **Light Fade**. É onde Mestres e Jogadores podem acompanhar as campanhas e trabalhar com as fichas dos personagens. O acesso ao painel integrado é feito pela conta e pela campanha selecionada.
+> **ANITOPE SCIENCE — “Eu só queria uma sessão.”**
 
-### RGN — salas de RPG
-Uma sala online pra jogar junto, conversar pelo chat e rolar dados sem depender de cada pessoa calcular o resultado por conta própria.
+---
 
-- Crie uma sala e compartilhe o código com o grupo.
-- Role D4, D6, D8, D10, D12, D20 ou D100.
-- Acompanhe as rolagens e as mensagens em tempo real.
-- Se a conexão cair, dá pra tentar voltar à sala durante a janela de reconexão.
+## Módulos do sistema
+
+### ANITOPEBOARD · AnitOS '89
+Painel de controle das campanhas, com foco na organização de Mestres, Jogadores e fichas de personagens. O acesso às informações depende da conta e das permissões da campanha.
+
+### RGN · Salas de RPG
+Ambientes online para reunir o grupo durante a sessão.
+
+- Criação e entrada em salas por código.
+- Chat integrado para conversar durante o jogo.
+- Rolagens de D4, D6, D8, D10, D12, D20 e D100.
+- Atualização das mensagens e rolagens em tempo real.
+- Reconexão após uma queda de conexão, dentro do período permitido pelo sistema.
 
 ### Contas e campanhas
-Existem dois perfis: **Mestre** e **Jogador**. As campanhas ficam salvas no banco de dados, e o Mestre pode organizar as fichas e atribuí-las aos jogadores. Cada jogador só deve conseguir ver as fichas que foram atribuídas a ele.
+O sistema possui perfis de **Mestre** e **Jogador**. Os Mestres podem organizar campanhas, gerenciar fichas e atribuí-las aos jogadores. O acesso às fichas deve respeitar as permissões de cada personagem e campanha.
 
 ### AnitOS '90 Pro
-O acesso Pro é ativado por **chave de membro**. A ativação é feita dentro do site; a distribuição ou venda das chaves acontece separadamente.
+Uma modalidade de acesso adicional, ativada por **chave de membro**. A chave é inserida no próprio site; a distribuição ou venda das chaves é feita separadamente.
 
-## Como acessar
+Os recursos disponíveis no Pro podem evoluir conforme o desenvolvimento do sistema.
 
-- `/` — página de entrada
-- `/account` — cadastro e login
-- `/anitopeboard/` — painel de campanhas
-- `/rgn` — salas de RPG
-- `/health` — verifica se o servidor está respondendo
+---
 
-## Rodar no seu computador
+## Acesso rápido
 
-Você vai precisar do **Node.js 20 ou superior**.
+| Endereço | Função |
+| --- | --- |
+| `/` | Página inicial |
+| `/account` | Cadastro e login |
+| `/anitopeboard/` | Painel de campanhas |
+| `/rgn` | Salas de RPG |
+| `/health` | Verificação de disponibilidade do servidor |
 
-1. Baixe ou clone este repositório.
+---
+
+## Instalação local
+
+Para executar uma cópia do projeto, você precisará de **Node.js 20 ou superior**.
+
+1. Clone ou baixe este repositório.
 2. Abra um terminal na pasta do projeto.
 3. Instale as dependências:
 
@@ -41,27 +57,41 @@ Você vai precisar do **Node.js 20 ou superior**.
    npm install
    ```
 
-4. Inicie o servidor:
+4. Configure as variáveis de ambiente necessárias para sua instalação.
+5. Inicie o servidor:
 
    ```bash
    npm start
    ```
 
-5. Abra [http://localhost:3000](http://localhost:3000).
+6. Acesse [http://localhost:3000](http://localhost:3000).
 
-Para usar contas e manter os dados salvos entre reinicializações, configure a variável de ambiente `DATABASE_URL` com a conexão PostgreSQL. O projeto pode usar um banco do [Supabase](https://supabase.com/). **Não coloque credenciais no código nem publique essas informações no GitHub.**
+### Banco de dados
 
-## Tecnologias
+Para manter contas e dados entre reinicializações, configure `DATABASE_URL` com uma conexão PostgreSQL. O projeto pode usar um banco hospedado no [Supabase](https://supabase.com/).
 
-- Node.js e Express
-- Socket.IO para comunicação em tempo real
-- PostgreSQL para contas, campanhas e dados persistentes
-- Supabase como opção de hospedagem do banco
-
-## Um projeto em construção
-
-O AnitOS '90 continua recebendo ajustes. Algumas partes podem mudar conforme os testes e as sessões de jogo; por isso, se encontrar algo quebrado, anote o que aconteceu e em qual tela. Isso ajuda muito mais do que um simples “não funciona” :)
+Não publique senhas, tokens, chaves de membro ou outras credenciais no repositório. Configure segredos por meio das variáveis de ambiente do ambiente em que o servidor estiver hospedado.
 
 ---
 
-Feito para as sessões do nosso grupo. **“Eu só queria uma sessão.”**
+## Base tecnológica
+
+- **Node.js** — execução do servidor.
+- **Express** — rotas e endpoints da aplicação.
+- **Socket.IO** — comunicação em tempo real.
+- **PostgreSQL** — persistência dos dados.
+- **Supabase** — opção de hospedagem para o banco de dados.
+
+---
+
+## Estado do projeto
+
+O AnitOS '90 está em desenvolvimento. A estrutura e os recursos podem mudar à medida que novos módulos são integrados e os fluxos existentes são testados. Se encontrar um problema, informe a tela, os passos que levaram ao erro e o que aconteceu.
+
+---
+
+**ANITOPE SCIENCE**  
+*AnitOS '90 · Ambiente de operações para campanhas e sessões de RPG*  
+© Anitope Science. Todos os direitos reservados.
+
+*“Eu só queria uma sessão.”*
