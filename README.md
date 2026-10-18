@@ -1,58 +1,67 @@
 # AnitOS '90
 
-Plataforma modular da Anitope Science: o **ANITOPEBOARD** (painel de campanhas Light Fade) e o **RGN** (salas de RPG com dados e chat) compartilham o mesmo serviço Node.js, mas mantêm interfaces separadas.
+O AnitOS '90 nasceu pra deixar as sessões de RPG mais fáceis de organizar — sem precisar abrir um monte de ferramentas diferentes. Aqui ficam o painel das campanhas e as salas pra jogar com a galera, tudo no mesmo projeto.
 
-## Executar localmente
+## O que tem por aqui?
 
-Requer Node.js 20+. Dentro da pasta do projeto:
+### ANITOPEBOARD — AnitOS '89
+O painel das campanhas **Light Fade**. É onde Mestres e Jogadores podem acompanhar as campanhas e trabalhar com as fichas dos personagens. O acesso ao painel integrado é feito pela conta e pela campanha selecionada.
 
-1. `npm install`
-2. `npm start`
-3. Abra `http://localhost:3000`
+### RGN — salas de RPG
+Uma sala online pra jogar junto, conversar pelo chat e rolar dados sem depender de cada pessoa calcular o resultado por conta própria.
 
-## Módulos
+- Crie uma sala e compartilhe o código com o grupo.
+- Role D4, D6, D8, D10, D12, D20 ou D100.
+- Acompanhe as rolagens e as mensagens em tempo real.
+- Se a conexão cair, dá pra tentar voltar à sala durante a janela de reconexão.
 
-- **RGN:** `/` ou `/rgn` — lobby multiplayer existente.
-- **ANITOPEBOARD:** `/anitopeboard/` — dashboard AnitOS '89, incluindo os recursos locais em `img/` e `aud/`.
-- **Contas:** `/account` — criação de conta e login com perfil Mestre ou Jogador.
-- **Saúde do serviço:** `/health`.
+### Contas e campanhas
+Existem dois perfis: **Mestre** e **Jogador**. As campanhas ficam salvas no banco de dados, e o Mestre pode organizar as fichas e atribuí-las aos jogadores. Cada jogador só deve conseguir ver as fichas que foram atribuídas a ele.
 
-As interfaces são servidas separadamente. O login usa cookies de sessão HTTP-only e senhas derivadas com scrypt; as contas/campanhas exigem `DATABASE_URL` configurado no servidor. Sem banco, o RGN continua disponível em memória, mas os endpoints de contas/campanhas respondem com indisponibilidade.
+### AnitOS '90 Pro
+O acesso Pro é ativado por **chave de membro**. A ativação é feita dentro do site; a distribuição ou venda das chaves acontece separadamente.
 
-## Persistência com Supabase
+## Como acessar
 
-1. Crie um projeto no [Supabase](https://supabase.com/) e abra **Connect** no painel.
-2. Copie a string PostgreSQL. Para ambientes IPv4, prefira o **Session pooler** se a conexão direta não estiver disponível.
-3. Configure `DATABASE_URL` como variável de ambiente no serviço Node.js. Nunca coloque essa string no frontend nem a envie ao GitHub.
-4. O servidor cria as tabelas automaticamente na inicialização. O esquema também está em `supabase/schema.sql`.
+- `/` — página de entrada
+- `/account` — cadastro e login
+- `/anitopeboard/` — painel de campanhas
+- `/rgn` — salas de RPG
+- `/health` — verifica se o servidor está respondendo
 
-O banco mantém:
-- `anitos_state`: estado atual das salas RGN (JSONB), com jogadores, tokens de reconexão e histórico de rolagens/chat.
-- `anitos_users` e `anitos_sessions`: contas, perfil Mestre/Jogador e sessões autenticadas.
-- `anitos_campaigns` e `anitos_campaign_members`: campanhas persistentes e participação por código.
-- `anitos_characters`: fichas de personagem e atribuição a jogadores.
+## Rodar no seu computador
 
-As sessões RGN desconectadas podem ser recuperadas durante uma janela de 30 segundos. As sessões de conta duram 30 dias. Nunca publique a variável `DATABASE_URL`.
+Você vai precisar do **Node.js 20 ou superior**.
 
-## Funcionalidades do RGN mantidas
+1. Baixe ou clone este repositório.
+2. Abra um terminal na pasta do projeto.
+3. Instale as dependências:
 
-- Salas com códigos gerados no servidor e entrada por código
-- Limites de frequência para criação/entrada, reconexão, rolagens e encerramento
-- Limite de 200 salas simultâneas e 20 jogadores por sala
-- Jogadores, rolagens e chat sincronizados em tempo real
-- D4, D6, D8, D10, D12, D20 e D100
-- Resultados calculados no servidor com `crypto.randomInt`
-- Moderação de chat e rolagens, banimento por nome e encerramento pelo administrador
-- Reconexão temporária por token, sem exigir conta para usar o RGN legado
+   ```bash
+   npm install
+   ```
 
-## Estado da integração
+4. Inicie o servidor:
 
-**Implementado no código:** login e criação de contas Mestre/Jogador; campanhas persistentes com exclusão confirmada pelo nome; ANITOPEBOARD carregado por campanha remota e salvo no banco; importação inicial confirmada do `MGR_DATA` local sem apagar o backup; RGN em rota separada; criação/edição/atribuição de fichas pela central; visualização de fichas atribuídas somente para o jogador; sincronização explícita de personagens do capítulo aberto; atualização periódica da visualização do jogador. A exclusão remove a campanha remota, os vínculos e as fichas associadas, mas não apaga o backup local do navegador.
+   ```bash
+   npm start
+   ```
 
-**Validação restante:** confirmar o deploy ativo no Render e executar o fluxo completo com duas contas reais e o Supabase de produção. O acesso direto ao ANITOPEBOARD sem uma campanha agora retorna à central de contas, para evitar abrir o dashboard integrado em modo local/anônimo. O RGN legado continua acessível sem conta, conforme a compatibilidade existente.
+5. Abra [http://localhost:3000](http://localhost:3000).
 
-## Segurança e dados
+Para usar contas e manter os dados salvos entre reinicializações, configure a variável de ambiente `DATABASE_URL` com a conexão PostgreSQL. O projeto pode usar um banco do [Supabase](https://supabase.com/). **Não coloque credenciais no código nem publique essas informações no GitHub.**
 
-- O backend verifica a sessão e o proprietário/membro da campanha em cada endpoint.
-- Jogadores só recebem fichas atribuídas a eles e não podem editá-las via API.
-- O backup JSON exportado pelo dashboard deve ser preservado até a migração e validação dos dados reais.
+## Tecnologias
+
+- Node.js e Express
+- Socket.IO para comunicação em tempo real
+- PostgreSQL para contas, campanhas e dados persistentes
+- Supabase como opção de hospedagem do banco
+
+## Um projeto em construção
+
+O AnitOS '90 continua recebendo ajustes. Algumas partes podem mudar conforme os testes e as sessões de jogo; por isso, se encontrar algo quebrado, anote o que aconteceu e em qual tela. Isso ajuda muito mais do que um simples “não funciona” :)
+
+---
+
+Feito para as sessões do nosso grupo. **“Eu só queria uma sessão.”**
