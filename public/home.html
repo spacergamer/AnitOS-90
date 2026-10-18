@@ -197,7 +197,7 @@ $("membershipForm").addEventListener("submit", async event => {
   submit.disabled = true;
   message("membershipMessage", "Validando chave...");
   try {
-    const result = await api("/api/membership/activate", {method:"POST",body:JSON.stringify({key:$("membershipKey").value})});
+    const result = await api("/api/membership/activate", {method:"POST",body:JSON.stringify({key:$("membershipKey").value,password:$("devPassword").value})});
     currentUser = result.user;
     $("membershipKey").value = "";
     $("membershipKey").hidden = true;
