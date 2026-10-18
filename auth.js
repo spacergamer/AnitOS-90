@@ -244,7 +244,10 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/membership/activate", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
     const submitted = typeof req.body?.key === "string" ? req.body.key.trim().toUpperCase() : "";
     const normalized = submitted.replace(/-/g, "");
-    const configuredKey = String(process.env.ANITOS_PREMIUM_KEY || "XFHWIG-GME6SM").trim().toUpperCase().replace(/-/g, "");
+    const configuredKey = String(process.env.ANITOS_PREMIUM_KEY || "").trim().toUpperCase().replace(/-/g, "");
+    if (!/^[A-Z0-9]{12}$/.test(configuredKey)) {
+      return sendError(res, 503, "A ativação por chave está temporariamente indisponível. A configuração do servidor está incompleta.");
+    }
     if (!/^[A-Z0-9]{12}$/.test(normalized) || normalized !== configuredKey) {
       return sendError(res, 400, "Chave inválida. Confira os 12 caracteres e tente novamente.");
     }
