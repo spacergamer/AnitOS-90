@@ -162,7 +162,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.email,u.display_name,u.role,u.is_premium
+        `SELECT u.id,u.email,u.display_name,u.role,u.is_premium,u.is_dev
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
@@ -202,7 +202,7 @@ function registerAuthRoutes(app, express, db) {
       const hash = (await scrypt(password, salt, 64)).toString("hex");
       const id = crypto.randomUUID();
       const result = await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,role,is_premium",
+        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,role,is_premium,is_dev",
         [id, email, displayName, role, salt, hash]
       );
       await createSession(id, res);
@@ -222,7 +222,7 @@ function registerAuthRoutes(app, express, db) {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const result = await db.query(
-        "SELECT id,email,display_name,role,is_premium,password_salt,password_hash FROM anitos_users WHERE email=$1",
+        "SELECT id,email,display_name,role,is_premium,is_dev,password_salt,password_hash FROM anitos_users WHERE email=$1",
         [email]
       );
       const user = result.rows[0];
