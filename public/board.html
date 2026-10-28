@@ -1961,7 +1961,7 @@
             const currentHandle = boardAssignments[String(character.id || '')] || '';
             if (removeAssignment && !currentHandle) return;
             if (removeAssignment && !confirm('Retirar a atribuição de @' + currentHandle + '?')) return;
-            const rawHandle = removeAssignment ? '' : prompt(currentHandle ? 'Atribuído a @' + currentHandle + '. Digite outro @ para transferir ou deixe vazio para retirar a atribuição:' : 'Digite o @nome do jogador que já participa desta campanha.', currentHandle);
+            const rawHandle = removeAssignment ? '' : prompt(currentHandle ? 'Atribuído a @' + currentHandle + '. Digite outro @ para transferir ou deixe vazio para retirar a atribuição:' : 'Digite o @nome do jogador desta campanha ou o seu próprio @nome para atribuir a ficha a você.', currentHandle);
             if (rawHandle === null) return;
             const playerHandle = rawHandle.trim().replace(/^@/, '');
             try {

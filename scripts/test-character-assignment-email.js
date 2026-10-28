@@ -26,15 +26,20 @@ async function main() {
       }
       if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.email)=$2")) {
         assert.equal(params[0],"campaign-1");
+        if (params[1] === "master@example.test") return {rows:[{id:"master-1",display_name:"Mestre"}]};
         assert.equal(params[1],"player@example.test");
         return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
       if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
         assert.equal(params[0],"campaign-1");
+        if (params[1] === "mestre") return {rows:[{id:"master-1",display_name:"Mestre"}]};
         assert.equal(params[1],"jogador");
         return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
-      if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1",display_name:"Jogador"}]};
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("u.id=$2")) {
+        if (params[1] === "master-1") return {rows:[{id:"master-1",display_name:"Mestre"}]};
+        if (params[1] === "player-1") return {rows:[{id:"player-1",display_name:"Jogador"}]};
+      }
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")) return {rows:[]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")) {
         return {rows:[{id:params[1],campaign_id:"campaign-1",name:params[1]==="character-2"?"Outro personagem":"Personagem",assigned_player_id:params[0]}]};
@@ -58,6 +63,11 @@ async function main() {
     const moved=await post("/api/characters/character-2/assign",masterToken,{playerHandle:"jogador"});
     assert.equal(moved.status,200,"A player can be moved to another character");
     assert.equal((await moved.json()).character.assigned_player_id,"player-1");
+    const selfAssigned=await post("/api/characters/character-1/assign",masterToken,{playerHandle:"@Mestre"});
+    assert.equal(selfAssigned.status,200,"A master should be able to assign a character to themselves");
+    const selfBody=await selfAssigned.json();
+    assert.equal(selfBody.character.assigned_player_id,"master-1");
+    assert.equal(selfBody.character.assigned_player_handle,"Mestre");
     assert.ok(calls.some(call=>call.sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")&&call.params[3]==="character-2"),
       "Reassignment must clear the player's previous character in the campaign");
     const removed=await post("/api/characters/character-2/assign",masterToken,{playerHandle:""});
@@ -69,7 +79,7 @@ async function main() {
     assert.equal(playerAssign.status,403,"Players must not assign character sheets");
     const playerEdit=await patch("/api/characters/character-1",playerToken,{data:{hp:999}});
     assert.equal(playerEdit.status,403,"Players must not edit character sheet values or items");
-    assert.equal(calls.filter(c=>c.sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")).length,4,
+    assert.equal(calls.filter(c=>c.sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")).length,5,
       "Only authorized master assignment and unassignment requests should update the database");
     console.log("Character assignment-by-email/@handle and player read-only tests passed.");
   } finally {await new Promise((resolve,reject)=>server.close(err=>err?reject(err):resolve()))}
