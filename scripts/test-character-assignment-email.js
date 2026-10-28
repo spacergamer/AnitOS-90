@@ -32,10 +32,14 @@ async function main() {
       }
       if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
         assert.equal(params[0],"campaign-1");
+        if (params[1] === "mestre") return {rows:[{id:"master-1",display_name:"Mestre"}]};
         assert.equal(params[1],"jogador");
         return {rows:[{id:"player-1",display_name:"Jogador"}]};
       }
-      if (sql.includes("FROM anitos_campaign_members m") && sql.includes("u.role=\'player\'")) return {rows:[{id:"player-1",display_name:"Jogador"}]};
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("u.id=$2")) {
+        if (params[1] === "master-1") return {rows:[{id:"master-1",display_name:"Mestre"}]};
+        if (params[1] === "player-1") return {rows:[{id:"player-1",display_name:"Jogador"}]};
+      }
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")) return {rows:[]};
       if (sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")) {
         return {rows:[{id:params[1],campaign_id:"campaign-1",name:params[1]==="character-2"?"Outro personagem":"Personagem",assigned_player_id:params[0]}]};
