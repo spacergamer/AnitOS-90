@@ -587,10 +587,16 @@ function registerAuthRoutes(app, express, db) {
       if (playerEmail || playerHandle) {
         const member = await client.query(
           `SELECT u.id,u.display_name FROM anitos_users u
-           JOIN anitos_campaign_members m ON m.user_id=u.id
-           WHERE m.campaign_id=$1 AND ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"} AND u.role='player'
+           WHERE ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"}
+             AND (
+               (u.role='master' AND u.id=$3)
+               OR (u.role='player' AND EXISTS (
+                 SELECT 1 FROM anitos_campaign_members m
+                 WHERE m.user_id=u.id AND m.campaign_id=$1
+               ))
+             )
            LIMIT 1`,
-          [character.rows[0].campaign_id, playerEmail || playerHandle]
+          [character.rows[0].campaign_id, playerEmail || playerHandle, req.user.id]
         );
         if (!member.rows[0]) {
           if (ownsClient) await client.query("ROLLBACK");
@@ -601,10 +607,15 @@ function registerAuthRoutes(app, express, db) {
       }
       if (playerId) {
         const member = await client.query(
-          `SELECT u.id,u.display_name FROM anitos_campaign_members m
-           JOIN anitos_users u ON u.id=m.user_id
-           WHERE m.campaign_id=$1 AND m.user_id=$2 AND u.role='player'`,
-          [character.rows[0].campaign_id, playerId]
+          `SELECT u.id,u.display_name FROM anitos_users u
+           WHERE u.id=$2 AND (
+             (u.role='master' AND u.id=$3)
+             OR (u.role='player' AND EXISTS (
+               SELECT 1 FROM anitos_campaign_members m
+               WHERE m.user_id=u.id AND m.campaign_id=$1
+             ))
+           )`,
+          [character.rows[0].campaign_id, playerId, req.user.id]
         );
         if (!member.rows[0]) {
           if (ownsClient) await client.query("ROLLBACK");
