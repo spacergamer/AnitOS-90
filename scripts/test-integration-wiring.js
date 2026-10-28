@@ -5,6 +5,7 @@ const home = fs.readFileSync("public/home.html", "utf8");
 const board = fs.readFileSync("public/board.html", "utf8");
 const room = fs.readFileSync("public/room.html", "utf8");
 const server = fs.readFileSync("server.js", "utf8");
+const auth = fs.readFileSync("auth.js", "utf8");
 
 // Both role-specific forms must have real submit buttons. The Master handler
 // queries this exact selector before entering its try/finally block.
@@ -27,6 +28,10 @@ assert.ok(saveDataStart >= 0 && saveChapterStart > saveDataStart);
 assert.match(board.slice(saveDataStart, saveChapterStart), /sync-board-characters/);
 assert.match(board.slice(saveDataStart, saveChapterStart), /SALVO \+ FICHAS SINCRONIZADAS/);
 assert.match(board, /Abrir um capítulo também sincroniza suas fichas existentes com o servidor/);
+
+// Campaign listing must not multiply rows when a user is both owner and member.
+assert.match(auth, /OR EXISTS \\(\\s*SELECT 1 FROM anitos_campaign_members m/);
+assert.doesNotMatch(auth, /FROM anitos_campaigns c\\s+LEFT JOIN anitos_campaign_members m ON m\\.campaign_id=c\\.id\\s+WHERE c\\.owner_id=\\$1 OR m\\.user_id=\\$1/);
 
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);

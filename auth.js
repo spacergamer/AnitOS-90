@@ -294,8 +294,11 @@ function registerAuthRoutes(app, express, db) {
         `SELECT c.id,c.owner_id,c.title,CASE WHEN c.owner_id=$1 THEN c.join_code ELSE NULL END AS join_code,c.created_at,c.updated_at,
           (c.owner_id=$1) AS is_owner
          FROM anitos_campaigns c
-         LEFT JOIN anitos_campaign_members m ON m.campaign_id=c.id
-         WHERE c.owner_id=$1 OR m.user_id=$1
+         WHERE c.owner_id=$1
+            OR EXISTS (
+              SELECT 1 FROM anitos_campaign_members m
+              WHERE m.campaign_id=c.id AND m.user_id=$1
+            )
          ORDER BY c.updated_at DESC`,
         [req.user.id]
       );
