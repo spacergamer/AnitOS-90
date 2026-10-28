@@ -28,6 +28,10 @@ assert.match(board.slice(saveDataStart, saveChapterStart), /sync-board-character
 assert.match(board.slice(saveDataStart, saveChapterStart), /SALVO \+ FICHAS SINCRONIZADAS/);
 assert.match(board, /Abrir um capítulo também sincroniza suas fichas existentes com o servidor/);
 
+// Campaign listing must not multiply rows when a user is both owner and member.
+assert.match(auth, /OR EXISTS \\(\\s*SELECT 1 FROM anitos_campaign_members m/);
+assert.doesNotMatch(auth, /FROM anitos_campaigns c\\s+LEFT JOIN anitos_campaign_members m ON m\\.campaign_id=c\\.id\\s+WHERE c\\.owner_id=\\$1 OR m\\.user_id=\\$1/);
+
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);
 assert.match(server, /app\.get\("\/board\.html",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","board\.html"\)\)\)/);
