@@ -5,6 +5,7 @@ const home = fs.readFileSync("public/home.html", "utf8");
 const board = fs.readFileSync("public/board.html", "utf8");
 const room = fs.readFileSync("public/room.html", "utf8");
 const server = fs.readFileSync("server.js", "utf8");
+const auth = fs.readFileSync("auth.js", "utf8");
 
 // Both role-specific forms must have real submit buttons. The Master handler
 // queries this exact selector before entering its try/finally block.
