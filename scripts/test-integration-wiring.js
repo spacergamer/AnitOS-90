@@ -19,7 +19,7 @@ assert.match(board, /href="\/room\.html\?campaign=\$\{encodeURIComponent\(remote
 assert.doesNotMatch(board, /vinculação automática da sala ao código desta campanha não faz parte desta etapa/i);
 assert.match(home, /href="\/room\.html\?campaign="\+encodeURIComponent\(campaign\.id\)/);
 assert.match(room, /\.\.\.\(campaignId\?\{campaignId\}:\{\}\)/);
-assert.match(room, /setInterval\(\(\)=>\{if\(room\)refreshCampaignSheet\(\)\},1000\)/);
+assert.match(room, /setInterval\\(\\(\\)=>\\{if\\(room\\)refreshCampaignSheet\\(\\)\\},100\\)/);
 
 // Saving or opening a chapter in ANITOPEBOARD must synchronize its character sheets.
 const saveDataStart = board.indexOf("function saveData()");
