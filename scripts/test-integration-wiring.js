@@ -25,6 +25,9 @@ assert.match(room, /id="roomPaneData"/);
 assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
+assert.match(room, /pingTimeoutTimer=setTimeout\(\(\)=>\{/);
+assert.match(room, /socket\.disconnect\(\);\s*socket\.connect\(\);/);
+assert.match(room, /A conexão parou de responder\. Tentando recuperar a sessão/);
 
 // Saving or opening a chapter in ANITOPEBOARD must synchronize its character sheets.
 const saveDataStart = board.indexOf("function saveData()");

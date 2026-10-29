@@ -291,7 +291,7 @@ async function initializePremiumPalette(){
  if(control){control.disabled=!premiumPaletteAllowed;control.title=premiumPaletteAllowed?"Membro Premium: escolha sua paleta":"Somente membros Premium podem mudar a paleta. Ative em Seja Membro no menu inicial.";control.setAttribute("aria-label",control.title)}
  applyPalette(premiumPaletteAllowed?savedPalette:"menta",false);
 }
-let room=null,playerId=null,resumeToken="",isResuming=false,isRolling=false,rollUnlockTimer=null,pingMs=null,pingTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
+let room=null,playerId=null,resumeToken="",isResuming=false,isRolling=false,rollUnlockTimer=null,pingMs=null,pingTimer=null,pingTimeoutTimer=null,dicePool=[4],rollFocusTimer=null,rollFocusRun=0;
 const campaignId=new URLSearchParams(window.location.search).get("campaign")||"";
 let campaignUser=null,campaignInfo=null;
 try{resumeToken=localStorage.getItem("anitos.resumeToken")||""}catch{}
@@ -356,7 +356,19 @@ function renderStatus(){
 function measurePing(){
  if(!socket.connected)return;
  const sentAt=Date.now();
- socket.emit("system:ping",sentAt,()=>{pingMs=Date.now()-sentAt;renderStatus()});
+ socket.emit("system:ping",sentAt,()=>{
+  if(pingTimeoutTimer){clearTimeout(pingTimeoutTimer);pingTimeoutTimer=null}
+  pingMs=Date.now()-sentAt;renderStatus();
+ });
+ if(pingTimeoutTimer)clearTimeout(pingTimeoutTimer);
+ pingTimeoutTimer=setTimeout(()=>{
+  pingTimeoutTimer=null;
+  if(!socket.connected)return;
+  $("status").textContent="Conexão instável — reconectando...";
+  msg(room?"roomMsg":"lobbyMsg","A conexão parou de responder. Tentando recuperar a sessão...");
+  socket.disconnect();
+  socket.connect();
+ },12000);
 }
 function saveToken(token){
  resumeToken=token||"";
@@ -559,6 +571,7 @@ socket.on("connect",()=>{
  msg("lobbyMsg","");
 });
 socket.on("disconnect",()=>{
+ if(pingTimeoutTimer){clearTimeout(pingTimeoutTimer);pingTimeoutTimer=null}
  $("status").textContent="Conexão perdida — tentando reconectar...";
  isResuming=Boolean(resumeToken);
  updateRollButton();
