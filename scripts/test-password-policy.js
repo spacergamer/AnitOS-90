@@ -13,7 +13,7 @@ async function main() {
   process.env.RESEND_API_KEY = "test-key";
   process.env.AUTH_EMAIL_FROM = "ANITOPE TEST <test@example.test>";
   process.env.ANITOS_PUBLIC_URL = "https://anitos.example.test";
-  global.fetch = async () => ({ok: true, status: 200, text: async () => ""});
+  global.fetch = (url, options) => String(url).startsWith("https://api.resend.com/") ? Promise.resolve({ok: true, status: 200, text: async () => ""}) : originalFetch(url, options);
   const db = {
     async query(sql, params = []) {
       databaseWrites++;
