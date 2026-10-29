@@ -314,7 +314,7 @@ function registerAuthRoutes(app, express, db) {
       );
       if (!result.rows[0]) return sendError(res, 400, "Link de confirmação inválido ou expirado. Solicite um novo.");
       await db.query("UPDATE anitos_users SET email_verified=true WHERE id=$1", [result.rows[0].user_id]);
-      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='verify_email' AND used_at IS NULL", [result.rows[0].user_id]);
+      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='verify_email'", [result.rows[0].user_id]);
       return res.json({message: "E-mail confirmado! Agora você já pode entrar na sua conta."});
     } catch (err) {
       console.error("[auth] Falha ao confirmar e-mail:", err.message);
@@ -369,7 +369,7 @@ function registerAuthRoutes(app, express, db) {
       const hash = (await scrypt(password, salt, 64)).toString("hex");
       await db.query("UPDATE anitos_users SET password_salt=$1,password_hash=$2 WHERE id=$3", [salt, hash, userId]);
       await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [userId]);
-      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='reset_password' AND used_at IS NULL", [userId]);
+      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='reset_password'", [userId]);
       return res.json({message: "Senha redefinida com sucesso. Entre usando sua nova senha."});
     } catch (err) {
       console.error("[auth] Falha ao redefinir senha:", err.message);
