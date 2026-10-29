@@ -46,13 +46,19 @@ async function main() {
       const response = await register(password, name);
       assert.equal(response.status, 201, name + " password should be allowed because strength rules are recommendations");
       const payload = await response.json();
-      assert.equal(payload.user.role, "player");
+      assert.equal(payload.verificationRequired, true, "registration must require email verification");
+      assert.equal(typeof payload.user, "undefined", "registration must not log in before verification");
     }
     const emptyResponse = await register("", "empty");
     assert.equal(emptyResponse.status, 400, "empty password must be rejected");
-    assert.equal(databaseWrites, cases.length * 2, "each accepted account should create a user and session; empty password should not write");
-    console.log("Optional password-strength recommendation tests passed.");
+    assert.equal(databaseWrites, cases.length * 3, "each accepted account should create a user and verification token; empty password should not write");
+    console.log("Registration email-verification policy tests passed.");
   } finally {
+    global.fetch = originalFetch;
+    for (const [key, value] of Object.entries(originalEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 }
