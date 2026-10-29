@@ -245,11 +245,12 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
+      if (!emailServiceConfigured()) return sendError(res, 503, "A confirmação por e-mail ainda não está configurada no servidor. Tente novamente mais tarde.");
       const email = String(req.body?.email || "").trim().toLowerCase();
       const displayName = String(req.body?.displayName || "").trim().replace(/^@/, "").toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const role = req.body?.role || "player";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254)
         return sendError(res, 400, "Informe um e-mail válido.");
       if (!/^[a-z0-9_.-]{2,32}$/.test(displayName)) return sendError(res, 400, "Use um @nome único de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
       if (password.length < 1 || password.length > 200)
@@ -260,11 +261,16 @@ function registerAuthRoutes(app, express, db) {
       const hash = (await scrypt(password, salt, 64)).toString("hex");
       const id = crypto.randomUUID();
       const result = await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,role,is_premium,is_dev",
+        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified) VALUES($1,$2,$3,$4,$5,$6,false) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified",
         [id, email, displayName, role, salt, hash]
       );
-      await createSession(id, res);
-      return res.status(201).json({user: safeUser(result.rows[0])});
+      try {
+        await sendVerificationEmail(result.rows[0]);
+      } catch (mailError) {
+        console.error("[auth] Falha ao enviar confirmação:", mailError.message);
+        return sendError(res, 503, "A conta foi criada, mas não conseguimos enviar o e-mail de confirmação. Use 'Reenviar confirmação' em instantes.");
+      }
+      return res.status(201).json({verificationRequired: true, message: "Conta criada! Confira sua caixa de entrada e confirme seu e-mail antes de entrar."});
     } catch (err) {
       if (err.code === "23505") {
         if (err.constraint === "anitos_users_display_name_lower_idx") return sendError(res, 409, "Esse @nome já está em uso. Escolha outro.");
@@ -280,7 +286,7 @@ function registerAuthRoutes(app, express, db) {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const result = await db.query(
-        "SELECT id,email,display_name,role,is_premium,is_dev,password_salt,password_hash FROM anitos_users WHERE email=$1",
+        "SELECT id,email,display_name,role,is_premium,is_dev,email_verified,password_salt,password_hash FROM anitos_users WHERE email=$1",
         [email]
       );
       const user = result.rows[0];
@@ -289,11 +295,85 @@ function registerAuthRoutes(app, express, db) {
       const expected = Buffer.from(user.password_hash, "hex");
       if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
         return sendError(res, 401, "E-mail ou senha incorretos.");
+      if (!user.email_verified) return sendError(res, 403, "Confirme seu e-mail antes de entrar. Se não recebeu a mensagem, use 'Reenviar confirmação'.");
       await createSession(user.id, res);
       return res.json({user: safeUser(user)});
     } catch (err) {
       console.error("[auth] Falha ao entrar:", err.message);
       return sendError(res, 500, "Não foi possível iniciar a sessão.");
+    }
+  });
+
+  app.post("/api/auth/verify-email", databaseRequired, limitAuthAttempts, async (req, res) => {
+    try {
+      const token = String(req.body?.token || "");
+      if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 400, "Link de confirmação inválido ou expirado.");
+      const result = await db.query(
+        "UPDATE anitos_auth_tokens SET used_at=now() WHERE token_hash=$1 AND purpose='verify_email' AND used_at IS NULL AND expires_at>now() RETURNING user_id",
+        [tokenHash(token)]
+      );
+      if (!result.rows[0]) return sendError(res, 400, "Link de confirmação inválido ou expirado. Solicite um novo.");
+      await db.query("UPDATE anitos_users SET email_verified=true WHERE id=$1", [result.rows[0].user_id]);
+      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='verify_email' AND used_at IS NULL", [result.rows[0].user_id]);
+      return res.json({message: "E-mail confirmado! Agora você já pode entrar na sua conta."});
+    } catch (err) {
+      console.error("[auth] Falha ao confirmar e-mail:", err.message);
+      return sendError(res, 500, "Não foi possível confirmar o e-mail.");
+    }
+  });
+
+  app.post("/api/auth/resend-verification", databaseRequired, limitAuthAttempts, async (req, res) => {
+    try {
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      const result = await db.query("SELECT id,email,display_name,email_verified FROM anitos_users WHERE email=$1", [email]);
+      const user = result.rows[0];
+      if (user && !user.email_verified) {
+        if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de e-mail está temporariamente indisponível.");
+        await sendVerificationEmail(user);
+      }
+      return res.json({message: "Se houver uma conta pendente de confirmação para esse endereço, enviaremos um novo link."});
+    } catch (err) {
+      console.error("[auth] Falha ao reenviar confirmação:", err.message);
+      return sendError(res, 500, "Não foi possível processar a solicitação agora.");
+    }
+  });
+
+  app.post("/api/auth/request-password-reset", databaseRequired, limitAuthAttempts, async (req, res) => {
+    try {
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      const result = await db.query("SELECT id,email,display_name FROM anitos_users WHERE email=$1 AND email_verified=true", [email]);
+      if (result.rows[0]) {
+        if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de redefinição de senha está temporariamente indisponível.");
+        await sendPasswordResetEmail(result.rows[0]);
+      }
+      return res.json({message: "Se houver uma conta confirmada com esse endereço, enviaremos instruções para redefinir a senha."});
+    } catch (err) {
+      console.error("[auth] Falha ao solicitar redefinição:", err.message);
+      return sendError(res, 500, "Não foi possível processar a solicitação agora.");
+    }
+  });
+
+  app.post("/api/auth/reset-password", databaseRequired, limitAuthAttempts, async (req, res) => {
+    try {
+      const token = String(req.body?.token || "");
+      const password = typeof req.body?.password === "string" ? req.body.password : "";
+      if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 400, "Link de redefinição inválido ou expirado.");
+      if (password.length < 12 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 12 e 200 caracteres.");
+      const result = await db.query(
+        "UPDATE anitos_auth_tokens SET used_at=now() WHERE token_hash=$1 AND purpose='reset_password' AND used_at IS NULL AND expires_at>now() RETURNING user_id",
+        [tokenHash(token)]
+      );
+      if (!result.rows[0]) return sendError(res, 400, "Link de redefinição inválido ou expirado. Solicite outro.");
+      const userId = result.rows[0].user_id;
+      const salt = crypto.randomBytes(16).toString("hex");
+      const hash = (await scrypt(password, salt, 64)).toString("hex");
+      await db.query("UPDATE anitos_users SET password_salt=$1,password_hash=$2 WHERE id=$3", [salt, hash, userId]);
+      await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [userId]);
+      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='reset_password' AND used_at IS NULL", [userId]);
+      return res.json({message: "Senha redefinida com sucesso. Entre usando sua nova senha."});
+    } catch (err) {
+      console.error("[auth] Falha ao redefinir senha:", err.message);
+      return sendError(res, 500, "Não foi possível redefinir a senha.");
     }
   });
 
