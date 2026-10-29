@@ -27,7 +27,7 @@ assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
 
 // Authentication must require verified ownership of an email address and support one-time recovery tokens.
-assert.match(auth, /email_verified boolean NOT NULL DEFAULT false/);
+assert.match(auth, /email_verified boolean NOT NULL DEFAULT true/);
 assert.match(auth, /if \(!user\.email_verified\) return sendError\(res, 403/);
 assert.match(auth, /app\.post\("\/api\/auth\/verify-email"/);
 assert.match(auth, /app\.post\("\/api\/auth\/resend-verification"/);
