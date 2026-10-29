@@ -69,7 +69,7 @@ async function initializeAuthSchema(db) {
     );
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
-    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
     CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
