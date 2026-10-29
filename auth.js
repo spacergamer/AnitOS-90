@@ -324,6 +324,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/resend-verification", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
+      if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de e-mail está temporariamente indisponível.");
       const email = String(req.body?.email || "").trim().toLowerCase();
       const result = await db.query("SELECT id,email,display_name,email_verified FROM anitos_users WHERE email=$1", [email]);
       const user = result.rows[0];
@@ -340,6 +341,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/request-password-reset", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
+      if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de redefinição de senha está temporariamente indisponível.");
       const email = String(req.body?.email || "").trim().toLowerCase();
       const result = await db.query("SELECT id,email,display_name FROM anitos_users WHERE email=$1 AND email_verified=true", [email]);
       if (result.rows[0]) {
