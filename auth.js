@@ -69,6 +69,16 @@ async function initializeAuthSchema(db) {
     );
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false;
+    CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
+      token_hash text PRIMARY KEY,
+      user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
+      purpose text NOT NULL CHECK (purpose IN ('verify_email','reset_password')),
+      expires_at timestamptz NOT NULL,
+      used_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS anitos_auth_tokens_user_purpose_idx ON anitos_auth_tokens(user_id,purpose);
     CREATE TABLE IF NOT EXISTS anitos_sessions (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -182,6 +192,55 @@ function registerAuthRoutes(app, express, db) {
       [tokenHash(token), userId]
     );
     setSessionCookie(res, token);
+  }
+
+  function emailServiceConfigured() {
+    return Boolean(process.env.RESEND_API_KEY && process.env.AUTH_EMAIL_FROM && process.env.ANITOS_PUBLIC_URL);
+  }
+
+  async function sendAuthEmail(email, subject, html) {
+    if (!emailServiceConfigured()) throw new Error("Serviço de e-mail não configurado.");
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + process.env.RESEND_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({from: process.env.AUTH_EMAIL_FROM, to: [email], subject, html})
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error("Provedor de e-mail respondeu " + response.status + ": " + detail.slice(0, 300));
+    }
+  }
+
+  async function createAuthToken(userId, purpose, expiresInterval) {
+    const token = crypto.randomBytes(32).toString("hex");
+    await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose=$2 AND used_at IS NULL", [userId, purpose]);
+    await db.query(
+      "INSERT INTO anitos_auth_tokens(token_hash,user_id,purpose,expires_at) VALUES($1,$2,$3,now()+$4::interval)",
+      [tokenHash(token), userId, purpose, expiresInterval]
+    );
+    return token;
+  }
+
+  function authLink(path, token) {
+    return process.env.ANITOS_PUBLIC_URL.replace(/\\/+$/, "") + path + "?token=" + encodeURIComponent(token);
+  }
+
+  async function sendVerificationEmail(user) {
+    const token = await createAuthToken(user.id, "verify_email", "24 hours");
+    const link = authLink("/account/verify-email", token);
+    const displayName = String(user.display_name || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    await sendAuthEmail(user.email, "Confirme seu e-mail — ANITOPE SCIENCE",
+      "<p>Olá, " + displayName + "!</p><p>Confirme seu endereço para ativar sua conta no ANITOPEBOARD / RGN.</p><p><a href=\"" + link + "\">Confirmar meu e-mail</a></p><p>Este link expira em 24 horas. Se você não criou esta conta, ignore esta mensagem.</p>");
+  }
+
+  async function sendPasswordResetEmail(user) {
+    const token = await createAuthToken(user.id, "reset_password", "1 hour");
+    const link = authLink("/account/reset-password", token);
+    await sendAuthEmail(user.email, "Redefinição de senha — ANITOPE SCIENCE",
+      "<p>Recebemos uma solicitação para redefinir a senha da sua conta.</p><p><a href=\"" + link + "\">Criar uma nova senha</a></p><p>Este link expira em 1 hora e só pode ser usado uma vez. Se não foi você, ignore esta mensagem.</p>");
   }
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
