@@ -250,7 +250,7 @@ function registerAuthRoutes(app, express, db) {
       const displayName = String(req.body?.displayName || "").trim().replace(/^@/, "").toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const role = req.body?.role || "player";
-      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254)
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
         return sendError(res, 400, "Informe um e-mail válido.");
       if (!/^[a-z0-9_.-]{2,32}$/.test(displayName)) return sendError(res, 400, "Use um @nome único de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
       if (password.length < 1 || password.length > 200)
