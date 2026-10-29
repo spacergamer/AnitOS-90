@@ -4,14 +4,23 @@ const {registerAuthRoutes} = require("../auth");
 
 async function main() {
   let databaseWrites = 0;
+  const originalFetch = global.fetch;
+  const originalEnv = {
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    AUTH_EMAIL_FROM: process.env.AUTH_EMAIL_FROM,
+    ANITOS_PUBLIC_URL: process.env.ANITOS_PUBLIC_URL
+  };
+  process.env.RESEND_API_KEY = "test-key";
+  process.env.AUTH_EMAIL_FROM = "ANITOPE TEST <test@example.test>";
+  process.env.ANITOS_PUBLIC_URL = "https://anitos.example.test";
+  global.fetch = async () => ({ok: true, status: 200, text: async () => ""});
   const db = {
     async query(sql, params = []) {
-      if (sql.includes("FROM anitos_sessions s JOIN anitos_users")) return {rows: []};
       databaseWrites++;
       if (sql.includes("INSERT INTO anitos_users")) {
-        return {rows: [{id: "test-user-" + databaseWrites, email: params[1], display_name: params[2], role: params[3]}]};
+        return {rows: [{id: "test-user-" + databaseWrites, email: params[1], display_name: params[2], role: params[3], email_verified: false}]};
       }
-      if (sql.includes("INSERT INTO anitos_sessions")) return {rows: []};
+      if (sql.includes("DELETE FROM anitos_auth_tokens") || sql.includes("INSERT INTO anitos_auth_tokens")) return {rows: []};
       throw new Error("Unexpected database query in password-policy test: " + sql);
     }
   };
