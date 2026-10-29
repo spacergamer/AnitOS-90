@@ -25,6 +25,19 @@ assert.match(room, /id="roomPaneData"/);
 assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
+
+// Authentication must require verified ownership of an email address and support one-time recovery tokens.
+assert.match(auth, /email_verified boolean NOT NULL DEFAULT false/);
+assert.match(auth, /if \(!user\.email_verified\) return sendError\(res, 403/);
+assert.match(auth, /app\.post\("\/api\/auth\/verify-email"/);
+assert.match(auth, /app\.post\("\/api\/auth\/resend-verification"/);
+assert.match(auth, /app\.post\("\/api\/auth\/request-password-reset"/);
+assert.match(auth, /app\.post\("\/api\/auth\/reset-password"/);
+assert.match(auth, /DELETE FROM anitos_sessions WHERE user_id=\$1/);
+assert.match(auth, /RESEND_API_KEY/);
+assert.match(board, /ANITOPEBOARD/);
+assert.match(fs.readFileSync("public/account.html", "utf8"), /id="forgotPassword"/);
+assert.match(fs.readFileSync("public/account.html", "utf8"), /id="resendVerification"/);
 assert.match(room, /pingTimeoutTimer=setTimeout\(\(\)=>\{/);
 assert.match(room, /socket\.disconnect\(\);\s*socket\.connect\(\);/);
 assert.match(room, /A conexão parou de responder\. Tentando recuperar a sessão/);
