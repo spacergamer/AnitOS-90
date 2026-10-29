@@ -225,7 +225,7 @@ function registerAuthRoutes(app, express, db) {
   }
 
   function authLink(action, token) {
-    return process.env.ANITOS_PUBLIC_URL.replace(/\\/+$/, "") + "/account?" + action + "=" + encodeURIComponent(token);
+    return process.env.ANITOS_PUBLIC_URL.replace(/\/+$/, "") + "/account?" + action + "=" + encodeURIComponent(token);
   }
 
   async function sendVerificationEmail(user) {
