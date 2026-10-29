@@ -224,13 +224,13 @@ function registerAuthRoutes(app, express, db) {
     return token;
   }
 
-  function authLink(path, token) {
-    return process.env.ANITOS_PUBLIC_URL.replace(/\\/+$/, "") + path + "?token=" + encodeURIComponent(token);
+  function authLink(action, token) {
+    return process.env.ANITOS_PUBLIC_URL.replace(/\\/+$/, "") + "/account?" + action + "=" + encodeURIComponent(token);
   }
 
   async function sendVerificationEmail(user) {
     const token = await createAuthToken(user.id, "verify_email", "24 hours");
-    const link = authLink("/account/verify-email", token);
+    const link = authLink("verify", token);
     const displayName = String(user.display_name || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
     await sendAuthEmail(user.email, "Confirme seu e-mail — ANITOPE SCIENCE",
       "<p>Olá, " + displayName + "!</p><p>Confirme seu endereço para ativar sua conta no ANITOPEBOARD / RGN.</p><p><a href=\"" + link + "\">Confirmar meu e-mail</a></p><p>Este link expira em 24 horas. Se você não criou esta conta, ignore esta mensagem.</p>");
@@ -238,7 +238,7 @@ function registerAuthRoutes(app, express, db) {
 
   async function sendPasswordResetEmail(user) {
     const token = await createAuthToken(user.id, "reset_password", "1 hour");
-    const link = authLink("/account/reset-password", token);
+    const link = authLink("reset", token);
     await sendAuthEmail(user.email, "Redefinição de senha — ANITOPE SCIENCE",
       "<p>Recebemos uma solicitação para redefinir a senha da sua conta.</p><p><a href=\"" + link + "\">Criar uma nova senha</a></p><p>Este link expira em 1 hora e só pode ser usado uma vez. Se não foi você, ignore esta mensagem.</p>");
   }
