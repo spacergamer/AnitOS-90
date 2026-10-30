@@ -221,7 +221,7 @@ $("membershipForm").addEventListener("submit", async event => {
     $("acquireMembership").disabled = true;
     $("membershipStatus").textContent = "Status: MEMBRO PREMIUM";
     message("membershipMessage", result.message, "success");
-    $("roleLabel").textContent = "Perfil ativo: " + (currentUser.role === "master" ? "Mestre" : "Jogador") + " · @" + currentUser.displayName + (currentUser.dev ? " · DEV" : "") + " · Premium";
+    $("roleLabel").textContent = "Perfil: " + (currentUser.role === "master" ? "Mestre" : "Jogador") + " · @" + currentUser.displayName + (currentUser.dev ? " · DEV" : "") + " · Premium";
   } catch (error) {
     message("membershipMessage", error.message, "error");
   } finally { submit.disabled = false; }
@@ -635,7 +635,7 @@ async function showApp(user) {
   currentUser = user;
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: @" + user.displayName;
-  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · @" + user.displayName + (user.dev ? " · DEV" : "") + (user.premium ? " · Premium" : "");
+  $("roleLabel").textContent = "Perfil: " + (user.role === "master" ? "Mestre" : "Jogador") + " · @" + user.displayName + (user.dev ? " · DEV" : "") + (user.premium ? " · Premium" : "");
   $("membershipStatus").textContent = user.premium ? "Status: MEMBRO PREMIUM" : "Status: Jogador comum";
   $("showMembership").textContent = user.premium ? "Membro Premium ✓" : "Seja Membro";
   $("showMembership").disabled = Boolean(user.premium);
