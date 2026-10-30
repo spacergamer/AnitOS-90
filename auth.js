@@ -306,15 +306,20 @@ function registerAuthRoutes(app, express, db) {
       const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
-      if (!displayName || !username || !food || !animal)
-        return sendError(res, 400, "Preencha todos os campos para confirmar sua identidade.");
+      const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
+      if (!displayName || !username)
+        return sendError(res, 400, "Informe o nome de exibição e o nome de usuário.");
       const result = await db.query(
-        "SELECT display_name,username,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",
+        "SELECT display_name,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1",
         [username]
       );
       const user = result.rows[0];
       let recoveryValid = false;
-      if (user && user.recovery_salt && user.recovery_hash) {
+      if (user && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
+        const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
+        const expected = Buffer.from(user.recovery_code_hash, "hex");
+        recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
+      } else if (user && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
         const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
         const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
         const expected = Buffer.from(user.recovery_hash, "hex");
