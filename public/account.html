@@ -169,6 +169,7 @@ function setMode(next) {
   $("password").minLength = mode === "register" ? 12 : 1;
   $("passwordHint").hidden = mode !== "register";
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
+  $("username").placeholder = mode === "register" ? "Escolha um nome, sem #" : "usuario#CODIGO12";
   $("identifierMessage").textContent = "";
   message("authMessage", "");
 }
