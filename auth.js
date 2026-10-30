@@ -302,7 +302,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/reveal-user-code", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\\s+/g, " ").slice(0, 48);
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
       const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
@@ -316,7 +316,7 @@ function registerAuthRoutes(app, express, db) {
       let recoveryValid = false;
       if (user && user.recovery_salt && user.recovery_hash) {
         const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\\u0000" + animal, user.recovery_salt, 64);
+        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
         const expected = Buffer.from(user.recovery_hash, "hex");
         recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       }
