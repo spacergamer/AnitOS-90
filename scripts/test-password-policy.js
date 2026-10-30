@@ -11,7 +11,8 @@ async function main() {
         return {rows: [{
           id: params[0], email: params[1], display_name: params[2], role: params[3],
           is_premium: false, is_dev: false, email_verified: true,
-          username: params[6], public_code: params[7], recovery_salt: params[8], recovery_hash: params[9]
+          username: params[6], public_code: params[7], recovery_salt: params[8], recovery_hash: params[9],
+          recovery_code_salt: params[10], recovery_code_hash: params[11]
         }]};
       }
       if (sql.includes("INSERT INTO anitos_sessions")) return {rows: []};
