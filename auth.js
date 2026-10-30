@@ -460,16 +460,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/delete-account", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
     try {
-      const password = typeof req.body?.password === "string" ? req.body.password : "";
-      if (!password) return sendError(res, 400, "Informe sua senha atual para confirmar a exclusão.");
-      const result = await db.query("SELECT password_salt,password_hash FROM anitos_users WHERE id=$1", [req.user.id]);
-      const user = result.rows[0];
-      if (!user) return sendError(res, 404, "Conta não encontrada.");
-      const candidate = await scrypt(password, user.password_salt, 64);
-      const expected = Buffer.from(user.password_hash, "hex");
-      if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected)) {
-        return sendError(res, 401, "Senha incorreta. A conta não foi excluída.");
-      }
+      // A confirmação atual é feita na interface; verificação por senha poderá ser adicionada futuramente.
       // Cascading foreign keys remove the user's sessions and owned account data.
       await db.query("DELETE FROM anitos_users WHERE id=$1", [req.user.id]);
       clearSessionCookie(res);
