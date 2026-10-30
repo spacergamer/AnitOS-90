@@ -214,55 +214,6 @@ function registerAuthRoutes(app, express, db) {
     setSessionCookie(res, token);
   }
 
-  function emailServiceConfigured() {
-    return Boolean(process.env.RESEND_API_KEY && process.env.AUTH_EMAIL_FROM && process.env.ANITOS_PUBLIC_URL);
-  }
-
-  async function sendAuthEmail(email, subject, html) {
-    if (!emailServiceConfigured()) throw new Error("Serviço de e-mail não configurado.");
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + process.env.RESEND_API_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({from: process.env.AUTH_EMAIL_FROM, to: [email], subject, html})
-    });
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      throw new Error("Provedor de e-mail respondeu " + response.status + ": " + detail.slice(0, 300));
-    }
-  }
-
-  async function createAuthToken(userId, purpose, expiresInterval) {
-    const token = crypto.randomBytes(32).toString("hex");
-    await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose=$2 AND used_at IS NULL", [userId, purpose]);
-    await db.query(
-      "INSERT INTO anitos_auth_tokens(token_hash,user_id,purpose,expires_at) VALUES($1,$2,$3,now()+$4::interval)",
-      [tokenHash(token), userId, purpose, expiresInterval]
-    );
-    return token;
-  }
-
-  function authLink(action, token) {
-    return process.env.ANITOS_PUBLIC_URL.replace(/\/+$/, "") + "/account?" + action + "=" + encodeURIComponent(token);
-  }
-
-  async function sendVerificationEmail(user) {
-    const token = await createAuthToken(user.id, "verify_email", "24 hours");
-    const link = authLink("verify", token);
-    const displayName = String(user.display_name || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    await sendAuthEmail(user.email, "Confirme seu e-mail — ANITOPE SCIENCE",
-      "<p>Olá, " + displayName + "!</p><p>Confirme seu endereço para ativar sua conta no ANITOPEBOARD / RGN.</p><p><a href=\"" + link + "\">Confirmar meu e-mail</a></p><p>Este link expira em 24 horas. Se você não criou esta conta, ignore esta mensagem.</p>");
-  }
-
-  async function sendPasswordResetEmail(user) {
-    const token = await createAuthToken(user.id, "reset_password", "1 hour");
-    const link = authLink("reset", token);
-    await sendAuthEmail(user.email, "Redefinição de senha — ANITOPE SCIENCE",
-      "<p>Recebemos uma solicitação para redefinir a senha da sua conta.</p><p><a href=\"" + link + "\">Criar uma nova senha</a></p><p>Este link expira em 1 hora e só pode ser usado uma vez. Se não foi você, ignore esta mensagem.</p>");
-  }
-
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase() || null;
@@ -369,7 +320,7 @@ function registerAuthRoutes(app, express, db) {
     }
   });
 
-  app.post("/api/auth/credentials", databaseRequired, limitAuthAttempts, async (req, res) => {
+  app.post("/api/auth/credentials", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
     try {
       const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const food = normalizeAnswer(req.body?.favoriteFood);
