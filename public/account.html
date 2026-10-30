@@ -65,14 +65,14 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </form>
 <form id="recoveryForm" class="card" hidden>
 <h2>Recuperar conta</h2>
-<label for="recoveryDisplayName">Nome de exibição</label><input id="recoveryDisplayName" maxlength="48" required>
+<label for="recoveryDisplayName">Nome de exibição (necessário sem o código secreto)</label><input id="recoveryDisplayName" maxlength="48>
 <label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="39" placeholder="usuario#583104" required>
 <label for="recoveryCode">Código secreto de recuperação (se tiver)</label><input id="recoveryCode" maxlength="32" autocomplete="off">
 <p class="muted">Se perdeu o código secreto, deixe-o vazio e responda às duas perguntas abaixo.</p>
 <label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100">
 <label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100">
 <label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
-<label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
+<label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
 <div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery" class="secondary">Voltar</button></div>
 <p id="recoveryMessage" role="status" class="muted"></p>
 </form>
@@ -141,6 +141,13 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <script>
 const $ = id => document.getElementById(id);
 let mode = "login";
+function updateRecoveryRequirements() {
+  const usingCode = Boolean($("recoveryCode").value.trim());
+  $("recoveryDisplayName").required = !usingCode;
+  $("recoveryFood").required = !usingCode;
+  $("recoveryAnimal").required = !usingCode;
+}
+$("recoveryCode").addEventListener("input", updateRecoveryRequirements);
 let currentUser = null;
 async function api(url, options = {}) {
   const response = await fetch(url, {credentials:"same-origin", ...options, headers:{"Content-Type":"application/json", ...(options.headers||{})}});
@@ -170,8 +177,9 @@ function setMode(next) {
   $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
   $("password").minLength = 1;
   $("passwordHint").hidden = mode !== "register";
+  updateRecoveryRequirements();
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
-  $("username").placeholder = mode === "register" ? "Escolha um nome, sem #" : "usuario#CODIGO12";
+  $("username").placeholder = mode === "register" ? "Escolha um nome, sem #" : "usuario#583104";
   $("identifierMessage").textContent = "";
   message("authMessage", "");
 }
@@ -198,7 +206,7 @@ $("authForm").addEventListener("submit", async event => {
       return;
     }
     if (mode === "register") {
-      window.alert("CONTA CRIADA!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nSeu código secreto para redefinir a senha é:\\n" + result.recoveryCode + "\\n\\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
+      window.alert("CONTA CRIADA!\n\nSeu identificador é:\n" + result.userTag + "\n\nSeu código secreto para redefinir a senha é:\n" + result.recoveryCode + "\n\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
     }
     await showApp(result.user);
   } catch (error) {
@@ -249,7 +257,7 @@ $("newCredentialsForm").addEventListener("submit", async event => {
     $("username").value = result.userTag;
     $("password").value = "";
     setMode("login");
-    window.alert("NOVAS CREDENCIAIS CADASTRADAS!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nSeu código secreto para redefinir a senha é:\\n" + result.recoveryCode + "\\n\\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
+    window.alert("NOVAS CREDENCIAIS CADASTRADAS!\n\nSeu identificador é:\n" + result.userTag + "\n\nSeu código secreto para redefinir a senha é:\n" + result.recoveryCode + "\n\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
     message("authMessage", result.message, "success");
   } catch (error) { message("credentialsMessage", error.message, "error"); }
   finally { $("saveCredentials").disabled = false; }
