@@ -361,7 +361,7 @@ function registerAuthRoutes(app, express, db) {
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
           const result = await db.query(
-            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,email_verified=true WHERE id=$7 AND username IS NULL RETURNING id",
+            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,email_verified=true WHERE id=$7 AND (username IS NULL OR recovery_code_hash IS NULL) RETURNING id",
             [username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash, req.user.id]
           );
           if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
