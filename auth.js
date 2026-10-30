@@ -71,7 +71,7 @@ function makeRecoveryCode() {
   return result;
 }
 function splitUserTag(value) {
-  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#(\\d{3,6})$/i);
+  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#(\d{3,6})$/i);
   return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
 }
 
