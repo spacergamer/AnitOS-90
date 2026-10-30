@@ -57,7 +57,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off"></div>
 <label for="password">Senha</label><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password">
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" maxlength="200" autocomplete="new-password"></div>
-<p id="passwordHint" class="muted" hidden>Use pelo menos 12 caracteres. Após criar a conta, guarde o identificador completo com # e o código de 12 caracteres.</p>
+<p id="passwordHint" class="muted" hidden>Escolha uma senha difícil de adivinhar. Após criar a conta, guarde o identificador completo com # e o código de 12 caracteres.</p>
 <div id="roleField" hidden><label for="role">Perfil</label><select id="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
 <div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/">Abrir RGN</a></div>
 <p id="authMessage" role="status" class="muted"></p>
@@ -69,7 +69,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="48" placeholder="usuario#CODIGO12" required>
 <label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100" required>
 <label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100" required>
-<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
+<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
 <label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
 <div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery" class="secondary">Voltar</button></div>
 <p id="recoveryMessage" role="status" class="muted"></p>
@@ -166,7 +166,7 @@ function setMode(next) {
   $("favoriteAnimal").required = mode === "register";
   $("confirmPassword").required = mode === "register";
   $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
-  $("password").minLength = mode === "register" ? 12 : 1;
+  $("password").minLength = 1;
   $("passwordHint").hidden = mode !== "register";
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
   $("username").placeholder = mode === "register" ? "Escolha um nome, sem #" : "usuario#CODIGO12";
