@@ -304,22 +304,23 @@ function registerAuthRoutes(app, express, db) {
     try {
       const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
       const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
+      const email = String(req.body?.email || "").trim().toLowerCase();
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
       const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
-      if (!displayName || !username)
-        return sendError(res, 400, "Informe o nome de exibição e o nome de usuário.");
+      if (!displayName || !username || !email)
+        return sendError(res, 400, "Informe o nome de exibição, o nome de usuário e o e-mail.");
       const result = await db.query(
-        "SELECT display_name,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1",
-        [username]
+        "SELECT display_name,username,email,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND lower(email)=$2",
+        [username, email]
       );
       const user = result.rows[0];
       let recoveryValid = false;
-      if (user && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
+      if (user && user.email && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
         const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
         const expected = Buffer.from(user.recovery_code_hash, "hex");
         recoveryValid = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR") && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      } else if (user && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
+      } else if (user && user.email && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
         const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
         const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
         const expected = Buffer.from(user.recovery_hash, "hex");
