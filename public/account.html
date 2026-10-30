@@ -52,12 +52,12 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
 <form id="authForm">
 <div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name"></div>
-<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="48" required autocomplete="username" placeholder="usuario#CODIGO12"></div>
+<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="48" required autocomplete="username" placeholder="usuario#583104"></div>
 <div id="foodField" hidden><label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off"></div>
 <div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off"></div>
 <label for="password">Senha</label><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password">
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" maxlength="200" autocomplete="new-password"></div>
-<p id="passwordHint" class="muted" hidden>Escolha uma senha difícil de adivinhar. Após criar a conta, guarde o identificador completo com # e o código de 12 caracteres.</p>
+<p id="passwordHint" class="muted" hidden>Escolha uma senha difícil de adivinhar. Após criar a conta, guarde o identificador com # e o código secreto de recuperação.</p>
 <div id="roleField" hidden><label for="role">Perfil</label><select id="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
 <div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/">Abrir RGN</a></div>
 <p id="authMessage" role="status" class="muted"></p>
@@ -66,9 +66,11 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <form id="recoveryForm" class="card" hidden>
 <h2>Recuperar conta</h2>
 <label for="recoveryDisplayName">Nome de exibição</label><input id="recoveryDisplayName" maxlength="48" required>
-<label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="48" placeholder="usuario#CODIGO12" required>
-<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100" required>
-<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100" required>
+<label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="39" placeholder="usuario#583104" required>
+<label for="recoveryCode">Código secreto de recuperação (se tiver)</label><input id="recoveryCode" maxlength="32" autocomplete="off">
+<p class="muted">Se perdeu o código secreto, deixe-o vazio e responda às duas perguntas abaixo.</p>
+<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100">
+<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100">
 <label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
 <label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
 <div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery" class="secondary">Voltar</button></div>
@@ -196,7 +198,7 @@ $("authForm").addEventListener("submit", async event => {
       return;
     }
     if (mode === "register") {
-      window.alert("CONTA CRIADA!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nGuarde-o em um local seguro. Ele não será exibido novamente.");
+      window.alert("CONTA CRIADA!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nSeu código secreto para redefinir a senha é:\\n" + result.recoveryCode + "\\n\\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
     }
     await showApp(result.user);
   } catch (error) {
@@ -212,6 +214,7 @@ $("recoveryForm").addEventListener("submit", async event => {
     const result = await api("/api/auth/recover-account", {method:"POST",body:JSON.stringify({
       displayName:$("recoveryDisplayName").value,
       userTag:$("recoveryUserTag").value,
+      recoveryCode:$("recoveryCode").value,
       favoriteFood:$("recoveryFood").value,
       favoriteAnimal:$("recoveryAnimal").value,
       password:$("recoveryNewPassword").value,
@@ -246,6 +249,7 @@ $("newCredentialsForm").addEventListener("submit", async event => {
     $("username").value = result.userTag;
     $("password").value = "";
     setMode("login");
+    window.alert("NOVAS CREDENCIAIS CADASTRADAS!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nSeu código secreto para redefinir a senha é:\\n" + result.recoveryCode + "\\n\\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
     message("authMessage", result.message, "success");
   } catch (error) { message("credentialsMessage", error.message, "error"); }
   finally { $("saveCredentials").disabled = false; }
