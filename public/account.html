@@ -49,14 +49,44 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <section class="window" id="authWindow">
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
 <div class="content">
-<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
+<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
 <form id="authForm">
-<div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" name="displayName" maxlength="48" autocomplete="name"></div>
-<label for="email">E-mail</label><input id="email" name="email" type="email" maxlength="254" required autocomplete="email">
-<label for="password">Senha</label><input id="password" name="password" type="password" minlength="10" maxlength="200" required autocomplete="current-password"><p id="passwordHint" class="muted" hidden>Na criação da conta: mínimo de 12 caracteres, com maiúscula, minúscula, número e símbolo.</p>
-<div id="roleField" hidden><label for="role">Perfil</label><select id="role" name="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
+<div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name"></div>
+<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="48" required autocomplete="username" placeholder="usuario#CODIGO12"></div>
+<div id="foodField" hidden><label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off"></div>
+<div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off"></div>
+<label for="password">Senha</label><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password">
+<div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" maxlength="200" autocomplete="new-password"></div>
+<p id="passwordHint" class="muted" hidden>Use pelo menos 12 caracteres. Após criar a conta, guarde o identificador completo com # e o código de 12 caracteres.</p>
+<div id="roleField" hidden><label for="role">Perfil</label><select id="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
 <div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/">Abrir RGN</a></div>
 <p id="authMessage" role="status" class="muted"></p>
+<p id="identifierMessage" role="status" class="muted"></p>
+</form>
+<form id="recoveryForm" class="card" hidden>
+<h2>Recuperar conta</h2>
+<label for="recoveryDisplayName">Nome de exibição</label><input id="recoveryDisplayName" maxlength="48" required>
+<label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="48" placeholder="usuario#CODIGO12" required>
+<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100" required>
+<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100" required>
+<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
+<label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required>
+<div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery" class="secondary">Voltar</button></div>
+<p id="recoveryMessage" role="status" class="muted"></p>
+</form>
+</div>
+</section>
+
+<section class="window" id="newCredentialsWindow" hidden>
+<div class="bar"><span>NOVAS CREDENCIAIS</span><span>LEGACY.ACCOUNT</span></div>
+<div class="content">
+<p>Esta conta é anterior ao novo sistema. Cadastre um nome de usuário e suas respostas de recuperação. Depois, a sessão será encerrada automaticamente; entre novamente usando o identificador completo e sua senha atual.</p>
+<form id="newCredentialsForm" class="card">
+<label for="newUsername">Nome de usuário</label><input id="newUsername" maxlength="32" pattern="[A-Za-z0-9_.-]{2,32}" required>
+<label for="newFavoriteFood">Comida favorita</label><input id="newFavoriteFood" maxlength="100" required>
+<label for="newFavoriteAnimal">Animal favorito</label><input id="newFavoriteAnimal" maxlength="100" required>
+<button type="submit" id="saveCredentials" style="margin-top:10px">Salvar novas credenciais</button>
+<p id="credentialsMessage" role="status" class="muted"></p>
 </form>
 </div>
 </section>
@@ -123,32 +153,50 @@ function setMode(next) {
   mode = next;
   $("loginTab").classList.toggle("active", mode === "login");
   $("registerTab").classList.toggle("active", mode === "register");
+  $("recoveryTab").classList.toggle("active", mode === "recovery");
+  $("authForm").hidden = mode === "recovery";
+  $("recoveryForm").hidden = mode !== "recovery";
   $("nameField").hidden = mode !== "register";
+  $("foodField").hidden = mode !== "register";
+  $("animalField").hidden = mode !== "register";
   $("roleField").hidden = mode !== "register";
+  $("confirmPasswordField").hidden = mode !== "register";
   $("displayName").required = mode === "register";
+  $("favoriteFood").required = mode === "register";
+  $("favoriteAnimal").required = mode === "register";
+  $("confirmPassword").required = mode === "register";
   $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
-  $("password").minLength = mode === "register" ? 12 : 10;
+  $("password").minLength = mode === "register" ? 12 : 1;
   $("passwordHint").hidden = mode !== "register";
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
+  $("identifierMessage").textContent = "";
   message("authMessage", "");
 }
 $("loginTab").addEventListener("click", () => setMode("login"));
 $("registerTab").addEventListener("click", () => setMode("register"));
+$("recoveryTab").addEventListener("click", () => setMode("recovery"));
 $("authForm").addEventListener("submit", async event => {
   event.preventDefault();
-  const body = {email:$("email").value, password:$("password").value};
+  const body = {username:$("username").value.trim(), password:$("password").value};
   if (mode === "register") {
     body.displayName = $("displayName").value;
+    body.username = $("username").value.trim();
+    body.favoriteFood = $("favoriteFood").value;
+    body.favoriteAnimal = $("favoriteAnimal").value;
+    body.confirmPassword = $("confirmPassword").value;
     body.role = $("role").value;
   }
   $("submitAuth").disabled = true;
   message("authMessage", mode === "register" ? "Criando conta…" : "Verificando credenciais…");
   try {
-    const result = await api("/api/auth/" + mode, {method:"POST", body:JSON.stringify(body)});
-    if (result.verificationRequired) {
-      message("authMessage", result.message, "success");
-      $("recoveryEmail").value = body.email;
+    const result = await api("/api/auth/" + (mode === "register" ? "register" : "login"), {method:"POST", body:JSON.stringify(body)});
+    if (result.user && !result.user.credentialsReady) {
+      await showNewCredentials();
       return;
+    }
+    if (result.userTag) message("identifierMessage", "Seu identificador: " + result.userTag + " — guarde-o agora.", "success");
+    if (mode === "register") {
+      $("identifierMessage").textContent = "SEU IDENTIFICADOR: " + result.userTag + " — salve este código, ele não será exibido novamente.";
     }
     await showApp(result.user);
   } catch (error) {
@@ -157,10 +205,55 @@ $("authForm").addEventListener("submit", async event => {
     $("submitAuth").disabled = false;
   }
 });
+$("recoveryForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  $("recoverSubmit").disabled = true;
+  try {
+    const result = await api("/api/auth/recover-account", {method:"POST",body:JSON.stringify({
+      displayName:$("recoveryDisplayName").value,
+      userTag:$("recoveryUserTag").value,
+      favoriteFood:$("recoveryFood").value,
+      favoriteAnimal:$("recoveryAnimal").value,
+      password:$("recoveryNewPassword").value,
+      confirmPassword:$("recoveryConfirmPassword").value
+    })});
+    message("recoveryMessage", result.message + " Identificador: " + $("recoveryUserTag").value.trim(), "success");
+    $("recoveryForm").reset();
+    $("username").value = $("recoveryUserTag").value.trim();
+    setMode("login");
+  } catch (error) { message("recoveryMessage", error.message, "error"); }
+  finally { $("recoverSubmit").disabled = false; }
+});
+$("cancelRecovery").addEventListener("click", () => setMode("login"));
+async function showNewCredentials() {
+  $("authWindow").hidden = true;
+  $("appWindow").hidden = true;
+  $("newCredentialsWindow").hidden = false;
+}
+$("newCredentialsForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  $("saveCredentials").disabled = true;
+  try {
+    const result = await api("/api/auth/credentials", {method:"POST",body:JSON.stringify({
+      username:$("newUsername").value,
+      favoriteFood:$("newFavoriteFood").value,
+      favoriteAnimal:$("newFavoriteAnimal").value
+    })});
+    $("newCredentialsWindow").hidden = true;
+    $("authWindow").hidden = false;
+    $("newCredentialsForm").reset();
+    $("username").value = result.userTag;
+    $("password").value = "";
+    setMode("login");
+    message("authMessage", result.message, "success");
+  } catch (error) { message("credentialsMessage", error.message, "error"); }
+  finally { $("saveCredentials").disabled = false; }
+});
 $("logout").addEventListener("click", async () => {
   try { await api("/api/auth/logout", {method:"POST",body:"{}"}); } catch {}
   currentUser = null;
   $("appWindow").hidden = true;
+  $("newCredentialsWindow").hidden = true;
   $("authWindow").hidden = false;
   $("authForm").reset();
   setMode("login");
@@ -498,10 +591,11 @@ async function loadCampaigns() {
 }
 async function showApp(user) {
   currentUser = user;
+  $("newCredentialsWindow").hidden = true;
   $("authWindow").hidden = true;
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: " + user.displayName;
-  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + " · " + user.email;
+  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + (user.username ? " · @" + user.username + "#" + user.publicCode : "");
   $("createCampaign").hidden = user.role !== "master";
   $("joinCampaign").hidden = user.role !== "player";
   await loadCampaigns();
@@ -509,9 +603,11 @@ async function showApp(user) {
 (async function boot() {
   try {
     const result = await api("/api/auth/me");
-    await showApp(result.user);
+    if (!result.user.credentialsReady) await showNewCredentials();
+    else await showApp(result.user);
   } catch {
     $("appWindow").hidden = true;
+    $("newCredentialsWindow").hidden = true;
     $("authWindow").hidden = false;
   }
 })();;
