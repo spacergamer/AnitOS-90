@@ -245,7 +245,6 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      if (!emailServiceConfigured()) return sendError(res, 503, "A confirmação por e-mail ainda não está configurada no servidor. Tente novamente mais tarde.");
       const email = String(req.body?.email || "").trim().toLowerCase();
       const displayName = String(req.body?.displayName || "").trim().replace(/^@/, "").toLowerCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
@@ -261,16 +260,11 @@ function registerAuthRoutes(app, express, db) {
       const hash = (await scrypt(password, salt, 64)).toString("hex");
       const id = crypto.randomUUID();
       const result = await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified) VALUES($1,$2,$3,$4,$5,$6,false) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified",
+        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified) VALUES($1,$2,$3,$4,$5,$6,true) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified",
         [id, email, displayName, role, salt, hash]
       );
-      try {
-        await sendVerificationEmail(result.rows[0]);
-      } catch (mailError) {
-        console.error("[auth] Falha ao enviar confirmação:", mailError.message);
-        return sendError(res, 503, "A conta foi criada, mas não conseguimos enviar o e-mail de confirmação. Use 'Reenviar confirmação' em instantes.");
-      }
-      return res.status(201).json({verificationRequired: true, message: "Conta criada! Confira sua caixa de entrada e confirme seu e-mail antes de entrar."});
+      await createSession(id, res);
+      return res.status(201).json({user: safeUser(result.rows[0])});
     } catch (err) {
       if (err.code === "23505") {
         if (err.constraint === "anitos_users_display_name_lower_idx") return sendError(res, 409, "Esse @nome já está em uso. Escolha outro.");
@@ -295,7 +289,6 @@ function registerAuthRoutes(app, express, db) {
       const expected = Buffer.from(user.password_hash, "hex");
       if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
         return sendError(res, 401, "E-mail ou senha incorretos.");
-      if (!user.email_verified) return sendError(res, 403, "Confirme seu e-mail antes de entrar. Se não recebeu a mensagem, use 'Reenviar confirmação'.");
       await createSession(user.id, res);
       return res.json({user: safeUser(user)});
     } catch (err) {
