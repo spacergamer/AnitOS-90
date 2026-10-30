@@ -226,7 +226,7 @@ function registerAuthRoutes(app, express, db) {
       if (displayName.length < 2) return sendError(res, 400, "Informe um nome de exibição com pelo menos 2 caracteres.");
       if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
       if (!food || !animal) return sendError(res, 400, "Informe sua comida favorita e seu animal favorito.");
-      if (password.length < 12 || password.length > 200) return sendError(res, 400, "A senha deve ter entre 12 e 200 caracteres.");
+      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
       if (!["master", "player"].includes(role)) return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
       const id = crypto.randomUUID();
@@ -297,7 +297,7 @@ function registerAuthRoutes(app, express, db) {
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
       if (!tag || !food || !animal) return sendError(res, 400, "Confira o nome de usuário e o código, a comida e o animal.");
-      if (password.length < 12 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 12 e 200 caracteres.");
+      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 1 e 200 caracteres.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
       const result = await db.query("SELECT id,display_name,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
       const user = result.rows[0];
