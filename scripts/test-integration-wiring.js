@@ -26,15 +26,13 @@ assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
 
-// Authentication must require verified ownership of an email address and support one-time recovery tokens.
+// Authentication works without email delivery and retains password/session protections.
 assert.match(auth, /email_verified boolean NOT NULL DEFAULT true/);
-assert.match(auth, /if \(!user\.email_verified\) return sendError\(res, 403/);
-assert.match(auth, /app\.post\("\/api\/auth\/verify-email"/);
-assert.match(auth, /app\.post\("\/api\/auth\/resend-verification"/);
-assert.match(auth, /app\.post\("\/api\/auth\/request-password-reset"/);
-assert.match(auth, /app\.post\("\/api\/auth\/reset-password"/);
-assert.match(auth, /DELETE FROM anitos_sessions WHERE user_id=\$1/);
-assert.match(auth, /RESEND_API_KEY/);
+assert.doesNotMatch(auth, /if \(!user\.email_verified\) return sendError\(res, 403/);
+assert.match(auth, /await createSession\(id, res\)/);
+assert.match(auth, /scrypt\(password, salt, 64\)/);
+assert.match(auth, /limitAuthAttempts/);
+assert.doesNotMatch(fs.readFileSync("public/account.html", "utf8"), /forgotPassword|resendVerification|recoveryForm|resetForm|request-password-reset|verify-email|reset-password/);
 assert.match(board, /ANITOPEBOARD/);
 assert.match(fs.readFileSync("public/account.html", "utf8"), /id="forgotPassword"/);
 assert.match(fs.readFileSync("public/account.html", "utf8"), /id="resendVerification"/);
