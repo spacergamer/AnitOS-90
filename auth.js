@@ -56,7 +56,7 @@ function safeUser(row) {
   return {id: row.id, email: row.email || null, displayName: row.display_name, username: row.username || null, publicCode: row.public_code || null, credentialsReady: Boolean(row.username && row.public_code && row.recovery_salt && row.recovery_hash), role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
-  return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\\s+/g, " ").slice(0, 100);
+  return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
 }
 function makePublicCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -217,7 +217,7 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase() || null;
-      const displayName = String(req.body?.displayName || "").trim().replace(/\\s+/g, " ").slice(0, 48);
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
       const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
@@ -234,7 +234,7 @@ function registerAuthRoutes(app, express, db) {
       const passwordSalt = crypto.randomBytes(16).toString("hex");
       const passwordHash = (await scrypt(password, passwordSalt, 64)).toString("hex");
       const recoverySalt = crypto.randomBytes(16).toString("hex");
-      const recoveryHash = (await scrypt(normalizeAnswer(food) + "\\0" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
+      const recoveryHash = (await scrypt(normalizeAnswer(food) + "\u0000" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
       let publicCode = makePublicCode();
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
@@ -291,7 +291,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\\s+/g, " ").slice(0, 48);
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
       const tag = splitUserTag(req.body?.userTag);
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
@@ -304,7 +304,7 @@ function registerAuthRoutes(app, express, db) {
       const user = result.rows[0];
       if (!user || !user.recovery_salt || !user.recovery_hash || user.display_name.toLocaleLowerCase("pt-BR") !== displayName.toLocaleLowerCase("pt-BR"))
         return sendError(res, 403, "Os dados de recuperação não correspondem.");
-      const candidate = await scrypt(food + "\\0" + animal, user.recovery_salt, 64);
+      const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
       const expected = Buffer.from(user.recovery_hash, "hex");
       if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
         return sendError(res, 403, "Os dados de recuperação não correspondem.");
@@ -329,7 +329,7 @@ function registerAuthRoutes(app, express, db) {
         return sendError(res, 400, "Informe um nome de usuário válido, comida favorita e animal favorito.");
       const publicCode = makePublicCode();
       const recoverySalt = crypto.randomBytes(16).toString("hex");
-      const recoveryHash = (await scrypt(food + "\\0" + animal, recoverySalt, 64)).toString("hex");
+      const recoveryHash = (await scrypt(food + "\u0000" + animal, recoverySalt, 64)).toString("hex");
       const result = await db.query("UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,email_verified=true WHERE id=$5 AND username IS NULL RETURNING id", [username, publicCode, recoverySalt, recoveryHash, req.user.id]);
       if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
       await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
