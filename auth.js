@@ -53,7 +53,26 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id: row.id, email: row.email, displayName: row.display_name, role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
+  return {id: row.id, email: row.email || null, displayName: row.display_name, username: row.username || null, publicCode: row.public_code || null, credentialsReady: Boolean(row.username && row.public_code && row.recovery_salt && row.recovery_hash), role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
+}
+function normalizeAnswer(value) {
+  return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
+}
+function makePublicCode() {
+  // O sufixo público é numérico, aleatório e curto: de 3 a 6 dígitos.
+  const length = crypto.randomInt(3, 7);
+  const min = 10 ** (length - 1);
+  return String(crypto.randomInt(min, 10 ** length));
+}
+function makeRecoveryCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  while (result.length < 16) result += alphabet[crypto.randomInt(alphabet.length)];
+  return result;
+}
+function splitUserTag(value) {
+  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#(\d{3,6})$/i);
+  return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
 }
 
 async function initializeAuthSchema(db) {
@@ -70,6 +89,15 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
+    ALTER TABLE anitos_users ALTER COLUMN email DROP NOT NULL;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS username text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS public_code text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_salt text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_hash text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_salt text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_hash text;
+    DROP INDEX IF EXISTS anitos_users_username_code_idx;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_public_code_idx ON anitos_users(public_code) WHERE public_code IS NOT NULL;
     CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -171,7 +199,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.email,u.display_name,u.role,u.is_premium,u.is_dev
+        `SELECT u.id,u.email,u.display_name,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.role,u.is_premium,u.is_dev
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
@@ -194,88 +222,53 @@ function registerAuthRoutes(app, express, db) {
     setSessionCookie(res, token);
   }
 
-  function emailServiceConfigured() {
-    return Boolean(process.env.RESEND_API_KEY && process.env.AUTH_EMAIL_FROM && process.env.ANITOS_PUBLIC_URL);
-  }
-
-  async function sendAuthEmail(email, subject, html) {
-    if (!emailServiceConfigured()) throw new Error("Serviço de e-mail não configurado.");
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + process.env.RESEND_API_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({from: process.env.AUTH_EMAIL_FROM, to: [email], subject, html})
-    });
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      throw new Error("Provedor de e-mail respondeu " + response.status + ": " + detail.slice(0, 300));
-    }
-  }
-
-  async function createAuthToken(userId, purpose, expiresInterval) {
-    const token = crypto.randomBytes(32).toString("hex");
-    await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose=$2 AND used_at IS NULL", [userId, purpose]);
-    await db.query(
-      "INSERT INTO anitos_auth_tokens(token_hash,user_id,purpose,expires_at) VALUES($1,$2,$3,now()+$4::interval)",
-      [tokenHash(token), userId, purpose, expiresInterval]
-    );
-    return token;
-  }
-
-  function authLink(action, token) {
-    return process.env.ANITOS_PUBLIC_URL.replace(/\/+$/, "") + "/account?" + action + "=" + encodeURIComponent(token);
-  }
-
-  async function sendVerificationEmail(user) {
-    const token = await createAuthToken(user.id, "verify_email", "24 hours");
-    const link = authLink("verify", token);
-    const displayName = String(user.display_name || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    await sendAuthEmail(user.email, "Confirme seu e-mail — ANITOPE SCIENCE",
-      "<p>Olá, " + displayName + "!</p><p>Confirme seu endereço para ativar sua conta no ANITOPEBOARD / RGN.</p><p><a href=\"" + link + "\">Confirmar meu e-mail</a></p><p>Este link expira em 24 horas. Se você não criou esta conta, ignore esta mensagem.</p>");
-  }
-
-  async function sendPasswordResetEmail(user) {
-    const token = await createAuthToken(user.id, "reset_password", "1 hour");
-    const link = authLink("reset", token);
-    await sendAuthEmail(user.email, "Redefinição de senha — ANITOPE SCIENCE",
-      "<p>Recebemos uma solicitação para redefinir a senha da sua conta.</p><p><a href=\"" + link + "\">Criar uma nova senha</a></p><p>Este link expira em 1 hora e só pode ser usado uma vez. Se não foi você, ignore esta mensagem.</p>");
-  }
-
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      if (!emailServiceConfigured()) return sendError(res, 503, "A confirmação por e-mail ainda não está configurada no servidor. Tente novamente mais tarde.");
-      const email = String(req.body?.email || "").trim().toLowerCase();
-      const displayName = String(req.body?.displayName || "").trim().replace(/^@/, "").toLowerCase();
+      const email = String(req.body?.email || "").trim().toLowerCase() || null;
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
+      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
+      const food = normalizeAnswer(req.body?.favoriteFood);
+      const animal = normalizeAnswer(req.body?.favoriteAnimal);
       const password = typeof req.body?.password === "string" ? req.body.password : "";
+      const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
       const role = req.body?.role || "player";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
-        return sendError(res, 400, "Informe um e-mail válido.");
-      if (!/^[a-z0-9_.-]{2,32}$/.test(displayName)) return sendError(res, 400, "Use um @nome único de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
-      if (password.length < 1 || password.length > 200)
-        return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
-      if (!["master", "player"].includes(role))
-        return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
-      const salt = crypto.randomBytes(16).toString("hex");
-      const hash = (await scrypt(password, salt, 64)).toString("hex");
+      if (displayName.length < 2) return sendError(res, 400, "Informe um nome de exibição com pelo menos 2 caracteres.");
+      if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
+      if (!food || !animal) return sendError(res, 400, "Informe sua comida favorita e seu animal favorito.");
+      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
+      if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
+      if (!["master", "player"].includes(role)) return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
       const id = crypto.randomUUID();
-      const result = await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified) VALUES($1,$2,$3,$4,$5,$6,false) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified",
-        [id, email, displayName, role, salt, hash]
-      );
-      try {
-        await sendVerificationEmail(result.rows[0]);
-      } catch (mailError) {
-        console.error("[auth] Falha ao enviar confirmação:", mailError.message);
-        return sendError(res, 503, "A conta foi criada, mas não conseguimos enviar o e-mail de confirmação. Use 'Reenviar confirmação' em instantes.");
+      const passwordSalt = crypto.randomBytes(16).toString("hex");
+      const passwordHash = (await scrypt(password, passwordSalt, 64)).toString("hex");
+      const recoverySalt = crypto.randomBytes(16).toString("hex");
+      const recoveryHash = (await scrypt(normalizeAnswer(food) + "\u0000" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
+      const recoveryCode = makeRecoveryCode();
+      const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
+      const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
+      let publicCode = makePublicCode();
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const result = await db.query(
+            "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash) VALUES($1,$2,$3,$4,$5,$6,true,$7,$8,$9,$10,$11,$12) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash",
+            [id, email, displayName, role, passwordSalt, passwordHash, username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash]
+          );
+          await createSession(id, res);
+          return res.status(201).json({user: safeUser(result.rows[0]), recoveryCode, userTag: username + "#" + publicCode});
+        } catch (err) {
+          if (err.code === "23505" && (err.constraint === "anitos_users_public_code_idx" || err.constraint === "anitos_users_username_code_idx")) {
+            publicCode = makePublicCode();
+            continue;
+          }
+          if (err.code === "23505") {
+            if (String(err.detail || "").includes("username")) return sendError(res, 409, "Esse nome de usuário já está em uso.");
+            return sendError(res, 409, "Já existe uma conta com esses dados.");
+          }
+          throw err;
+        }
       }
-      return res.status(201).json({verificationRequired: true, message: "Conta criada! Confira sua caixa de entrada e confirme seu e-mail antes de entrar."});
+      return sendError(res, 503, "Não foi possível gerar um identificador único. Tente novamente.");
     } catch (err) {
-      if (err.code === "23505") {
-        if (err.constraint === "anitos_users_display_name_lower_idx") return sendError(res, 409, "Esse @nome já está em uso. Escolha outro.");
-        return sendError(res, 409, "Já existe uma conta com esse e-mail.");
-      }
       console.error("[auth] Falha ao criar conta:", err.message);
       return sendError(res, 500, "Não foi possível criar a conta.");
     }
@@ -283,19 +276,22 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const email = String(req.body?.email || "").trim().toLowerCase();
+      const login = String(req.body?.username || req.body?.email || "").trim();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
-      const result = await db.query(
-        "SELECT id,email,display_name,role,is_premium,is_dev,email_verified,password_salt,password_hash FROM anitos_users WHERE email=$1",
-        [email]
-      );
+      const tag = splitUserTag(login);
+      let result;
+      if (tag) {
+        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
+      } else {
+        // Legacy accounts can authenticate once with their old email to register new credentials.
+        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1)", [login]);
+      }
       const user = result.rows[0];
-      if (!user) return sendError(res, 401, "E-mail ou senha incorretos.");
+      if (!user) return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
       const candidate = await scrypt(password, user.password_salt, 64);
       const expected = Buffer.from(user.password_hash, "hex");
       if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
-        return sendError(res, 401, "E-mail ou senha incorretos.");
-      if (!user.email_verified) return sendError(res, 403, "Confirme seu e-mail antes de entrar. Se não recebeu a mensagem, use 'Reenviar confirmação'.");
+        return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
       await createSession(user.id, res);
       return res.json({user: safeUser(user)});
     } catch (err) {
@@ -304,78 +300,57 @@ function registerAuthRoutes(app, express, db) {
     }
   });
 
-  app.post("/api/auth/verify-email", databaseRequired, limitAuthAttempts, async (req, res) => {
+  app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const token = String(req.body?.token || "");
-      if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 400, "Link de confirmação inválido ou expirado.");
-      const result = await db.query(
-        "UPDATE anitos_auth_tokens SET used_at=now() WHERE token_hash=$1 AND purpose='verify_email' AND used_at IS NULL AND expires_at>now() RETURNING user_id",
-        [tokenHash(token)]
-      );
-      if (!result.rows[0]) return sendError(res, 400, "Link de confirmação inválido ou expirado. Solicite um novo.");
-      await db.query("UPDATE anitos_users SET email_verified=true WHERE id=$1", [result.rows[0].user_id]);
-      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='verify_email'", [result.rows[0].user_id]);
-      return res.json({message: "E-mail confirmado! Agora você já pode entrar na sua conta."});
-    } catch (err) {
-      console.error("[auth] Falha ao confirmar e-mail:", err.message);
-      return sendError(res, 500, "Não foi possível confirmar o e-mail.");
-    }
-  });
-
-  app.post("/api/auth/resend-verification", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de e-mail está temporariamente indisponível.");
-      const email = String(req.body?.email || "").trim().toLowerCase();
-      const result = await db.query("SELECT id,email,display_name,email_verified FROM anitos_users WHERE email=$1", [email]);
-      const user = result.rows[0];
-      if (user && !user.email_verified) {
-        if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de e-mail está temporariamente indisponível.");
-        await sendVerificationEmail(user);
-      }
-      return res.json({message: "Se houver uma conta pendente de confirmação para esse endereço, enviaremos um novo link."});
-    } catch (err) {
-      console.error("[auth] Falha ao reenviar confirmação:", err.message);
-      return sendError(res, 500, "Não foi possível processar a solicitação agora.");
-    }
-  });
-
-  app.post("/api/auth/request-password-reset", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de redefinição de senha está temporariamente indisponível.");
-      const email = String(req.body?.email || "").trim().toLowerCase();
-      const result = await db.query("SELECT id,email,display_name FROM anitos_users WHERE email=$1 AND email_verified=true", [email]);
-      if (result.rows[0]) {
-        if (!emailServiceConfigured()) return sendError(res, 503, "O serviço de redefinição de senha está temporariamente indisponível.");
-        await sendPasswordResetEmail(result.rows[0]);
-      }
-      return res.json({message: "Se houver uma conta confirmada com esse endereço, enviaremos instruções para redefinir a senha."});
-    } catch (err) {
-      console.error("[auth] Falha ao solicitar redefinição:", err.message);
-      return sendError(res, 500, "Não foi possível processar a solicitação agora.");
-    }
-  });
-
-  app.post("/api/auth/reset-password", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      const token = String(req.body?.token || "");
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
+      const tag = splitUserTag(req.body?.userTag);
+      const food = normalizeAnswer(req.body?.favoriteFood);
+      const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
-      if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 400, "Link de redefinição inválido ou expirado.");
-      if (password.length < 12 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 12 e 200 caracteres.");
-      const result = await db.query(
-        "UPDATE anitos_auth_tokens SET used_at=now() WHERE token_hash=$1 AND purpose='reset_password' AND used_at IS NULL AND expires_at>now() RETURNING user_id",
-        [tokenHash(token)]
-      );
-      if (!result.rows[0]) return sendError(res, 400, "Link de redefinição inválido ou expirado. Solicite outro.");
-      const userId = result.rows[0].user_id;
+      const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
+      if (!tag || (!recoveryCode && (!food || !animal))) return sendError(res, 400, "Informe o identificador e o código de recuperação ou as duas respostas de segurança.");
+      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 1 e 200 caracteres.");
+      if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
+      const result = await db.query("SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
+      const user = result.rows[0];
+      if (!user || !user.recovery_salt || !user.recovery_hash || user.display_name.toLocaleLowerCase("pt-BR") !== displayName.toLocaleLowerCase("pt-BR"))
+        return sendError(res, 403, "Os dados de recuperação não correspondem.");
+      const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
+      const expected = Buffer.from(user.recovery_hash, "hex");
+      if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
+        return sendError(res, 403, "Os dados de recuperação não correspondem.");
       const salt = crypto.randomBytes(16).toString("hex");
       const hash = (await scrypt(password, salt, 64)).toString("hex");
-      await db.query("UPDATE anitos_users SET password_salt=$1,password_hash=$2 WHERE id=$3", [salt, hash, userId]);
-      await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [userId]);
-      await db.query("DELETE FROM anitos_auth_tokens WHERE user_id=$1 AND purpose='reset_password'", [userId]);
-      return res.json({message: "Senha redefinida com sucesso. Entre usando sua nova senha."});
+      await db.query("UPDATE anitos_users SET password_salt=$1,password_hash=$2 WHERE id=$3", [salt, hash, user.id]);
+      await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [user.id]);
+      clearSessionCookie(res);
+      return res.json({ok:true,message:"Senha redefinida. Entre com suas novas credenciais."});
     } catch (err) {
-      console.error("[auth] Falha ao redefinir senha:", err.message);
-      return sendError(res, 500, "Não foi possível redefinir a senha.");
+      console.error("[auth] Falha ao recuperar conta:", err.message);
+      return sendError(res, 500, "Não foi possível recuperar a conta agora.");
+    }
+  });
+
+  app.post("/api/auth/credentials", databaseRequired, requireAuth, limitAuthAttempts, async (req, res) => {
+    try {
+      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
+      const food = normalizeAnswer(req.body?.favoriteFood);
+      const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      if (!/^[a-z0-9_.-]{2,32}$/.test(username) || !food || !animal)
+        return sendError(res, 400, "Informe um nome de usuário válido, comida favorita e animal favorito.");
+      const publicCode = makePublicCode();
+      const recoverySalt = crypto.randomBytes(16).toString("hex");
+      const recoveryHash = (await scrypt(food + "\u0000" + animal, recoverySalt, 64)).toString("hex");
+      const result = await db.query("UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,email_verified=true WHERE id=$5 AND username IS NULL RETURNING id", [username, publicCode, recoverySalt, recoveryHash, req.user.id]);
+      if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
+      await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
+      clearSessionCookie(res);
+      return res.json({ok:true,userTag:username + "#" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código de recuperação. Entre novamente com o identificador e sua senha atual."});
+    } catch (err) {
+      if (err.code === "23505") return sendError(res, 409, "Esse nome de usuário já está em uso. Escolha outro.");
+      console.error("[auth] Falha ao salvar novas credenciais:", err.message);
+      return sendError(res, 500, "Não foi possível salvar as novas credenciais.");
     }
   });
 
@@ -564,7 +539,7 @@ function registerAuthRoutes(app, express, db) {
       const owner = await db.query("SELECT id FROM anitos_campaigns WHERE id=$1 AND owner_id=$2", [req.params.id, req.user.id]);
       if (!owner.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.email,u.role,m.joined_at
+        `SELECT u.id,u.display_name,u.email,u.username,u.public_code,u.role,m.joined_at
          FROM anitos_campaign_members m JOIN anitos_users u ON u.id=m.user_id
          WHERE m.campaign_id=$1 ORDER BY m.joined_at`,
         [req.params.id]
