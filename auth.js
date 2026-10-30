@@ -89,7 +89,6 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_salt text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_hash text;
     CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_code_idx ON anitos_users(lower(username), public_code) WHERE username IS NOT NULL AND public_code IS NOT NULL;
-    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_email_lower_idx ON anitos_users(lower(email)) WHERE email IS NOT NULL;
     CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
