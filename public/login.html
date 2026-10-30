@@ -50,11 +50,11 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="content">
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
 <form id="authForm">
-<div id="displayNameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name" placeholder="Scott"></div>
+<div id="displayNameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name"></div>
 <div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="39" required autocomplete="username"></div>
 <div id="recoveryAnswers" hidden>
-<label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off" placeholder="Pudim">
-<label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off" placeholder="Axolote">
+<label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off">
+<label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off">
 </div>
 <label for="password">Senha</label><div class="password-row"><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password"><button id="togglePassword" type="button" aria-pressed="false">Mostrar senha</button></div>
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password"></div>
@@ -65,17 +65,30 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </form>
 <form id="recoveryForm" hidden>
 <h2>Recuperar conta</h2>
-<label for="recoveryDisplayName">Nome de exibição (necessário sem o código secreto)</label><input id="recoveryDisplayName" maxlength="48" autocomplete="name">
-<label for="recoveryUserTag">Identificador completo</label><input id="recoveryUserTag" maxlength="39" placeholder="usuario#583104" required>
-<label for="recoveryCode">Código secreto de recuperação (se tiver)</label><input id="recoveryCode" maxlength="32" autocomplete="off">
-<p class="muted">Se perdeu o código secreto, deixe-o vazio e responda às duas perguntas abaixo.</p>
-<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100" autocomplete="off">
-<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100" autocomplete="off">
+<label for="recoveryDisplayName">Nome de exibição</label><input id="recoveryDisplayName" maxlength="48" autocomplete="name" required>
+<label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" autocomplete="username" required>
+<label for="recoveryCode">Código</label><input id="recoveryCode" maxlength="32" autocomplete="off">
+<div class="row" style="margin-top:10px"><button type="button" id="verifyRecoveryCode">Continuar</button><button type="button" id="noRecoveryCode">Não tenho o código</button></div>
+<div id="recoveryIdentityResult" class="notice" hidden>
+<p>Código do usuário: <strong id="revealedUserTag" class="code"></strong></p>
+</div>
+<div id="recoveryPasswordFields" hidden>
 <label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
 <label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
-<div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery">Voltar</button></div>
+<div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button></div>
+</div>
 <p id="recoveryMessage" role="status" class="muted"></p>
 </form>
+<div id="recoveryQuestionsModal" class="window" role="dialog" aria-modal="true" aria-labelledby="recoveryQuestionsTitle" hidden>
+<div class="bar"><span>VERIFICAÇÃO DE IDENTIDADE</span><button type="button" id="closeRecoveryQuestions" aria-label="Fechar">×</button></div>
+<div class="content">
+<h2 id="recoveryQuestionsTitle">Confirme sua identidade</h2>
+<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100" autocomplete="off">
+<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100" autocomplete="off">
+<div class="row" style="margin-top:10px"><button type="button" id="verifyRecoveryAnswers">Confirmar</button></div>
+<p id="recoveryQuestionsMessage" role="status" class="muted"></p>
+</div>
+</div>
 <div id="registrationResult" class="notice" hidden>
 <h2>Cadastro concluído — guarde estes dados!</h2>
 <p>Identificador de acesso: <strong id="createdUserTag" class="code"></strong></p>
@@ -89,6 +102,8 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <script>
 const $ = id => document.getElementById(id);
 let mode = "login";
+let recoveryMethod = "";
+let verifiedUserTag = "";
 async function api(url, options = {}) {
   const response = await fetch(url, {credentials:"same-origin", ...options, headers:{"Content-Type":"application/json", ...(options.headers||{})}});
   const payload = await response.json().catch(() => ({}));
@@ -102,24 +117,20 @@ function setMode(next) {
   mode = next;
   $("loginTab").classList.toggle("active", mode === "login");
   $("registerTab").classList.toggle("active", mode === "register");
-  $("recoveryTab").classList.remove("active");
-  $("recoveryForm").hidden = true;
-  $("authForm").hidden = false;
-  $("recoveryForm").hidden = true;
+  $("recoveryTab").classList.toggle("active", mode === "recovery");
+  $("authForm").hidden = mode === "recovery";
+  $("recoveryForm").hidden = mode !== "recovery";
   $("registrationResult").hidden = true;
+  $("recoveryQuestionsModal").hidden = true;
   $("displayNameField").hidden = mode !== "register";
   $("recoveryAnswers").hidden = mode !== "register";
   $("confirmPasswordField").hidden = mode !== "register";
   $("roleField").hidden = mode !== "register";
   $("passwordHint").hidden = mode !== "register";
   $("displayName").required = mode === "register";
-  $("displayName").placeholder = mode === "register" ? "Scott" : "";
   $("favoriteFood").required = mode === "register";
-  $("favoriteFood").placeholder = mode === "register" ? "Pudim" : "";
   $("favoriteAnimal").required = mode === "register";
-  $("favoriteAnimal").placeholder = mode === "register" ? "Axolote" : "";
   $("confirmPassword").required = mode === "register";
-  $("username").placeholder = mode === "register" ? "bob." : "";
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
   $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
   message("authMessage", "");
@@ -134,15 +145,10 @@ $("togglePassword").addEventListener("click", () => {
 $("loginTab").addEventListener("click", () => setMode("login"));
 $("registerTab").addEventListener("click", () => setMode("register"));
 $("recoveryTab").addEventListener("click", () => {
-  $("authForm").hidden = true;
-  $("recoveryForm").hidden = false;
-  $("registrationResult").hidden = true;
-  $("loginTab").classList.remove("active");
-  $("registerTab").classList.remove("active");
-  $("recoveryTab").classList.add("active");
-  message("recoveryMessage", "");
+  setMode("recovery");
+  resetRecoveryFlow();
 });
-$("cancelRecovery").addEventListener("click", () => setMode("login"));
+$("cancelRecovery")?.addEventListener("click", () => setMode("login"));
 $("continueToLogin").addEventListener("click", () => {
   setMode("login");
   $("username").value = $("createdUserTag").textContent;
@@ -184,36 +190,103 @@ $("authForm").addEventListener("submit", async event => {
     $("submitAuth").disabled = false;
   }
 });
-function updateRecoveryRequirements() {
-  const usingCode = Boolean($("recoveryCode").value.trim());
-  $("recoveryDisplayName").required = !usingCode;
-  $("recoveryFood").required = !usingCode;
-  $("recoveryAnimal").required = !usingCode;
+function resetRecoveryFlow() {
+  $("recoveryForm").reset();
+  $("recoveryQuestionsModal").hidden = true;
+  $("recoveryIdentityResult").hidden = true;
+  $("recoveryPasswordFields").hidden = true;
+  $("recoveryCode").disabled = false;
+  $("verifyRecoveryCode").disabled = false;
+  verifiedUserTag = "";
+  recoveryMethod = "";
+  message("recoveryMessage", "");
+  message("recoveryQuestionsMessage", "");
 }
-$("recoveryCode").addEventListener("input", updateRecoveryRequirements);
-updateRecoveryRequirements();
+function recoveryIdentity() {
+  return {
+    displayName:$("recoveryDisplayName").value.trim(),
+    username:$("recoveryUsername").value.trim().replace(/^@/, "").toLowerCase(),
+    recoveryCode:$("recoveryCode").value.trim().toUpperCase(),
+    favoriteFood:$("recoveryFood").value,
+    favoriteAnimal:$("recoveryAnimal").value
+  };
+}
+async function verifyRecovery(method) {
+  const body = recoveryIdentity();
+  if (!body.displayName || !body.username) {
+    message(method === "answers" ? "recoveryQuestionsMessage" : "recoveryMessage", "Informe o nome de exibição e o nome de usuário.", "error");
+    return;
+  }
+  if (method === "answers" && (!body.favoriteFood.trim() || !body.favoriteAnimal.trim())) {
+    message("recoveryQuestionsMessage", "Preencha a comida e o animal favoritos.", "error");
+    return;
+  }
+  const button = method === "answers" ? $("verifyRecoveryAnswers") : $("verifyRecoveryCode");
+  button.disabled = true;
+  message(method === "answers" ? "recoveryQuestionsMessage" : "recoveryMessage", "Verificando dados…");
+  try {
+    const result = await api("/api/auth/reveal-user-code", {method:"POST", body:JSON.stringify(body)});
+    verifiedUserTag = result.userTag;
+    recoveryMethod = method;
+    $("revealedUserTag").textContent = verifiedUserTag;
+    $("recoveryIdentityResult").hidden = false;
+    $("recoveryPasswordFields").hidden = false;
+    $("recoveryCode").disabled = true;
+    $("verifyRecoveryCode").disabled = true;
+    $("recoveryQuestionsModal").hidden = true;
+    message("recoveryMessage", "Identidade confirmada. Agora defina uma nova senha.", "success");
+    $("recoveryNewPassword").focus();
+  } catch (error) {
+    message(method === "answers" ? "recoveryQuestionsMessage" : "recoveryMessage", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+$("verifyRecoveryCode").addEventListener("click", () => {
+  if (!$("recoveryCode").value.trim()) {
+    message("recoveryMessage", "Informe o código ou use “Não tenho o código”.", "error");
+    return;
+  }
+  verifyRecovery("code");
+});
+$("noRecoveryCode").addEventListener("click", () => {
+  if (!$("recoveryDisplayName").value.trim() || !$("recoveryUsername").value.trim()) {
+    message("recoveryMessage", "Informe primeiro o nome de exibição e o nome de usuário.", "error");
+    return;
+  }
+  $("recoveryQuestionsModal").hidden = false;
+  $("recoveryFood").focus();
+});
+$("closeRecoveryQuestions").addEventListener("click", () => {$("recoveryQuestionsModal").hidden = true;});
+$("verifyRecoveryAnswers").addEventListener("click", () => verifyRecovery("answers"));
 $("recoveryForm").addEventListener("submit", async event => {
   event.preventDefault();
+  if (!verifiedUserTag) {
+    message("recoveryMessage", "Confirme sua identidade antes de definir a nova senha.", "error");
+    return;
+  }
   if ($("recoveryNewPassword").value !== $("recoveryConfirmPassword").value) {
     message("recoveryMessage", "As senhas não coincidem.", "error");
     return;
   }
   const body = {
-    userTag:$("recoveryUserTag").value.trim(),
-    recoveryCode:$("recoveryCode").value.trim(),
+    userTag:verifiedUserTag,
     displayName:$("recoveryDisplayName").value.trim(),
+    recoveryCode:recoveryMethod === "code" ? $("recoveryCode").value.trim() : "",
     favoriteFood:$("recoveryFood").value,
     favoriteAnimal:$("recoveryAnimal").value,
     password:$("recoveryNewPassword").value,
     confirmPassword:$("recoveryConfirmPassword").value
   };
   $("recoverSubmit").disabled = true;
-  message("recoveryMessage", "Validando dados e redefinindo a senha…");
+  message("recoveryMessage", "Redefinindo senha…");
   try {
     const result = await api("/api/auth/recover-account", {method:"POST", body:JSON.stringify(body)});
-    message("recoveryMessage", result.message || "Senha redefinida. Entre com suas novas credenciais.", "success");
+    message("recoveryMessage", result.message || "Senha redefinida. Entre com sua nova senha.", "success");
+    $("recoveryPasswordFields").hidden = true;
+    $("recoveryIdentityResult").hidden = true;
     $("recoveryForm").reset();
-    updateRecoveryRequirements();
+    verifiedUserTag = "";
   } catch (error) {
     message("recoveryMessage", error.message, "error");
   } finally {
