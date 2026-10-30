@@ -302,7 +302,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\\s+/g, " ").slice(0, 48);
+      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
       const tag = splitUserTag(req.body?.userTag);
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
@@ -328,7 +328,7 @@ function registerAuthRoutes(app, express, db) {
         recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       } else if (!usingRecoveryCode && user.recovery_salt && user.recovery_hash) {
         const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\\u0000" + animal, user.recovery_salt, 64);
+        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
         const expected = Buffer.from(user.recovery_hash, "hex");
         recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       }
@@ -353,7 +353,7 @@ function registerAuthRoutes(app, express, db) {
       if (!/^[a-z0-9_.-]{2,32}$/.test(username) || !food || !animal)
         return sendError(res, 400, "Informe um nome de usuário válido, comida favorita e animal favorito.");
       const recoverySalt = crypto.randomBytes(16).toString("hex");
-      const recoveryHash = (await scrypt(food + "\\u0000" + animal, recoverySalt, 64)).toString("hex");
+      const recoveryHash = (await scrypt(food + "\u0000" + animal, recoverySalt, 64)).toString("hex");
       const recoveryCode = makeRecoveryCode();
       const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
