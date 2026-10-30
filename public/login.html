@@ -50,20 +50,20 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="content">
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
 <form id="authForm">
-<div id="displayNameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name"></div>
-<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="39" required autocomplete="username" placeholder="usuario#583104"></div>
+<div id="displayNameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name" placeholder="Scott"></div>
+<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="39" required autocomplete="username"></div>
 <div id="recoveryAnswers" hidden>
-<label for="favoriteFood">Comida favorita (recuperação)</label><input id="favoriteFood" maxlength="100" autocomplete="off">
-<label for="favoriteAnimal">Animal favorito (recuperação)</label><input id="favoriteAnimal" maxlength="100" autocomplete="off">
+<label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off" placeholder="Pudim">
+<label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off" placeholder="Axolote">
 </div>
 <label for="password">Senha</label><div class="password-row"><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password"><button id="togglePassword" type="button" aria-pressed="false">Mostrar senha</button></div>
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password"></div>
 <p id="passwordHint" class="muted" hidden>Guarde seu identificador e o código secreto de recuperação exibidos após o cadastro.</p>
-<div id="roleField" hidden><label for="role">Perfil</label><select id="role"><option value="player">Jogador — participar de campanhas</option><option value="master">Mestre — criar e administrar campanhas</option></select></div>
-<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/rgn">Abrir RGN</a></div>
+<div id="roleField" hidden><label for="role">Jogador / Mestre</label><select id="role"><option value="player">Jogador</option><option value="master">Mestre</option></select></div>
+<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
 </form>
-<form id="recoveryForm" class="card" hidden>
+<form id="recoveryForm" hidden>
 <h2>Recuperar conta</h2>
 <label for="recoveryDisplayName">Nome de exibição (necessário sem o código secreto)</label><input id="recoveryDisplayName" maxlength="48" autocomplete="name">
 <label for="recoveryUserTag">Identificador completo</label><input id="recoveryUserTag" maxlength="39" placeholder="usuario#583104" required>
@@ -103,6 +103,7 @@ function setMode(next) {
   $("loginTab").classList.toggle("active", mode === "login");
   $("registerTab").classList.toggle("active", mode === "register");
   $("recoveryTab").classList.remove("active");
+  $("recoveryForm").hidden = true;
   $("authForm").hidden = false;
   $("recoveryForm").hidden = true;
   $("registrationResult").hidden = true;
@@ -112,10 +113,13 @@ function setMode(next) {
   $("roleField").hidden = mode !== "register";
   $("passwordHint").hidden = mode !== "register";
   $("displayName").required = mode === "register";
+  $("displayName").placeholder = mode === "register" ? "Scott" : "";
   $("favoriteFood").required = mode === "register";
+  $("favoriteFood").placeholder = mode === "register" ? "Pudim" : "";
   $("favoriteAnimal").required = mode === "register";
+  $("favoriteAnimal").placeholder = mode === "register" ? "Axolote" : "";
   $("confirmPassword").required = mode === "register";
-  $("username").placeholder = mode === "register" ? "Escolha um nome (ex.: spacer)" : "usuario#583104";
+  $("username").placeholder = mode === "register" ? "bob." : "";
   $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
   $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
   message("authMessage", "");
