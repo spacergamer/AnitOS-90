@@ -526,7 +526,7 @@ function registerAuthRoutes(app, express, db) {
       const owner = await db.query("SELECT id FROM anitos_campaigns WHERE id=$1 AND owner_id=$2", [req.params.id, req.user.id]);
       if (!owner.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.email,u.role,m.joined_at
+        `SELECT u.id,u.display_name,u.email,u.username,u.public_code,u.role,m.joined_at
          FROM anitos_campaign_members m JOIN anitos_users u ON u.id=m.user_id
          WHERE m.campaign_id=$1 ORDER BY m.joined_at`,
         [req.params.id]
