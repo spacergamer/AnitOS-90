@@ -68,6 +68,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <h2>Recuperar conta</h2>
 <label for="recoveryDisplayName">Nome de exibição</label><input id="recoveryDisplayName" maxlength="48" autocomplete="name" required>
 <label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" autocomplete="username" required>
+<label for="recoveryEmail">E-mail</label><input id="recoveryEmail" type="email" maxlength="254" autocomplete="email" required>
 <label for="recoveryCode">Código</label><input id="recoveryCode" maxlength="32" autocomplete="off">
 <div class="row" style="margin-top:10px"><button type="button" id="verifyRecoveryCode">Continuar</button><button type="button" id="noRecoveryCode">Não tenho o código</button></div>
 <div id="recoveryIdentityResult" class="notice" hidden>
@@ -207,6 +208,7 @@ function recoveryIdentity() {
   return {
     displayName:$("recoveryDisplayName").value.trim(),
     username:$("recoveryUsername").value.trim().replace(/^@/, "").toLowerCase(),
+    email:$("recoveryEmail").value.trim().toLowerCase(),
     recoveryCode:$("recoveryCode").value.trim().toUpperCase(),
     favoriteFood:$("recoveryFood").value,
     favoriteAnimal:$("recoveryAnimal").value
@@ -214,8 +216,8 @@ function recoveryIdentity() {
 }
 async function verifyRecovery(method) {
   const body = recoveryIdentity();
-  if (!body.displayName || !body.username) {
-    message(method === "answers" ? "recoveryQuestionsMessage" : "recoveryMessage", "Informe o nome de exibição e o nome de usuário.", "error");
+  if (!body.displayName || !body.username || !body.email) {
+    message(method === "answers" ? "recoveryQuestionsMessage" : "recoveryMessage", "Informe o nome de exibição, o nome de usuário e o e-mail.", "error");
     return;
   }
   if (method === "answers" && (!body.favoriteFood.trim() || !body.favoriteAnimal.trim())) {
