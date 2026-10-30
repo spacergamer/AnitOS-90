@@ -318,7 +318,7 @@ function registerAuthRoutes(app, express, db) {
       if (user && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
         const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
         const expected = Buffer.from(user.recovery_code_hash, "hex");
-        recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
+        recoveryValid = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR") && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       } else if (user && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
         const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
         const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
