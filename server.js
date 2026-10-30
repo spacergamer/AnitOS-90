@@ -35,6 +35,7 @@ app.get("/anitopeboard/",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.
 app.use("/anitopeboard",express.static(boardDir));
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
+app.get("/account",(_q,r)=>r.sendFile(path.join(__dirname,"public","account.html")));
 app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
 app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
 app.get("/board.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
