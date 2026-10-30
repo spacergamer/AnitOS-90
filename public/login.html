@@ -187,6 +187,7 @@ function updateRecoveryRequirements() {
   $("recoveryAnimal").required = !usingCode;
 }
 $("recoveryCode").addEventListener("input", updateRecoveryRequirements);
+updateRecoveryRequirements();
 $("recoveryForm").addEventListener("submit", async event => {
   event.preventDefault();
   if ($("recoveryNewPassword").value !== $("recoveryConfirmPassword").value) {
