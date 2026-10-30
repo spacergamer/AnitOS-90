@@ -539,7 +539,7 @@ async function refreshMasterCharacters() {
       label.textContent = "Jogador responsável";
       const select = document.createElement("select");
       select.append(new Option("Não atribuída", ""));
-      for (const member of managedMembers) select.append(new Option(member.display_name + " (" + member.email + ")", member.id));
+      for (const member of managedMembers) select.append(new Option(member.display_name + " (" + (member.username ? "@" + member.username + "#" + member.public_code : member.email || "conta antiga") + ")", member.id));
       select.value = character.assigned_player_id || "";
       const jsonLabel = document.createElement("label");
       jsonLabel.textContent = "Dados da ficha (JSON)";
