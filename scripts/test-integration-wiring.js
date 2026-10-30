@@ -56,6 +56,7 @@ assert.doesNotMatch(auth, /FROM anitos_campaigns c\s+LEFT JOIN anitos_campaign_m
 
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);
+assert.match(server, /app\.get\("\/account",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","account\.html"\)\)\)/);
 assert.match(server, /app\.get\("\/board\.html",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","board\.html"\)\)\)/);
 assert.match(server, /app\.get\("\/anitopeboard\/",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","board\.html"\)\)\)/);
 
