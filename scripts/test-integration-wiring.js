@@ -26,14 +26,18 @@ assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
 
-// Username#12-character-code authentication and recovery use salted password hashing.
+// Username#3-to-6-digit account tags and a separate recovery secret use salted hashing.
 const accountPage = fs.readFileSync("public/account.html", "utf8");
 assert.match(auth, /ADD COLUMN IF NOT EXISTS username text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS public_code text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_salt text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_hash text/);
 assert.match(auth, /function makePublicCode\(\)/);
+assert.match(auth, /crypto\.randomInt\(3, 7\)/);
+assert.match(auth, /function makeRecoveryCode\(\)/);
+assert.match(auth, /recovery_code_hash text/);
 assert.match(auth, /function splitUserTag\(value\)/);
+assert.match(auth, /\\d\{3,6\}/);
 assert.match(auth, /scrypt\(password, passwordSalt, 64\)/);
 assert.match(auth, /scrypt\(food \+ "\\u0000" \+ animal, recoverySalt, 64\)/);
 assert.match(auth, /app\.post\("\/api\/auth\/recover-account"/);
@@ -41,6 +45,8 @@ assert.match(auth, /app\.post\("\/api\/auth\/credentials", databaseRequired, req
 assert.match(auth, /DELETE FROM anitos_sessions WHERE user_id=\$1/);
 assert.match(auth, /limitAuthAttempts/);
 assert.match(accountPage, /id="recoveryTab"/);
+assert.match(accountPage, /id="recoveryCode"/);
+assert.match(accountPage, /usuario#583104/);
 assert.match(accountPage, /id="newCredentialsWindow"/);
 assert.match(accountPage, /id="confirmPassword"/);
 assert.match(accountPage, /id="recoveryConfirmPassword"/);
