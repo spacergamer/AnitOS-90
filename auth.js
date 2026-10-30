@@ -300,6 +300,34 @@ function registerAuthRoutes(app, express, db) {
     }
   });
 
+  app.post("/api/auth/reveal-user-code", databaseRequired, limitAuthAttempts, async (req, res) => {
+    try {
+      const displayName = String(req.body?.displayName || "").trim().replace(/\\s+/g, " ").slice(0, 48);
+      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
+      const food = normalizeAnswer(req.body?.favoriteFood);
+      const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      if (!displayName || !username || !food || !animal)
+        return sendError(res, 400, "Preencha todos os campos para confirmar sua identidade.");
+      const result = await db.query(
+        "SELECT display_name,username,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",
+        [username]
+      );
+      const user = result.rows[0];
+      let recoveryValid = false;
+      if (user && user.recovery_salt && user.recovery_hash) {
+        const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
+        const candidate = await scrypt(food + "\\u0000" + animal, user.recovery_salt, 64);
+        const expected = Buffer.from(user.recovery_hash, "hex");
+        recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
+      }
+      if (!recoveryValid) return sendError(res, 403, "Os dados de recuperação não correspondem.");
+      return res.json({ok:true,userTag:user.username + "#" + user.public_code});
+    } catch (err) {
+      console.error("[auth] Falha ao confirmar identidade:", err.message);
+      return sendError(res, 500, "Não foi possível confirmar os dados agora.");
+    }
+  });
+
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
       const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
