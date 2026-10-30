@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id: row.id, email: row.email || null, displayName: row.display_name, username: row.username || null, publicCode: row.public_code || null, credentialsReady: Boolean(row.username && row.public_code && row.recovery_salt && row.recovery_hash && row.recovery_code_salt && row.recovery_code_hash), role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
+  return {id: row.id, email: row.email || null, displayName: (row.display_name && row.display_name.trim()) || row.username || null, username: row.username || null, publicCode: row.public_code || null, credentialsReady: Boolean(row.username && row.public_code && row.recovery_salt && row.recovery_hash && row.recovery_code_salt && row.recovery_code_hash), role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
@@ -123,6 +123,9 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
+    -- Legacy accounts without a display name use their username as the public display name.
+    UPDATE anitos_users SET display_name = username
+      WHERE (display_name IS NULL OR trim(display_name) = '') AND username IS NOT NULL AND trim(username) <> '';
     -- Display names now act as public @handles. Normalize legacy names and make them unique.
     UPDATE anitos_users
       SET display_name = CASE
