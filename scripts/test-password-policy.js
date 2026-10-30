@@ -53,8 +53,9 @@ async function main() {
       assert.equal(response.status, 201, name + " password should be accepted; strength is a recommendation");
       const payload = await response.json();
       assert.equal(payload.user.credentialsReady, true, "new account must receive recovery credentials");
-      assert.match(payload.userTag, new RegExp("^policy_" + name.replace(/[^a-z0-9]/g, "_") + "#[A-Z0-9]{12}$"));
-      assert.equal(payload.user.publicCode, payload.recoveryCode);
+      assert.match(payload.userTag, new RegExp("^policy_" + name.replace(/[^a-z0-9]/g, "_") + "#\\d{3,6}$"));
+      assert.match(payload.recoveryCode, /^[A-Z2-9]{16}$/);
+      assert.equal(payload.user.publicCode, payload.userTag.split("#")[1]);
     }
     const emptyResponse = await register("", "empty");
     assert.equal(emptyResponse.status, 400, "empty password must be rejected");
