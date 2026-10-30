@@ -65,7 +65,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </section>
 
 <section class="window" id="appWindow" hidden>
-<div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><div class="account-actions"><button type="button" id="showMembership">Seja Membro</button><button id="logout" type="button">Encerrar Sessão</button></div></div>
+<div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><div class="account-actions"><button type="button" id="showMembership">Seja Membro</button><button id="deleteAccount" type="button">Deletar conta</button><button id="logout" type="button">Encerrar Sessão</button></div></div>
 <div class="content">
 <p id="roleLabel"></p>
 <div id="membershipModal" class="modal-backdrop" hidden role="presentation">
@@ -225,6 +225,28 @@ $("membershipForm").addEventListener("submit", async event => {
   } catch (error) {
     message("membershipMessage", error.message, "error");
   } finally { submit.disabled = false; }
+});
+$("deleteAccount").addEventListener("click", async () => {
+  if (!currentUser) return;
+  const confirmation = window.prompt("Esta ação é permanente e apagará sua conta, campanhas e dados associados.\n\nDigite DELETAR para confirmar:");
+  if (confirmation !== "DELETAR") {
+    if (confirmation !== null) window.alert("Exclusão cancelada.");
+    return;
+  }
+  const password = window.prompt("Digite sua senha atual para confirmar a exclusão da conta:");
+  if (password === null || !password) return;
+  const button = $("deleteAccount");
+  button.disabled = true;
+  try {
+    await api("/api/auth/delete-account", {method:"POST", body:JSON.stringify({password})});
+    currentUser = null;
+    window.alert("Conta excluída. Você não poderá mais entrar com as credenciais antigas.");
+    window.location.replace("/login.html");
+  } catch (error) {
+    window.alert(error.message);
+  } finally {
+    button.disabled = false;
+  }
 });
 $("logout").addEventListener("click", async () => {
   try { await api("/api/auth/logout", {method:"POST",body:"{}"}); } catch {}
