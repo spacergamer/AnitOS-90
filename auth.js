@@ -243,6 +243,9 @@ function registerAuthRoutes(app, express, db) {
       const passwordHash = (await scrypt(password, passwordSalt, 64)).toString("hex");
       const recoverySalt = crypto.randomBytes(16).toString("hex");
       const recoveryHash = (await scrypt(normalizeAnswer(food) + "\u0000" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
+      const recoveryCode = makeRecoveryCode();
+      const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
+      const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
       let publicCode = makePublicCode();
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
