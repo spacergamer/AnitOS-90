@@ -194,9 +194,8 @@ $("authForm").addEventListener("submit", async event => {
       await showNewCredentials();
       return;
     }
-    if (result.userTag) message("identifierMessage", "Seu identificador: " + result.userTag + " — guarde-o agora.", "success");
     if (mode === "register") {
-      $("identifierMessage").textContent = "SEU IDENTIFICADOR: " + result.userTag + " — salve este código, ele não será exibido novamente.";
+      window.alert("CONTA CRIADA!\\n\\nSeu identificador é:\\n" + result.userTag + "\\n\\nGuarde-o em um local seguro. Ele não será exibido novamente.");
     }
     await showApp(result.user);
   } catch (error) {
@@ -217,10 +216,11 @@ $("recoveryForm").addEventListener("submit", async event => {
       password:$("recoveryNewPassword").value,
       confirmPassword:$("recoveryConfirmPassword").value
     })});
-    message("recoveryMessage", result.message + " Identificador: " + $("recoveryUserTag").value.trim(), "success");
+    const recoveredTag = $("recoveryUserTag").value.trim();
     $("recoveryForm").reset();
-    $("username").value = $("recoveryUserTag").value.trim();
+    $("username").value = recoveredTag;
     setMode("login");
+    message("authMessage", result.message, "success");
   } catch (error) { message("recoveryMessage", error.message, "error"); }
   finally { $("recoverSubmit").disabled = false; }
 });
