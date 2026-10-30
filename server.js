@@ -39,7 +39,18 @@ app.get("/account",(_q,r)=>r.sendFile(path.join(__dirname,"public","account.html
 app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
 app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
 app.get("/board.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
-app.get("/room.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","room.html")));
+app.get("/room.html",async(q,r)=>{
+ try{
+  if(!db)return r.redirect(302,"/login.html");
+  const raw=(q.headers.cookie||"").split(";").map(x=>x.trim()).find(x=>x.startsWith("anitos_session="))?.slice("anitos_session=".length)||"";
+  let token="";try{token=decodeURIComponent(raw)}catch{}
+  if(!/^[a-f0-9]{64}$/.test(token))return r.redirect(302,"/login.html");
+  const hash=createHash("sha256").update(token).digest("hex");
+  const session=await db.query("SELECT 1 FROM anitos_sessions WHERE token_hash=$1 AND expires_at>now()",[hash]);
+  if(!session.rows[0])return r.redirect(302,"/login.html");
+  return r.sendFile(path.join(__dirname,"public","room.html"));
+ }catch(err){console.error("[auth] Falha ao proteger RGN:",err.message);return r.redirect(302,"/login.html")}
+});
 app.get("/rgn",(_q,r)=>r.redirect(302,"/room.html"));
 app.get("/",(_q,r)=>r.redirect(302,"/login.html"));
 
@@ -225,6 +236,7 @@ io.on("connection",s=>{
  });
  s.on("room:join",async p=>{
   if(!allowEvent(s,"room:join",10,60_000)||!allowEvent(s,"room:join",30,60_000,"ip"))return;
+  if(!db||!s.data.userId)return error(s,"Entre na sua conta para acessar o RGN.");
   const c=String(p?.code||"").trim().toUpperCase(),r=rooms.get(c);
   if(!r)return error(s,"Sala não encontrada. Confira o código.");
   const requestedCampaignId=String(p?.campaignId||"").trim();
@@ -248,6 +260,7 @@ io.on("connection",s=>{
  });
  s.on("room:resume",async p=>{
   if(!allowEvent(s,"room:resume",5,60_000))return;
+  if(!db||!s.data.userId){s.emit("room:resume:failed","Entre na sua conta para acessar o RGN.");return;}
   const token=String(p?.token||"");
   if(!/^[a-f0-9]{64}$/.test(token)){
    s.emit("room:resume:failed","Não foi possível recuperar a sessão. Entre novamente pelo lobby.");
