@@ -233,14 +233,12 @@ $("deleteAccount").addEventListener("click", async () => {
     if (confirmation !== null) window.alert("Exclusão cancelada.");
     return;
   }
-  const password = window.prompt("Digite sua senha atual para confirmar a exclusão da conta:");
-  if (password === null || !password) return;
   const button = $("deleteAccount");
   button.disabled = true;
   try {
-    await api("/api/auth/delete-account", {method:"POST", body:JSON.stringify({password})});
+    await api("/api/auth/delete-account", {method:"POST", body:JSON.stringify({})});
     currentUser = null;
-    window.alert("Conta excluída. Você não poderá mais entrar com as credenciais antigas.");
+    window.alert("Conta excluída. Você poderá criar uma nova conta no futuro.");
     window.location.replace("/login.html");
   } catch (error) {
     window.alert(error.message);
