@@ -59,14 +59,20 @@ function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
 }
 function makePublicCode() {
+  // O sufixo público é numérico, aleatório e curto: de 3 a 6 dígitos.
+  const length = crypto.randomInt(3, 7);
+  const min = 10 ** (length - 1);
+  return String(crypto.randomInt(min, 10 ** length));
+}
+function makeRecoveryCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "";
-  while (result.length < 12) result += alphabet[crypto.randomInt(alphabet.length)];
+  while (result.length < 16) result += alphabet[crypto.randomInt(alphabet.length)];
   return result;
 }
 function splitUserTag(value) {
-  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#([A-Z0-9]{12})$/i);
-  return match ? {username: match[1].toLowerCase(), publicCode: match[2].toUpperCase()} : null;
+  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#(\\d{3,6})$/i);
+  return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
 }
 
 async function initializeAuthSchema(db) {
@@ -88,7 +94,10 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS public_code text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_salt text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_hash text;
-    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_code_idx ON anitos_users(lower(username), public_code) WHERE username IS NOT NULL AND public_code IS NOT NULL;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_salt text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_hash text;
+    DROP INDEX IF EXISTS anitos_users_username_code_idx;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_public_code_idx ON anitos_users(public_code) WHERE public_code IS NOT NULL;
     CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -238,13 +247,13 @@ function registerAuthRoutes(app, express, db) {
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
           const result = await db.query(
-            "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash) VALUES($1,$2,$3,$4,$5,$6,true,$7,$8,$9,$10) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash",
-            [id, email, displayName, role, passwordSalt, passwordHash, username, publicCode, recoverySalt, recoveryHash]
+            "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash) VALUES($1,$2,$3,$4,$5,$6,true,$7,$8,$9,$10,$11,$12) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash",
+            [id, email, displayName, role, passwordSalt, passwordHash, username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash]
           );
           await createSession(id, res);
-          return res.status(201).json({user: safeUser(result.rows[0]), recoveryCode: publicCode, userTag: username + "#" + publicCode});
+          return res.status(201).json({user: safeUser(result.rows[0]), recoveryCode, userTag: username + "#" + publicCode});
         } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_code_idx") {
+          if (err.code === "23505" && (err.constraint === "anitos_users_public_code_idx" || err.constraint === "anitos_users_username_code_idx")) {
             publicCode = makePublicCode();
             continue;
           }
@@ -294,12 +303,13 @@ function registerAuthRoutes(app, express, db) {
       const tag = splitUserTag(req.body?.userTag);
       const food = normalizeAnswer(req.body?.favoriteFood);
       const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      if (!tag || !food || !animal) return sendError(res, 400, "Confira o nome de usuário e o código, a comida e o animal.");
+      if (!tag || (!recoveryCode && (!food || !animal))) return sendError(res, 400, "Informe o identificador e o código de recuperação ou as duas respostas de segurança.");
       if (password.length < 1 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 1 e 200 caracteres.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
-      const result = await db.query("SELECT id,display_name,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
+      const result = await db.query("SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
       const user = result.rows[0];
       if (!user || !user.recovery_salt || !user.recovery_hash || user.display_name.toLocaleLowerCase("pt-BR") !== displayName.toLocaleLowerCase("pt-BR"))
         return sendError(res, 403, "Os dados de recuperação não correspondem.");
@@ -333,7 +343,7 @@ function registerAuthRoutes(app, express, db) {
       if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
       await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
       clearSessionCookie(res);
-      return res.json({ok:true,userTag:username + "#" + publicCode,message:"Credenciais cadastradas. Guarde seu identificador e entre novamente com ele e sua senha atual."});
+      return res.json({ok:true,userTag:username + "#" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código de recuperação. Entre novamente com o identificador e sua senha atual."});
     } catch (err) {
       if (err.code === "23505") return sendError(res, 409, "Esse nome de usuário já está em uso. Escolha outro.");
       console.error("[auth] Falha ao salvar novas credenciais:", err.message);
