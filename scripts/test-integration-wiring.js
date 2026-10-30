@@ -26,16 +26,25 @@ assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
 
-// Authentication works without email delivery and retains password/session protections.
-assert.match(auth, /email_verified boolean NOT NULL DEFAULT true/);
-assert.doesNotMatch(auth, /if \(!user\.email_verified\) return sendError\(res, 403/);
-assert.match(auth, /await createSession\(id, res\)/);
-assert.match(auth, /scrypt\(password, salt, 64\)/);
+// Username#12-character-code authentication and recovery use salted password hashing.
+const accountPage = fs.readFileSync("public/account.html", "utf8");
+assert.match(auth, /ADD COLUMN IF NOT EXISTS username text/);
+assert.match(auth, /ADD COLUMN IF NOT EXISTS public_code text/);
+assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_salt text/);
+assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_hash text/);
+assert.match(auth, /function makePublicCode\(\)/);
+assert.match(auth, /function splitUserTag\(value\)/);
+assert.match(auth, /scrypt\(password, passwordSalt, 64\)/);
+assert.match(auth, /scrypt\(food \+ "\\u0000" \+ animal, recoverySalt, 64\)/);
+assert.match(auth, /app\.post\("\/api\/auth\/recover-account"/);
+assert.match(auth, /app\.post\("\/api\/auth\/credentials", databaseRequired, requireAuth/);
+assert.match(auth, /DELETE FROM anitos_sessions WHERE user_id=\$1/);
 assert.match(auth, /limitAuthAttempts/);
-assert.doesNotMatch(fs.readFileSync("public/account.html", "utf8"), /forgotPassword|resendVerification|recoveryForm|resetForm|request-password-reset|verify-email|reset-password/);
-assert.match(board, /ANITOPEBOARD/);
-assert.match(fs.readFileSync("public/account.html", "utf8"), /id="forgotPassword"/);
-assert.match(fs.readFileSync("public/account.html", "utf8"), /id="resendVerification"/);
+assert.match(accountPage, /id="recoveryTab"/);
+assert.match(accountPage, /id="newCredentialsWindow"/);
+assert.match(accountPage, /id="confirmPassword"/);
+assert.match(accountPage, /id="recoveryConfirmPassword"/);
+assert.doesNotMatch(accountPage, /resendVerification|request-password-reset|verify-email|reset-password/);
 assert.match(room, /pingTimeoutTimer=setTimeout\(\(\)=>\{/);
 assert.match(room, /socket\.disconnect\(\);\s*socket\.connect\(\);/);
 assert.match(room, /A conexão parou de responder\. Tentando recuperar a sessão/);
