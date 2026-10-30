@@ -96,6 +96,14 @@ async function main() {
     assert.equal(answerRecovery.status, 200, "normalized fallback answers should work when the secret is lost");
     assert.equal(sessionDeletes, 2, "each successful recovery must invalidate sessions");
 
+    const login = await post("/api/auth/login", {username:userTag,password:"reset-with-answers"});
+    assert.equal(login.status, 200, "the new password must work through the normal login flow");
+    const loginPayload = await login.json();
+    assert.equal(loginPayload.user.credentialsReady, true, "login must recognize all recovery credentials");
+
+    const oldPassword = await post("/api/auth/login", {username:userTag,password:"original-pass"});
+    assert.equal(oldPassword.status, 401, "the old password must stop working after recovery");
+
     const mismatch = await post("/api/auth/recover-account", {
       userTag, displayName: "Spacer Test", favoriteFood: "Sushi",
       favoriteAnimal: "Gato", password: "nope", confirmPassword: "nope"
