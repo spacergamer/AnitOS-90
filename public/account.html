@@ -47,7 +47,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </section>
 
 <section class="window" id="authWindow">
-<div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
+<div class="bar"><span id="authBarTitle">IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
 <div class="content">
 <h2 id="authHeading">Entrar no AnitOS</h2>
 
@@ -186,6 +186,7 @@ function updatePublicCodeField(){
 $("username").addEventListener("input",updatePublicCodeField);
 function setMode(next){
   mode=next;
+  $("authBarTitle").textContent=mode==="register"?"REGISTRO DE USUÁRIO":"IDENTIFICAÇÃO DE USUÁRIO";
   $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":"Cadastrar ID A.S.";
   $("authForm").hidden=mode==="recovery";
   $("recoveryForm").hidden=mode!=="recovery";
@@ -206,6 +207,11 @@ function setMode(next){
   $("username").placeholder=mode==="register"?"g_johnson":"bob.";
   $("username").value="";
   $("publicCode").value="";
+  $("password").value="";
+  $("password").type="password";
+  $("togglePassword").textContent="Mostrar senha";
+  $("togglePassword").setAttribute("aria-pressed","false");
+  $("confirmPassword").value="";
   updatePublicCodeField();
   message("authMessage","");
   message("identifierMessage","");
@@ -235,6 +241,7 @@ $("authForm").addEventListener("submit",async event=>{
   const registering=mode==="register";
   const body={username:$("username").value.trim(),password:$("password").value};
   if(registering){
+    if(body.password!==$("confirmPassword").value){message("authMessage","As senhas não coincidem.","error");$("confirmPassword").focus();return;}
     body.employeeName=$("employeeName").value;
     body.favoriteFood=$("favoriteFood").value;
     body.favoriteAnimal=$("favoriteAnimal").value;
