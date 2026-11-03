@@ -89,6 +89,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="revealedCodeArea" hidden>
 <label>Código de recuperação</label>
 <div class="row"><strong id="revealedRecoveryCode" class="code"></strong><button type="button" id="copyRecoveryCode">Copiar</button></div>
+<button type="button" id="closeRecoveryModalAfterCopy" style="margin-top:10px">Fechar</button>
 </div>
 </div>
 </div>
@@ -259,6 +260,7 @@ $("openRecoveryModal").addEventListener("click",()=>{
   $("recoveryModal").hidden=false;
 });
 $("closeRecoveryModal").addEventListener("click",()=>$("recoveryModal").hidden=true);
+$("closeRecoveryModalAfterCopy").addEventListener("click",()=>$("recoveryModal").hidden=true);
 $("revealRecoveryCode").addEventListener("click",async()=>{
   $("revealRecoveryCode").disabled=true;message("modalRecoveryMessage","Verificando respostas…");
   try{
@@ -267,6 +269,7 @@ $("revealRecoveryCode").addEventListener("click",async()=>{
     $("revealedCodeArea").hidden=false;
     $("recoveryCode").value=result.recoveryCode;
     $("recoveryUsername").value=$("modalRecoveryUsername").value.trim();
+    $("recoveryPublicCode").value=result.publicCode||"";
     message("modalRecoveryMessage","Código gerado. Copie e guarde em local seguro.","success");
   }catch(error){message("modalRecoveryMessage",error.message,"error");}
   finally{$("revealRecoveryCode").disabled=false;}
