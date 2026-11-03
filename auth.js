@@ -53,12 +53,12 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,publicCode:row.public_code||null,userTag:row.username&&row.public_code?`${row.username} #${row.public_code}`:null,profilePhoto:row.profile_photo_url||null,bio:row.bio||'',motivation:row.motivation||'',profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.public_code&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,publicCode:row.public_code||null,userTag:row.username&&row.public_code?row.username+" #"+row.public_code:null,profilePhoto:row.profile_photo_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.public_code&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
 }
-function makePublicCode() { return String(crypto.randomInt(0,10000)).padStart(4,'0'); }
+function makePublicCode() { return String(crypto.randomInt(0,10000)).padStart(4,"0"); }
 function makeRecoveryCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "";
@@ -66,8 +66,8 @@ function makeRecoveryCode() {
   return result;
 }
 function splitUserTag(value) {
-  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})\\s*#\\s*(\\d{4})$/i);
-  return match ? {username:match[1].toLowerCase(),publicCode:match[2]} : null;
+  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})\s*#\s*(\d{4})$/i);
+  return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
 }
 
 async function initializeAuthSchema(db) {
@@ -102,7 +102,7 @@ async function initializeAuthSchema(db) {
     UPDATE anitos_users SET username=lower(left(regexp_replace(trim(username),'[^A-Za-z0-9_.-]+','_','g'),32));
     WITH duplicates AS (SELECT id,row_number() OVER(PARTITION BY lower(username) ORDER BY created_at,id) AS duplicate_rank FROM anitos_users WHERE username IS NOT NULL)
     UPDATE anitos_users u SET username=left(u.username,23)||'_'||substr(u.id,1,8) FROM duplicates d WHERE u.id=d.id AND d.duplicate_rank>1;
-    UPDATE anitos_users SET public_code=lpad(floor(random()*10000)::int::text,4,'0') WHERE public_code IS NULL OR public_code !~ '^\\d{4}
+    UPDATE anitos_users SET public_code=lpad(floor(random()*10000)::int::text,4,'0') WHERE public_code IS NULL OR public_code !~ '^\d{4}
     CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -232,9 +232,9 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const employeeName=String(req.body?.employeeName||"").trim().replace(/\\s+/g," ").slice(0,60);
+      const employeeName=String(req.body?.employeeName||"").trim().replace(/\s+/g," ").slice(0,60);
       const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
-      const food=normalizeAnswer(req.body?.favoriteFood), animal=normalizeAnswer(req.body?.favoriteAnimal);
+      const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
       const password=typeof req.body?.password==="string"?req.body.password:"";
       const confirmPassword=typeof req.body?.confirmPassword==="string"?req.body.confirmPassword:"";
       if(employeeName.length<2)return sendError(res,400,"Informe seu nome de empregado.");
@@ -245,7 +245,7 @@ function registerAuthRoutes(app, express, db) {
       const id=crypto.randomUUID(),passwordSalt=crypto.randomBytes(16).toString("hex");
       const passwordHash=(await scrypt(password,passwordSalt,64)).toString("hex");
       const recoverySalt=crypto.randomBytes(16).toString("hex");
-      const recoveryHash=(await scrypt(food+"\\u0000"+animal,recoverySalt,64)).toString("hex");
+      const recoveryHash=(await scrypt(food+"\u0000"+animal,recoverySalt,64)).toString("hex");
       const recoveryCode=makeRecoveryCode(),recoveryCodeSalt=crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash=(await scrypt(recoveryCode,recoveryCodeSalt,64)).toString("hex");
       const publicCode=makePublicCode();
@@ -264,14 +264,13 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req,res)=>{
     try{
-      const input=String(req.body?.username||"").trim();
-      const combined=splitUserTag(input);
+      const input=String(req.body?.username||"").trim(),combined=splitUserTag(input);
       const username=(combined?.username||input).replace(/^@/,"").toLowerCase();
       const publicCode=combined?.publicCode||String(req.body?.publicCode||"").trim();
       const password=typeof req.body?.password==="string"?req.body.password:"";
       if(!username||!password)return sendError(res,400,"Informe seu nome de usuário e senha.");
       let result,legacyLogin=false;
-      if(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(input)&&!publicCode){
+      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)&&!publicCode){
         result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
         legacyLogin=true;
       }else{
@@ -296,7 +295,7 @@ function registerAuthRoutes(app, express, db) {
       const result=await db.query("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
       const user=result.rows[0];let valid=false;
       if(user?.recovery_salt&&user?.recovery_hash){
-        const candidate=await scrypt(food+"\\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
+        const candidate=await scrypt(food+"\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
         valid=candidate.length===expected.length&&crypto.timingSafeEqual(candidate,expected);
       }
       if(!valid)return sendError(res,403,"As respostas não correspondem aos dados cadastrados.");
@@ -368,15 +367,15 @@ function registerAuthRoutes(app, express, db) {
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
           const result = await db.query(
-            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,email_verified=true WHERE id=$7 AND (username IS NULL OR recovery_code_hash IS NULL) RETURNING id",
+            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,legacy_login_enabled=false WHERE id=$7 AND recovery_code_hash IS NULL RETURNING id",
             [username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash, req.user.id]
           );
           if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
           await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
           clearSessionCookie(res);
-          return res.json({ok:true,userTag:username + "#" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
+          return res.json({ok:true,userTag:username + " #" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
         } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_code_idx") {
+          if (err.code === "23505" && err.constraint === "anitos_users_username_unique_idx") {
             publicCode = makePublicCode();
             continue;
           }
@@ -393,7 +392,7 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/profile",databaseRequired,requireAuth,limitAuthAttempts,async(req,res)=>{
     try{
-      const displayName=String(req.body?.displayName||"").trim().replace(/\\s+/g," ").slice(0,48);
+      const displayName=String(req.body?.displayName||"").trim().replace(/\s+/g," ").slice(0,48);
       const profilePhoto=String(req.body?.profilePhoto||"").trim().slice(0,500);
       const bio=String(req.body?.bio||"").trim().slice(0,280);
       const motivation=String(req.body?.motivation||"").trim().slice(0,3000);
@@ -433,7 +432,7 @@ function registerAuthRoutes(app, express, db) {
     }
 
     try {
-      const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium,is_dev", [req.user.id]);
+      const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,display_name,employee_name,username,public_code,role,is_premium,is_dev", [req.user.id]);
       if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0]),message:"AnitOS Pro ativado com sucesso."});
     } catch (err) {
@@ -603,7 +602,7 @@ function registerAuthRoutes(app, express, db) {
       const owner = await db.query("SELECT id FROM anitos_campaigns WHERE id=$1 AND owner_id=$2", [req.params.id, req.user.id]);
       if (!owner.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.email,u.username,u.public_code,u.role,m.joined_at
+        `SELECT u.id,u.display_name,u.employee_name,u.username,u.public_code,u.role,m.joined_at
          FROM anitos_campaign_members m JOIN anitos_users u ON u.id=m.user_id
          WHERE m.campaign_id=$1 ORDER BY m.joined_at`,
         [req.params.id]
@@ -737,13 +736,11 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/characters/:id/assign", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem atribuir fichas.");
-    const playerEmail = typeof req.body?.playerEmail === "string" ? req.body.playerEmail.trim().toLowerCase() : "";
+    const playerUsername = typeof req.body?.playerUsername === "string" ? req.body.playerUsername.trim().replace(/^@/, "").toLowerCase() : "";
     const playerHandle = typeof req.body?.playerHandle === "string" ? req.body.playerHandle.trim().replace(/^@/, "").toLowerCase() : "";
     const legacyPlayerId = String(req.body?.playerId || "");
-    if (playerEmail && (playerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail))) {
-      return sendError(res, 400, "Informe um email válido para o jogador.");
-    }
-    if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um @nome válido.");
+    if (playerUsername && !/^[a-z0-9_.-]{2,32}$/.test(playerUsername)) return sendError(res, 400, "Informe um nome de usuário válido.");
+    if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um nome de usuário válido.");
     let client;
     let ownsClient = false;
     try {
@@ -764,10 +761,10 @@ function registerAuthRoutes(app, express, db) {
       }
       let playerId = legacyPlayerId || null;
       let assignedPlayerHandle = null;
-      if (playerEmail || playerHandle) {
+      if (playerUsername || playerHandle) {
         const member = await client.query(
           `SELECT u.id,u.display_name FROM anitos_users u
-           WHERE ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"}
+           WHERE lower(u.username)=$2
              AND (
                (u.role='master' AND u.id=$3)
                OR (u.role='player' AND EXISTS (
@@ -776,11 +773,11 @@ function registerAuthRoutes(app, express, db) {
                ))
              )
            LIMIT 1`,
-          [character.rows[0].campaign_id, playerEmail || playerHandle, req.user.id]
+          [character.rows[0].campaign_id, playerUsername || playerHandle, req.user.id]
         );
         if (!member.rows[0]) {
           if (ownsClient) await client.query("ROLLBACK");
-          return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
+          return sendError(res, 404, "Não existe um jogador com esse nome de usuário participando desta campanha.");
         }
         playerId = member.rows[0].id;
         assignedPlayerHandle = member.rows[0].display_name;
