@@ -18,7 +18,7 @@ main{max-width:960px;margin:0 auto;position:relative;z-index:1}
 h1{font-size:38px;margin:0 0 4px}h2{font-size:30px;margin:0 0 10px}p{margin:6px 0}
 small,.muted{color:#444;font-size:19px}
 label{display:block;margin:10px 0 3px}
-input,select{width:100%;font:inherit;padding:5px;border:2px inset var(--dark);background:#fff}
+input,select{width:100%;font:inherit;padding:5px;border:2px inset var(--dark);background:#fff}.password-row{display:flex;gap:6px}.password-row input{flex:1;min-width:0}.modal{position:fixed;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;box-shadow:0 0 0 100vmax rgba(0,0,0,.65)}.link-button{border:0;background:transparent;text-decoration:underline;padding:0;color:#000080;font:inherit}.link-button:hover{color:#005b50}
 button,.button{font:inherit;background:var(--win);border-top:2px solid var(--light);border-left:2px solid var(--light);border-right:2px solid var(--black);border-bottom:2px solid var(--black);padding:5px 12px;cursor:pointer;color:#111;text-decoration:none;display:inline-block}
 button:active,.button:active{border:2px inset var(--dark)}
 button:disabled{opacity:.5;cursor:wait}
@@ -49,46 +49,74 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <section class="window" id="authWindow">
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
 <div class="content">
+<h2 id="authHeading">Entrar no AnitOS</h2>
 <div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
 <form id="authForm">
-<div id="nameField" hidden><label for="displayName">Nome de exibição</label><input id="displayName" maxlength="48" autocomplete="name"></div>
-<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="48" required autocomplete="username" placeholder="usuario#583104"></div>
-<div id="foodField" hidden><label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off"></div>
-<div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off"></div>
-<label for="password">Senha</label><input id="password" type="password" minlength="1" maxlength="200" required autocomplete="current-password">
-<div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" maxlength="200" autocomplete="new-password"></div>
-<p id="passwordHint" class="muted" hidden>Escolha uma senha difícil de adivinhar. Após criar a conta, guarde o identificador com # e o código secreto de recuperação.</p>
-<div id="roleField" hidden><label for="role">Perfil</label><select id="role"><option value="master">Mestre — criar e administrar campanhas</option><option value="player">Jogador — participar de campanhas</option></select></div>
-<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><a class="button" href="/">Abrir RGN</a></div>
+<div id="employeeNameField" hidden><label for="employeeName">Nome de empregado</label><input id="employeeName" maxlength="60" autocomplete="name" placeholder="Ash Katarine Carter"></div>
+<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="32" required autocomplete="username" placeholder="bob."></div>
+<div id="publicCodeField"><label for="publicCode">Número identificador</label><input id="publicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="1972" autocomplete="off"></div>
+<div id="foodField" hidden><label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off" placeholder="Pudim"></div>
+<div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off" placeholder="Axolote"></div>
+<label for="password">Senha</label><div class="password-row"><input id="password" type="password" minlength="8" maxlength="200" required autocomplete="current-password" placeholder="Senha1234!"><button id="togglePassword" type="button" aria-pressed="false">Mostrar senha</button></div>
+<div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" placeholder="Senha1234!"></div>
+<p id="passwordHint" class="muted" hidden>Guarde seu identificador e seu código de recuperação em um local seguro.</p>
+<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
 <p id="identifierMessage" role="status" class="muted"></p>
 </form>
 <form id="recoveryForm" class="card" hidden>
-<h2>Recuperar conta</h2>
-<label for="recoveryDisplayName">Nome de exibição (necessário sem o código secreto)</label><input id="recoveryDisplayName" maxlength="48">
-<label for="recoveryUserTag">Nome de usuário # código</label><input id="recoveryUserTag" maxlength="39" placeholder="usuario#583104" required>
-<label for="recoveryCode">Código secreto de recuperação (se tiver)</label><input id="recoveryCode" maxlength="32" autocomplete="off">
-<p class="muted">Se perdeu o código secreto, deixe-o vazio e responda às duas perguntas abaixo.</p>
-<label for="recoveryFood">Comida favorita</label><input id="recoveryFood" maxlength="100">
-<label for="recoveryAnimal">Animal favorito</label><input id="recoveryAnimal" maxlength="100">
-<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
-<label for="recoveryConfirmPassword">Confirmar nova senha</label><input id="recoveryConfirmPassword" type="password" minlength="1" maxlength="200" autocomplete="new-password" required>
-<div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery" class="secondary">Voltar</button></div>
+<h2>Recuperação de conta</h2>
+<label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" required placeholder="bob.">
+<label for="recoveryCode">Código de recuperação</label><input id="recoveryCode" maxlength="32" autocomplete="off" placeholder="Código secreto">
+<p><button type="button" class="link-button" id="openRecoveryModal">Não obtenho o código</button></p>
+<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
+<label for="recoveryConfirmPassword">Confirmar senha</label><input id="recoveryConfirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
+<div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery">Voltar</button></div>
 <p id="recoveryMessage" role="status" class="muted"></p>
 </form>
 </div>
 </section>
-
-<section class="window" id="newCredentialsWindow" hidden>
-<div class="bar"><span>NOVAS CREDENCIAIS</span><span>LEGACY.ACCOUNT</span></div>
+<div id="recoveryModal" class="window modal" role="dialog" aria-modal="true" aria-labelledby="recoveryModalTitle" hidden>
+<div class="bar"><span>RECUPERAÇÃO ALTERNATIVA</span><button type="button" id="closeRecoveryModal">×</button></div>
 <div class="content">
-<p>Esta conta é anterior ao novo sistema. Cadastre um nome de usuário e suas respostas de recuperação. Depois, a sessão será encerrada automaticamente; entre novamente usando o identificador completo e sua senha atual.</p>
+<h2 id="recoveryModalTitle">Verificação de identidade</h2>
+<label for="modalRecoveryUsername">Nome de usuário</label><input id="modalRecoveryUsername" maxlength="32" placeholder="bob.">
+<label for="modalRecoveryFood">Comida favorita</label><input id="modalRecoveryFood" maxlength="100" placeholder="Pudim">
+<label for="modalRecoveryAnimal">Animal favorito</label><input id="modalRecoveryAnimal" maxlength="100" placeholder="Axolote">
+<button type="button" id="revealRecoveryCode" style="margin-top:12px">Exibir código</button>
+<p id="modalRecoveryMessage" role="status" class="muted"></p>
+<div id="revealedCodeArea" hidden>
+<label>Código de recuperação</label>
+<div class="row"><strong id="revealedRecoveryCode" class="code"></strong><button type="button" id="copyRecoveryCode">Copiar</button></div>
+</div>
+</div>
+</div>
+<section class="window" id="newCredentialsWindow" hidden>
+<div class="bar"><span>ATUALIZAÇÃO DE CREDENCIAIS</span><span>LEGACY.ACCOUNT</span></div>
+<div class="content">
+<p>Esta conta é anterior ao novo sistema. Defina seu nome de usuário e as respostas de recuperação para concluir a migração.</p>
 <form id="newCredentialsForm" class="card">
 <label for="newUsername">Nome de usuário</label><input id="newUsername" maxlength="32" pattern="[A-Za-z0-9_.-]{2,32}" required>
 <label for="newFavoriteFood">Comida favorita</label><input id="newFavoriteFood" maxlength="100" required>
 <label for="newFavoriteAnimal">Animal favorito</label><input id="newFavoriteAnimal" maxlength="100" required>
-<button type="submit" id="saveCredentials" style="margin-top:10px">Salvar novas credenciais</button>
+<button type="submit" id="saveCredentials" style="margin-top:10px">Salvar credenciais</button>
 <p id="credentialsMessage" role="status" class="muted"></p>
+</form>
+</div>
+</section>
+<section class="window" id="profileWindow" hidden>
+<div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>PROFILE.SYS</span></div>
+<div class="content">
+<h2>Perfil</h2>
+<p class="muted">Complete sua identificação na Anitope Science.</p>
+<form id="profileForm">
+<label for="profileDisplayName">Nome de exibição</label><input id="profileDisplayName" maxlength="48" required>
+<label for="profilePhoto">Foto (URL da imagem)</label><input id="profilePhoto" type="url" maxlength="500" placeholder="https://exemplo.com/foto.png">
+<img id="profilePreview" alt="Prévia da foto de perfil" hidden style="display:block;max-width:120px;max-height:120px;object-fit:cover;margin-top:8px;border:2px inset #888">
+<label for="profileBio">Bio</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
+<label for="profileMotivation">Por que escolheu a Anitope Science?</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
+<button type="submit" id="saveProfile" style="margin-top:12px">Finalizar cadastro</button>
+<p id="profileMessage" role="status" class="muted"></p>
 </form>
 </div>
 </section>
@@ -140,136 +168,160 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </main>
 <script>
 const $ = id => document.getElementById(id);
-let mode = "login";
-function updateRecoveryRequirements() {
-  const usingCode = Boolean($("recoveryCode").value.trim());
-  $("recoveryDisplayName").required = !usingCode;
-  $("recoveryFood").required = !usingCode;
-  $("recoveryAnimal").required = !usingCode;
-}
-$("recoveryCode").addEventListener("input", updateRecoveryRequirements);
-let currentUser = null;
-async function api(url, options = {}) {
-  const response = await fetch(url, {credentials:"same-origin", ...options, headers:{"Content-Type":"application/json", ...(options.headers||{})}});
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || "O servidor não conseguiu concluir a operação.");
+let mode="login",currentUser=null;
+async function api(url,options={}) {
+  const response=await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(payload.error||"O servidor não conseguiu concluir a operação.");
   return payload;
 }
-function message(id, text, type = "") {
-  const node = $(id); node.textContent = text; node.className = type || "muted";
+function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
+function setMode(next){
+  mode=next;
+  $("loginTab").classList.toggle("active",mode==="login");
+  $("registerTab").classList.toggle("active",mode==="register");
+  $("recoveryTab").classList.toggle("active",mode==="recovery");
+  $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":mode==="register"?"Cadastrar ID A.S.":"Recuperação de conta";
+  $("authForm").hidden=mode==="recovery";
+  $("recoveryForm").hidden=mode!=="recovery";
+  $("employeeNameField").hidden=mode!=="register";
+  $("publicCodeField").hidden=mode!=="login";
+  $("foodField").hidden=mode!=="register";
+  $("animalField").hidden=mode!=="register";
+  $("confirmPasswordField").hidden=mode!=="register";
+  $("employeeName").required=mode==="register";
+  $("favoriteFood").required=mode==="register";
+  $("favoriteAnimal").required=mode==="register";
+  $("confirmPassword").required=mode==="register";
+  $("publicCode").required=mode==="login";
+  $("password").autocomplete=mode==="register"?"new-password":"current-password";
+  $("passwordHint").hidden=mode!=="register";
+  $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
+  $("username").placeholder=mode==="register"?"g_johnson":"bob.";
+  $("username").value="";
+  $("publicCode").value="";
+  message("authMessage","");
+  message("identifierMessage","");
+  $("recoveryModal").hidden=true;
 }
-function setMode(next) {
-  mode = next;
-  $("loginTab").classList.toggle("active", mode === "login");
-  $("registerTab").classList.toggle("active", mode === "register");
-  $("recoveryTab").classList.toggle("active", mode === "recovery");
-  $("authForm").hidden = mode === "recovery";
-  $("recoveryForm").hidden = mode !== "recovery";
-  $("nameField").hidden = mode !== "register";
-  $("foodField").hidden = mode !== "register";
-  $("animalField").hidden = mode !== "register";
-  $("roleField").hidden = mode !== "register";
-  $("confirmPasswordField").hidden = mode !== "register";
-  $("displayName").required = mode === "register";
-  $("favoriteFood").required = mode === "register";
-  $("favoriteAnimal").required = mode === "register";
-  $("confirmPassword").required = mode === "register";
-  $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
-  $("password").minLength = 1;
-  $("passwordHint").hidden = mode !== "register";
-  updateRecoveryRequirements();
-  $("submitAuth").textContent = mode === "register" ? "Criar conta" : "Entrar";
-  $("username").placeholder = mode === "register" ? "Escolha um nome, sem #" : "usuario#583104";
-  $("identifierMessage").textContent = "";
-  message("authMessage", "");
-}
-$("loginTab").addEventListener("click", () => setMode("login"));
-$("registerTab").addEventListener("click", () => setMode("register"));
-$("recoveryTab").addEventListener("click", () => setMode("recovery"));
-$("authForm").addEventListener("submit", async event => {
+$("loginTab").addEventListener("click",()=>setMode("login"));
+$("registerTab").addEventListener("click",()=>setMode("register"));
+$("recoveryTab").addEventListener("click",()=>setMode("recovery"));
+$("togglePassword").addEventListener("click",()=>{
+  const field=$("password"),show=field.type==="password";
+  field.type=show?"text":"password";
+  $("togglePassword").textContent=show?"Ocultar senha":"Mostrar senha";
+  $("togglePassword").setAttribute("aria-pressed",String(show));
+});
+$("authForm").addEventListener("submit",async event=>{
   event.preventDefault();
-  const body = {username:$("username").value.trim(), password:$("password").value};
-  if (mode === "register") {
-    body.displayName = $("displayName").value;
-    body.username = $("username").value.trim();
-    body.favoriteFood = $("favoriteFood").value;
-    body.favoriteAnimal = $("favoriteAnimal").value;
-    body.confirmPassword = $("confirmPassword").value;
-    body.role = $("role").value;
-  }
-  $("submitAuth").disabled = true;
-  message("authMessage", mode === "register" ? "Criando conta…" : "Verificando credenciais…");
-  try {
-    const result = await api("/api/auth/" + (mode === "register" ? "register" : "login"), {method:"POST", body:JSON.stringify(body)});
-    if (result.user && !result.user.credentialsReady) {
-      await showNewCredentials();
-      return;
+  const registering=mode==="register";
+  const body={username:$("username").value.trim(),password:$("password").value};
+  if(registering){
+    body.employeeName=$("employeeName").value;
+    body.favoriteFood=$("favoriteFood").value;
+    body.favoriteAnimal=$("favoriteAnimal").value;
+    body.confirmPassword=$("confirmPassword").value;
+  }else body.publicCode=$("publicCode").value.trim();
+  $("submitAuth").disabled=true;
+  message("authMessage",registering?"Criando conta…":"Verificando credenciais…");
+  try{
+    const result=await api("/api/auth/"+(registering?"register":"login"),{method:"POST",body:JSON.stringify(body)});
+    if(result.user&&!result.user.credentialsReady){await showNewCredentials();return;}
+    if(registering){
+      window.alert("CONTA CRIADA!\n\nSeu identificador é:\n"+result.userTag+"\n\nSeu código de recuperação é:\n"+result.recoveryCode+"\n\nGuarde os dois em um local seguro.");
     }
-    if (mode === "register") {
-      window.alert("CONTA CRIADA!\n\nSeu identificador é:\n" + result.userTag + "\n\nSeu código secreto para redefinir a senha é:\n" + result.recoveryCode + "\n\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
-    }
+    if(!result.user.profileComplete){await showProfileSetup(result.user);return;}
     await showApp(result.user);
-  } catch (error) {
-    message("authMessage", error.message, "error");
-  } finally {
-    $("submitAuth").disabled = false;
-  }
+  }catch(error){message("authMessage",error.message,"error");}
+  finally{$("submitAuth").disabled=false;}
 });
-$("recoveryForm").addEventListener("submit", async event => {
+$("recoveryForm").addEventListener("submit",async event=>{
   event.preventDefault();
-  $("recoverSubmit").disabled = true;
-  try {
-    const result = await api("/api/auth/recover-account", {method:"POST",body:JSON.stringify({
-      displayName:$("recoveryDisplayName").value,
-      userTag:$("recoveryUserTag").value,
-      recoveryCode:$("recoveryCode").value,
-      favoriteFood:$("recoveryFood").value,
-      favoriteAnimal:$("recoveryAnimal").value,
-      password:$("recoveryNewPassword").value,
-      confirmPassword:$("recoveryConfirmPassword").value
-    })});
-    const recoveredTag = $("recoveryUserTag").value.trim();
-    $("recoveryForm").reset();
-    $("username").value = recoveredTag;
-    setMode("login");
-    message("authMessage", result.message, "success");
-  } catch (error) { message("recoveryMessage", error.message, "error"); }
-  finally { $("recoverSubmit").disabled = false; }
+  if($("recoveryNewPassword").value!==$("recoveryConfirmPassword").value){message("recoveryMessage","As senhas não coincidem.","error");return;}
+  const body={userTag:$("recoveryUsername").value.trim()+" #"+$("recoveryCode").dataset.publicCode,password:$("recoveryNewPassword").value,confirmPassword:$("recoveryConfirmPassword").value,recoveryCode:$("recoveryCode").value.trim()};
+  const codeInput=$("recoveryCode").value.trim();
+  if(!codeInput){message("recoveryMessage","Informe o código de recuperação.","error");return;}
+  $("recoverSubmit").disabled=true;
+  try{
+    const username=$("recoveryUsername").value.trim();
+    const publicCode=$("recoveryCode").dataset.publicCode||"";
+    if(!publicCode){message("recoveryMessage","Informe também o número identificador da conta no campo de usuário, no formato bob. #1972.","error");return;}
+    body.userTag=username+" #"+publicCode;
+    const result=await api("/api/auth/recover-account",{method:"POST",body:JSON.stringify(body)});
+    $("recoveryForm").reset();$("recoveryCode").dataset.publicCode="";
+    message("recoveryMessage",result.message,"success");
+  }catch(error){message("recoveryMessage",error.message,"error");}
+  finally{$("recoverSubmit").disabled=false;}
 });
-$("cancelRecovery").addEventListener("click", () => setMode("login"));
-async function showNewCredentials() {
-  $("authWindow").hidden = true;
-  $("appWindow").hidden = true;
-  $("newCredentialsWindow").hidden = false;
+$("recoveryUsername").addEventListener("input",()=>{
+  const match=$("recoveryUsername").value.trim().match(/^([a-z0-9_.-]{2,32})\s*#\s*(\d{4})$/i);
+  $("recoveryCode").dataset.publicCode=match?match[2]:"";
+  if(match)$("recoveryUsername").value=match[1];
+});
+$("cancelRecovery").addEventListener("click",()=>setMode("login"));
+$("openRecoveryModal").addEventListener("click",()=>{
+  $("modalRecoveryUsername").value=$("recoveryUsername").value.trim();
+  $("modalRecoveryFood").value="";$("modalRecoveryAnimal").value="";
+  $("revealedCodeArea").hidden=true;message("modalRecoveryMessage","");
+  $("recoveryModal").hidden=false;
+});
+$("closeRecoveryModal").addEventListener("click",()=>$("recoveryModal").hidden=true);
+$("revealRecoveryCode").addEventListener("click",async()=>{
+  $("revealRecoveryCode").disabled=true;message("modalRecoveryMessage","Verificando respostas…");
+  try{
+    const result=await api("/api/auth/reveal-recovery-code",{method:"POST",body:JSON.stringify({username:$("modalRecoveryUsername").value,favoriteFood:$("modalRecoveryFood").value,favoriteAnimal:$("modalRecoveryAnimal").value})});
+    $("revealedRecoveryCode").textContent=result.recoveryCode;
+    $("revealedCodeArea").hidden=false;
+    $("recoveryCode").value=result.recoveryCode;
+    $("recoveryUsername").value=$("modalRecoveryUsername").value.trim();
+    message("modalRecoveryMessage","Código gerado. Copie e guarde em local seguro.","success");
+  }catch(error){message("modalRecoveryMessage",error.message,"error");}
+  finally{$("revealRecoveryCode").disabled=false;}
+});
+$("copyRecoveryCode").addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText($("revealedRecoveryCode").textContent);message("modalRecoveryMessage","Código copiado.","success");}
+  catch{message("modalRecoveryMessage","Não foi possível copiar automaticamente. Selecione o código e copie.","error");}
+});
+async function showNewCredentials(){
+  $("authWindow").hidden=true;$("profileWindow").hidden=true;$("appWindow").hidden=true;
+  $("newCredentialsWindow").hidden=false;
 }
-$("newCredentialsForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  $("saveCredentials").disabled = true;
-  try {
-    const result = await api("/api/auth/credentials", {method:"POST",body:JSON.stringify({
-      username:$("newUsername").value,
-      favoriteFood:$("newFavoriteFood").value,
-      favoriteAnimal:$("newFavoriteAnimal").value
-    })});
-    $("newCredentialsWindow").hidden = true;
-    $("authWindow").hidden = false;
-    $("newCredentialsForm").reset();
-    $("username").value = result.userTag;
-    $("password").value = "";
+$("newCredentialsForm").addEventListener("submit",async event=>{
+  event.preventDefault();$("saveCredentials").disabled=true;
+  try{
+    const result=await api("/api/auth/credentials",{method:"POST",body:JSON.stringify({username:$("newUsername").value,favoriteFood:$("newFavoriteFood").value,favoriteAnimal:$("newFavoriteAnimal").value})});
+    $("newCredentialsWindow").hidden=true;$("authWindow").hidden=false;$("newCredentialsForm").reset();
+    window.alert("CREDENCIAIS ATUALIZADAS!\n\nIdentificador: "+result.userTag+"\nCódigo de recuperação: "+result.recoveryCode+"\n\nGuarde esses dados.");
+    await api("/api/auth/logout",{method:"POST",body:"{}"});
     setMode("login");
-    window.alert("NOVAS CREDENCIAIS CADASTRADAS!\n\nSeu identificador é:\n" + result.userTag + "\n\nSeu código secreto para redefinir a senha é:\n" + result.recoveryCode + "\n\nGuarde os dois em um local seguro. O código secreto não será exibido novamente.");
-    message("authMessage", result.message, "success");
-  } catch (error) { message("credentialsMessage", error.message, "error"); }
-  finally { $("saveCredentials").disabled = false; }
+  }catch(error){message("credentialsMessage",error.message,"error");}
+  finally{$("saveCredentials").disabled=false;}
 });
-$("logout").addEventListener("click", async () => {
-  try { await api("/api/auth/logout", {method:"POST",body:"{}"}); } catch {}
-  currentUser = null;
-  $("appWindow").hidden = true;
-  $("newCredentialsWindow").hidden = true;
-  $("authWindow").hidden = false;
-  $("authForm").reset();
-  setMode("login");
+async function showProfileSetup(user){
+  currentUser=user;$("authWindow").hidden=true;$("newCredentialsWindow").hidden=true;$("appWindow").hidden=true;$("profileWindow").hidden=false;
+  $("profileDisplayName").value=user.displayName||user.employeeName||"";
+  $("profilePhoto").value=user.profilePhoto||"";
+  $("profileBio").value=user.bio||"";
+  $("profileMotivation").value=user.motivation||"";
+  updateProfilePreview();
+}
+function updateProfilePreview(){
+  const url=$("profilePhoto").value.trim(),preview=$("profilePreview");
+  if(url){preview.src=url;preview.hidden=false;}else{preview.removeAttribute("src");preview.hidden=true;}
+}
+$("profilePhoto").addEventListener("input",updateProfilePreview);
+$("profileForm").addEventListener("submit",async event=>{
+  event.preventDefault();$("saveProfile").disabled=true;message("profileMessage","Salvando perfil…");
+  try{
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileDisplayName").value,profilePhoto:$("profilePhoto").value,bio:$("profileBio").value,motivation:$("profileMotivation").value})});
+    $("profileWindow").hidden=true;await showApp(result.user);
+  }catch(error){message("profileMessage",error.message,"error");}
+  finally{$("saveProfile").disabled=false;}
+});
+$("logout").addEventListener("click",async()=>{
+  try{await api("/api/auth/logout",{method:"POST",body:"{}"});}catch{}
+  currentUser=null;$("appWindow").hidden=true;$("profileWindow").hidden=true;$("newCredentialsWindow").hidden=true;$("authWindow").hidden=false;$("authForm").reset();setMode("login");
 });
 $("createCampaign").addEventListener("submit", async event => {
   event.preventDefault();
@@ -551,7 +603,7 @@ async function refreshMasterCharacters() {
       label.textContent = "Jogador responsável";
       const select = document.createElement("select");
       select.append(new Option("Não atribuída", ""));
-      for (const member of managedMembers) select.append(new Option(member.display_name + " (" + (member.username ? "@" + member.username + "#" + member.public_code : member.email || "conta antiga") + ")", member.id));
+      for (const member of managedMembers) select.append(new Option((member.employee_name || member.display_name) + " (" + (member.username ? "@" + member.username + " #" + member.public_code : "conta antiga") + ")", member.id));
       select.value = character.assigned_player_id || "";
       const jsonLabel = document.createElement("label");
       jsonLabel.textContent = "Dados da ficha (JSON)";
@@ -603,27 +655,25 @@ async function loadCampaigns() {
   } catch (error) { message("campaignMessage", error.message, "error"); }
 }
 async function showApp(user) {
-  currentUser = user;
-  $("newCredentialsWindow").hidden = true;
-  $("authWindow").hidden = true;
-  $("appWindow").hidden = false;
-  $("welcome").textContent = "USUÁRIO: " + user.displayName;
-  $("roleLabel").textContent = "Perfil ativo: " + (user.role === "master" ? "Mestre" : "Jogador") + (user.username ? " · @" + user.username + "#" + user.publicCode : "");
-  $("createCampaign").hidden = user.role !== "master";
-  $("joinCampaign").hidden = user.role !== "player";
+  if(!user.profileComplete){await showProfileSetup(user);return;}
+  currentUser=user;
+  $("newCredentialsWindow").hidden=true;$("profileWindow").hidden=true;$("authWindow").hidden=true;$("appWindow").hidden=false;
+  $("welcome").textContent="USUÁRIO: "+(user.displayName||user.employeeName||user.username);
+  $("roleLabel").textContent="Identificação: "+(user.username?user.username+" #"+user.publicCode:"")+(user.role==="master"?" · Mestre":" · Jogador");
+  $("createCampaign").hidden=user.role!=="master";
+  $("joinCampaign").hidden=user.role!=="player";
   await loadCampaigns();
 }
-(async function boot() {
-  try {
-    const result = await api("/api/auth/me");
-    if (!result.user.credentialsReady) await showNewCredentials();
-    else await showApp(result.user);
-  } catch {
-    $("appWindow").hidden = true;
-    $("newCredentialsWindow").hidden = true;
-    $("authWindow").hidden = false;
+(async function boot(){
+  try{
+    const result=await api("/api/auth/me");
+    if(!result.user.credentialsReady){await showNewCredentials();return;}
+    if(!result.user.profileComplete){await showProfileSetup(result.user);return;}
+    await showApp(result.user);
+  }catch{
+    $("appWindow").hidden=true;$("newCredentialsWindow").hidden=true;$("profileWindow").hidden=true;$("authWindow").hidden=false;
+    setMode("login");
   }
-})();;
-</script>
+})();</script></script>
 </body>
 </html>
