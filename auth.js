@@ -357,18 +357,21 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode = makeRecoveryCode();
       const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
-      let publicCode = makePublicCode();
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const result = await db.query(
-            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,legacy_login_enabled=false WHERE id=$7 AND recovery_code_hash IS NULL RETURNING id",
-            [username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash, req.user.id]
-          );
-          if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
-          await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
-          clearSessionCookie(res);
-          return res.json({ok:true,userTag:username + " #" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
-        } catch (err) {
+      const publicCode = makePublicCode();
+      try {
+        const result = await db.query(
+          "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,legacy_login_enabled=false WHERE id=$7 AND recovery_code_hash IS NULL RETURNING id",
+          [username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash,req.user.id]
+        );
+        if(!result.rows[0])return sendError(res,409,"Esta conta já possui novas credenciais. Entre novamente.");
+        await db.query("DELETE FROM anitos_sessions WHERE user_id=$1",[req.user.id]);
+        clearSessionCookie(res);
+        return res.json({ok:true,userTag:username+" #"+publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
+      }catch(err){
+        if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
+        throw err;
+      }
+    } catch (err) {
           if (err.code === "23505" && err.constraint === "anitos_users_username_unique_idx") {
             publicCode = makePublicCode();
             continue;
