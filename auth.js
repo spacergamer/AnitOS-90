@@ -355,16 +355,6 @@ function registerAuthRoutes(app, express, db) {
         throw err;
       }
     } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_unique_idx") {
-            publicCode = makePublicCode();
-            continue;
-          }
-          if (err.code === "23505") return sendError(res, 409, "Não foi possível salvar essas credenciais. Tente novamente.");
-          throw err;
-        }
-      }
-      return sendError(res, 503, "Não foi possível gerar um identificador único. Tente novamente.");
-    } catch (err) {
       console.error("[auth] Falha ao salvar novas credenciais:", err.message);
       return sendError(res, 500, "Não foi possível salvar as novas credenciais.");
     }
