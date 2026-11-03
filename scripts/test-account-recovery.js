@@ -22,6 +22,10 @@ async function main() {
         sessions.set(params[0],params[1]);
         return {rows:[]};
       }
+      if (sql.includes("SELECT id,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1")) {
+        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
+        return {rows:user?[{id:user.id,public_code:user.public_code,recovery_salt:user.recovery_salt,recovery_hash:user.recovery_hash}]:[]};
+      }
       if (sql.includes("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1")) {
         const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
         return {rows:user?[{id:user.id,recovery_salt:user.recovery_salt,recovery_hash:user.recovery_hash}]:[]};
