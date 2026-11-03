@@ -109,12 +109,12 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>PROFILE.SYS</span></div>
 <div class="content">
 <h2>Perfil</h2>
-<p class="muted">Complete sua identificação na Anitope Science.</p>
+
 <form id="profileForm">
-<label for="profilePhoto">Foto (URL da imagem)</label><input id="profilePhoto" type="url" maxlength="500" placeholder="https://exemplo.com/foto.png">
+<label for="profilePhoto">FOTO</label><input id="profilePhoto" type="url" maxlength="500" placeholder="https://exemplo.com/foto.png">
 <img id="profilePreview" alt="Prévia da foto de perfil" hidden style="display:block;max-width:120px;max-height:120px;object-fit:cover;margin-top:8px;border:2px inset #888">
 <label for="profileBio">Bio</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
-<label for="profileMotivation">Por que escolheu a Anitope Science?</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
+<label for="profileMotivation">Por que escolheu a Anitope Science? (Redação)</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
 <button type="submit" id="saveProfile" style="margin-top:12px">Finalizar cadastro</button>
 <p id="profileMessage" role="status" class="muted"></p>
 </form>
