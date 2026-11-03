@@ -67,6 +67,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <form id="recoveryForm" class="card" hidden>
 <h2>Recuperação de conta</h2>
 <label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" required placeholder="bob.">
+<label for="recoveryPublicCode">Número identificador</label><input id="recoveryPublicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" required placeholder="1972">
 <label for="recoveryCode">Código de recuperação</label><input id="recoveryCode" maxlength="32" autocomplete="off" placeholder="Código secreto">
 <p><button type="button" class="link-button" id="openRecoveryModal">Não obtenho o código</button></p>
 <label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
@@ -239,25 +240,16 @@ $("authForm").addEventListener("submit",async event=>{
 $("recoveryForm").addEventListener("submit",async event=>{
   event.preventDefault();
   if($("recoveryNewPassword").value!==$("recoveryConfirmPassword").value){message("recoveryMessage","As senhas não coincidem.","error");return;}
-  const body={userTag:$("recoveryUsername").value.trim()+" #"+$("recoveryCode").dataset.publicCode,password:$("recoveryNewPassword").value,confirmPassword:$("recoveryConfirmPassword").value,recoveryCode:$("recoveryCode").value.trim()};
+  const body={userTag:$("recoveryUsername").value.trim()+" #"+$("recoveryPublicCode").value.trim(),password:$("recoveryNewPassword").value,confirmPassword:$("recoveryConfirmPassword").value,recoveryCode:$("recoveryCode").value.trim()};
   const codeInput=$("recoveryCode").value.trim();
   if(!codeInput){message("recoveryMessage","Informe o código de recuperação.","error");return;}
   $("recoverSubmit").disabled=true;
   try{
-    const username=$("recoveryUsername").value.trim();
-    const publicCode=$("recoveryCode").dataset.publicCode||"";
-    if(!publicCode){message("recoveryMessage","Informe também o número identificador da conta no campo de usuário, no formato bob. #1972.","error");return;}
-    body.userTag=username+" #"+publicCode;
     const result=await api("/api/auth/recover-account",{method:"POST",body:JSON.stringify(body)});
-    $("recoveryForm").reset();$("recoveryCode").dataset.publicCode="";
+    $("recoveryForm").reset();
     message("recoveryMessage",result.message,"success");
   }catch(error){message("recoveryMessage",error.message,"error");}
   finally{$("recoverSubmit").disabled=false;}
-});
-$("recoveryUsername").addEventListener("input",()=>{
-  const match=$("recoveryUsername").value.trim().match(/^([a-z0-9_.-]{2,32})\s*#\s*(\d{4})$/i);
-  $("recoveryCode").dataset.publicCode=match?match[2]:"";
-  if(match)$("recoveryUsername").value=match[1];
 });
 $("cancelRecovery").addEventListener("click",()=>setMode("login"));
 $("openRecoveryModal").addEventListener("click",()=>{
