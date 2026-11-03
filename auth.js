@@ -286,21 +286,17 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const tag = splitUserTag(req.body?.userTag);
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      if (!tag) return sendError(res, 400, "Informe o nome de usuário e o número identificador no formato bob. #1972.");
+      if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "Informe um nome de usuário válido.");
+      if (!recoveryCode) return sendError(res, 400, "Informe o código de recuperação.");
       if (password.length < 8 || password.length > 200) return sendError(res, 400, "A nova senha deve ter pelo menos 8 caracteres e no máximo 200.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
-      const usingRecoveryCode = Boolean(recoveryCode);
-      if (!usingRecoveryCode) return sendError(res, 400, "Informe o código de recuperação. Se não o possui, use a recuperação alternativa.");
       const result = await db.query(
-        "SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",
-        [tag.username, tag.publicCode]
+        "SELECT id,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1",
+        [username]
       );
       const user = result.rows[0];
       if (!user) return sendError(res, 403, "Os dados de recuperação não correspondem.");
@@ -309,11 +305,6 @@ function registerAuthRoutes(app, express, db) {
         const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
         const expected = Buffer.from(user.recovery_code_hash, "hex");
         recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      } else if (!usingRecoveryCode && user.recovery_salt && user.recovery_hash) {
-        const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
-        const expected = Buffer.from(user.recovery_hash, "hex");
-        recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       }
       if (!recoveryValid) return sendError(res, 403, "Os dados de recuperação não correspondem.");
       const salt = crypto.randomBytes(16).toString("hex");
