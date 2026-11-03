@@ -287,7 +287,7 @@ function registerAuthRoutes(app, express, db) {
       const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
       const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
       if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!food||!animal)return sendError(res,400,"Informe o nome de usuário, a comida favorita e o animal favorito.");
-      const result=await db.query("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
+      const result=await db.query("SELECT id,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
       const user=result.rows[0];let valid=false;
       if(user?.recovery_salt&&user?.recovery_hash){
         const candidate=await scrypt(food+"\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
@@ -297,7 +297,7 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode=makeRecoveryCode(),salt=crypto.randomBytes(16).toString("hex");
       const hash=(await scrypt(recoveryCode,salt,64)).toString("hex");
       await db.query("UPDATE anitos_users SET recovery_code_salt=$1,recovery_code_hash=$2 WHERE id=$3",[salt,hash,user.id]);
-      return res.json({ok:true,recoveryCode,message:"Novo código gerado. O código anterior foi substituído."});
+      return res.json({ok:true,recoveryCode,publicCode:user.public_code,message:"Novo código gerado. O código anterior foi substituído."});
     }catch(err){console.error("[auth] Falha ao gerar código de recuperação:",err.message);return sendError(res,500,"Não foi possível gerar o código de recuperação.");}
   });
 
