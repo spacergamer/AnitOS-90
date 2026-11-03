@@ -68,7 +68,7 @@ async function main() {
     });
     assert.equal(registration.status,201,"registration should succeed without an email");
     const created=await registration.json();
-    assert.match(created.userTag,/^ash_carter #\\d{4}$/);
+    assert.match(created.userTag,/^ash_carter #\d{4}$/);
     assert.match(created.recoveryCode,/^[A-Z2-9]{16}$/);
     assert.equal(created.user.credentialsReady,true);
     assert.equal(created.user.profileComplete,false);
