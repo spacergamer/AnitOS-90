@@ -200,7 +200,6 @@ function setMode(next){
   $("favoriteFood").required=mode==="register";
   $("favoriteAnimal").required=mode==="register";
   $("confirmPassword").required=mode==="register";
-  updatePublicCodeField();
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
   $("passwordHint").hidden=mode!=="register";
   $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
@@ -208,6 +207,7 @@ function setMode(next){
   updatePublicCodeField();
   $("username").value="";
   $("publicCode").value="";
+  updatePublicCodeField();
   message("authMessage","");
   message("identifierMessage","");
   $("recoveryModal").hidden=true;
