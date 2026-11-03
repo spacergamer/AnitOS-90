@@ -232,114 +232,79 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const email = String(req.body?.email || "").trim().toLowerCase() || null;
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
-      const password = typeof req.body?.password === "string" ? req.body.password : "";
-      const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      const role = req.body?.role || "player";
-      if (displayName.length < 2) return sendError(res, 400, "Informe um nome de exibição com pelo menos 2 caracteres.");
-      if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
-      if (!food || !animal) return sendError(res, 400, "Informe sua comida favorita e seu animal favorito.");
-      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
-      if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
-      if (!["master", "player"].includes(role)) return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
-      const id = crypto.randomUUID();
-      const passwordSalt = crypto.randomBytes(16).toString("hex");
-      const passwordHash = (await scrypt(password, passwordSalt, 64)).toString("hex");
-      const recoverySalt = crypto.randomBytes(16).toString("hex");
-      const recoveryHash = (await scrypt(normalizeAnswer(food) + "\u0000" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
-      const recoveryCode = makeRecoveryCode();
-      const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
-      const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
-      let publicCode = makePublicCode();
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const result = await db.query(
-            "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash) VALUES($1,$2,$3,$4,$5,$6,true,$7,$8,$9,$10,$11,$12) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",
-            [id, email, displayName, role, passwordSalt, passwordHash, username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash]
-          );
-          await createSession(id, res);
-          return res.status(201).json({user: safeUser(result.rows[0]), recoveryCode, userTag: username + "#" + publicCode});
-        } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_code_idx") {
-            publicCode = makePublicCode();
-            continue;
-          }
-          if (err.code === "23505") {
-            if (String(err.detail || "").includes("username")) return sendError(res, 409, "Esse nome de usuário já está em uso.");
-            return sendError(res, 409, "Já existe uma conta com esses dados.");
-          }
-          throw err;
-        }
-      }
-      return sendError(res, 503, "Não foi possível gerar um identificador único. Tente novamente.");
-    } catch (err) {
-      console.error("[auth] Falha ao criar conta:", err.message);
-      return sendError(res, 500, "Não foi possível criar a conta.");
-    }
-  });
-
-  app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      const login = String(req.body?.username || req.body?.email || "").trim();
-      const password = typeof req.body?.password === "string" ? req.body.password : "";
-      const tag = splitUserTag(login);
-      let result;
-      if (tag) {
-        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
-      } else {
-        // Legacy accounts can authenticate once with their old email to register new credentials.
-        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1)", [login]);
-      }
-      const user = result.rows[0];
-      if (!user) return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
-      const candidate = await scrypt(password, user.password_salt, 64);
-      const expected = Buffer.from(user.password_hash, "hex");
-      if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
-        return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
-      await createSession(user.id, res);
-      return res.json({user: safeUser(user)});
-    } catch (err) {
-      console.error("[auth] Falha ao entrar:", err.message);
-      return sendError(res, 500, "Não foi possível iniciar a sessão.");
-    }
-  });
-
-  app.post("/api/auth/reveal-user-code", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
-      const email = String(req.body?.email || "").trim().toLowerCase();
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
-      const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
-      if (!displayName || !username || !email)
-        return sendError(res, 400, "Informe o nome de exibição, o nome de usuário e o e-mail.");
-      const result = await db.query(
-        "SELECT display_name,username,email,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND lower(email)=$2",
-        [username, email]
+      const employeeName=String(req.body?.employeeName||"").trim().replace(/\\s+/g," ").slice(0,60);
+      const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
+      const food=normalizeAnswer(req.body?.favoriteFood), animal=normalizeAnswer(req.body?.favoriteAnimal);
+      const password=typeof req.body?.password==="string"?req.body.password:"";
+      const confirmPassword=typeof req.body?.confirmPassword==="string"?req.body.confirmPassword:"";
+      if(employeeName.length<2)return sendError(res,400,"Informe seu nome de empregado.");
+      if(!/^[a-z0-9_.-]{2,32}$/.test(username))return sendError(res,400,"O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
+      if(!food||!animal)return sendError(res,400,"Informe sua comida favorita e seu animal favorito.");
+      if(password.length<8||password.length>200)return sendError(res,400,"A senha deve ter pelo menos 8 caracteres e no máximo 200.");
+      if(password!==confirmPassword)return sendError(res,400,"As senhas não coincidem.");
+      const id=crypto.randomUUID(),passwordSalt=crypto.randomBytes(16).toString("hex");
+      const passwordHash=(await scrypt(password,passwordSalt,64)).toString("hex");
+      const recoverySalt=crypto.randomBytes(16).toString("hex");
+      const recoveryHash=(await scrypt(food+"\\u0000"+animal,recoverySalt,64)).toString("hex");
+      const recoveryCode=makeRecoveryCode(),recoveryCodeSalt=crypto.randomBytes(16).toString("hex");
+      const recoveryCodeHash=(await scrypt(recoveryCode,recoveryCodeSalt,64)).toString("hex");
+      const publicCode=makePublicCode();
+      const result=await db.query(
+        "INSERT INTO anitos_users(id,email,display_name,employee_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete,legacy_login_enabled) VALUES($1,NULL,$2,$3,'player',$4,$5,true,$6,$7,$8,$9,$10,$11,false,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
+        [id,employeeName,employeeName,passwordSalt,passwordHash,username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
       );
-      const user = result.rows[0];
-      let recoveryValid = false;
-      if (user && user.email && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
-        const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
-        const expected = Buffer.from(user.recovery_code_hash, "hex");
-        recoveryValid = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR") && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      } else if (user && user.email && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
-        const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
-        const expected = Buffer.from(user.recovery_hash, "hex");
-        recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      }
-      if (!recoveryValid) return sendError(res, 403, "Os dados de recuperação não correspondem.");
-      return res.json({ok:true,userTag:user.username + "#" + user.public_code});
-    } catch (err) {
-      console.error("[auth] Falha ao confirmar identidade:", err.message);
-      return sendError(res, 500, "Não foi possível confirmar os dados agora.");
+      await createSession(id,res);
+      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username+" #"+publicCode});
+    }catch(err){
+      if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
+      console.error("[auth] Falha ao criar conta:",err.message);
+      return sendError(res,500,"Não foi possível criar a conta.");
     }
+  });
+
+  app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req,res)=>{
+    try{
+      const input=String(req.body?.username||"").trim();
+      const combined=splitUserTag(input);
+      const username=(combined?.username||input).replace(/^@/,"").toLowerCase();
+      const publicCode=combined?.publicCode||String(req.body?.publicCode||"").trim();
+      const password=typeof req.body?.password==="string"?req.body.password:"";
+      if(!username||!password)return sendError(res,400,"Informe seu nome de usuário e senha.");
+      let result,legacyLogin=false;
+      if(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(input)&&!publicCode){
+        result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
+        legacyLogin=true;
+      }else{
+        if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!/^[0-9]{4}$/.test(publicCode))return sendError(res,400,"Informe o nome de usuário e o número identificador de quatro dígitos.");
+        result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",[username,publicCode]);
+      }
+      const user=result.rows[0];
+      if(!user)return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      const candidate=await scrypt(password,user.password_salt,64),expected=Buffer.from(user.password_hash,"hex");
+      if(candidate.length!==expected.length||!crypto.timingSafeEqual(candidate,expected))return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      if(legacyLogin)await db.query("UPDATE anitos_users SET legacy_login_enabled=false WHERE id=$1",[user.id]);
+      await createSession(user.id,res);
+      return res.json({user:safeUser(user),legacyLogin});
+    }catch(err){console.error("[auth] Falha ao entrar:",err.message);return sendError(res,500,"Não foi possível iniciar a sessão.");}
+  });
+
+  app.post("/api/auth/reveal-recovery-code",databaseRequired,limitAuthAttempts,async(req,res)=>{
+    try{
+      const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
+      const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
+      if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!food||!animal)return sendError(res,400,"Informe o nome de usuário, a comida favorita e o animal favorito.");
+      const result=await db.query("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
+      const user=result.rows[0];let valid=false;
+      if(user?.recovery_salt&&user?.recovery_hash){
+        const candidate=await scrypt(food+"\\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
+        valid=candidate.length===expected.length&&crypto.timingSafeEqual(candidate,expected);
+      }
+      if(!valid)return sendError(res,403,"As respostas não correspondem aos dados cadastrados.");
+      const recoveryCode=makeRecoveryCode(),salt=crypto.randomBytes(16).toString("hex");
+      const hash=(await scrypt(recoveryCode,salt,64)).toString("hex");
+      await db.query("UPDATE anitos_users SET recovery_code_salt=$1,recovery_code_hash=$2 WHERE id=$3",[salt,hash,user.id]);
+      return res.json({ok:true,recoveryCode,message:"Novo código gerado. O código anterior foi substituído."});
+    }catch(err){console.error("[auth] Falha ao gerar código de recuperação:",err.message);return sendError(res,500,"Não foi possível gerar o código de recuperação.");}
   });
 
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
@@ -424,6 +389,20 @@ function registerAuthRoutes(app, express, db) {
       console.error("[auth] Falha ao salvar novas credenciais:", err.message);
       return sendError(res, 500, "Não foi possível salvar as novas credenciais.");
     }
+  });
+
+  app.post("/api/auth/profile",databaseRequired,requireAuth,limitAuthAttempts,async(req,res)=>{
+    try{
+      const displayName=String(req.body?.displayName||"").trim().replace(/\\s+/g," ").slice(0,48);
+      const profilePhoto=String(req.body?.profilePhoto||"").trim().slice(0,500);
+      const bio=String(req.body?.bio||"").trim().slice(0,280);
+      const motivation=String(req.body?.motivation||"").trim().slice(0,3000);
+      if(displayName.length<2)return sendError(res,400,"Informe um nome de perfil com pelo menos 2 caracteres.");
+      if(profilePhoto){let parsed;try{parsed=new URL(profilePhoto)}catch{return sendError(res,400,"A foto precisa usar um endereço HTTP ou HTTPS válido.")}if(!["http:","https:"].includes(parsed.protocol))return sendError(res,400,"Endereço de foto inválido.");}
+      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,bio=$3,motivation=$4,profile_complete=true WHERE id=$5 RETURNING id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,bio,motivation,req.user.id]);
+      if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
+      return res.json({ok:true,user:safeUser(result.rows[0])});
+    }catch(err){console.error("[auth] Falha ao salvar perfil:",err.message);return sendError(res,500,"Não foi possível salvar o perfil.");}
   });
 
   app.get("/api/auth/me", requireAuth, (req, res) => res.json({user: req.user}));
