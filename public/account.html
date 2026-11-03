@@ -50,7 +50,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
 <div class="content">
 <h2 id="authHeading">Entrar no AnitOS</h2>
-<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
+
 <form id="authForm">
 <div id="employeeNameField" hidden><label for="employeeName">Nome de empregado</label><input id="employeeName" maxlength="60" autocomplete="name" placeholder="Ash Katarine Carter"></div>
 <div id="usernameField"><label for="username">Nome de usuário</label><div class="row"><input id="username" maxlength="32" required autocomplete="username" placeholder="bob."><span id="publicCodeSeparator" style="flex:0 0 auto;width:auto;padding:5px 2px">#</span><input id="publicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" required placeholder="1972" autocomplete="off" aria-label="Número identificador"></div></div>
@@ -60,10 +60,11 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" placeholder="Senha1234!"></div>
 <p id="passwordHint" class="muted" hidden>Guarde seu identificador e seu código de recuperação em um local seguro.</p>
 <p id="forgotPasswordLink"><button type="button" class="link-button" id="openRecovery">Esqueci a senha.</button></p>
-<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button></div>
+<div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><button id="cancelRegister" type="button" hidden>Voltar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
 <p id="identifierMessage" role="status" class="muted"></p>
 </form>
+<div id="registerAction" style="margin-top:10px"><button id="openRegister" type="button">Criar conta</button></div>
 <form id="recoveryForm" class="card" hidden>
 <h2>Recuperar acesso</h2>
 <label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" required placeholder="bob.">
@@ -185,8 +186,6 @@ function updatePublicCodeField(){
 $("username").addEventListener("input",updatePublicCodeField);
 function setMode(next){
   mode=next;
-  $("loginTab").classList.toggle("active",mode==="login");
-  $("registerTab").classList.toggle("active",mode==="register");
   $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":"Cadastrar ID A.S.";
   $("authForm").hidden=mode==="recovery";
   $("recoveryForm").hidden=mode!=="recovery";
@@ -201,6 +200,8 @@ function setMode(next){
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
   $("passwordHint").hidden=mode!=="register";
   $("forgotPasswordLink").hidden=mode!=="login";
+  $("registerAction").hidden=mode!=="login";
+  $("cancelRegister").hidden=mode!=="register";
   $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
   $("username").placeholder=mode==="register"?"g_johnson":"bob.";
   $("username").value="";
@@ -211,8 +212,8 @@ function setMode(next){
   message("recoveryMessage","");
   $("recoveryModal").hidden=true;
 }
-$("loginTab").addEventListener("click",()=>setMode("login"));
-$("registerTab").addEventListener("click",()=>setMode("register"));
+$("openRegister").addEventListener("click",()=>setMode("register"));
+$("cancelRegister").addEventListener("click",()=>setMode("login"));
 $("openRecovery").addEventListener("click",()=>{
   $("authForm").hidden=true;
   $("recoveryForm").hidden=false;
