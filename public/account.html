@@ -176,11 +176,13 @@ async function api(url,options={}) {
 }
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 function updatePublicCodeField(){
-  const visible=mode==="login";
+  const legacyEmail=mode==="login"&&$("username").value.trim().includes("@");
+  const visible=mode==="login"&&!legacyEmail;
   $("publicCode").hidden=!visible;
   $("publicCodeSeparator").hidden=!visible;
   $("publicCode").required=visible;
 }
+$("username").addEventListener("input",updatePublicCodeField);
 function setMode(next){
   mode=next;
   $("loginTab").classList.toggle("active",mode==="login");
