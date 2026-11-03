@@ -310,7 +310,7 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      if (!tag) return sendError(res, 400, "Informe um identificador válido no formato usuario#583104.");
+      if (!tag) return sendError(res, 400, "Informe o nome de usuário e o número identificador no formato bob. #1972.");
       if (password.length < 8 || password.length > 200) return sendError(res, 400, "A nova senha deve ter pelo menos 8 caracteres e no máximo 200.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
       const usingRecoveryCode = Boolean(recoveryCode);
