@@ -10,7 +10,7 @@
 
 - **ANITOPEBOARD (AnitOS '90):** painel para organizar campanhas e fichas de personagens.
 - **Salas de RPG (RGN):** criação de salas por código, chat integrado e rolagem de dados de D4 a D100.
-- **Contas de usuário:** perfis de Mestre e Jogador, com atribuição de fichas e permissões por campanha.
+- **Contas AnitOS:** cadastro sem email, com nome de usuário exclusivo, identificador numérico, senha protegida e recuperação por código.
 - **AnitOS '90 Pro:** acesso adicional ativado por chave de membro.
 
 ## Acessar o site
@@ -33,7 +33,7 @@ npm install
 npm start
 ```
 
-Configure `DATABASE_URL` com uma conexão PostgreSQL para persistir contas e dados. Não armazene credenciais ou chaves privadas no código-fonte.
+Configure `DATABASE_URL` com uma conexão PostgreSQL para persistir contas e dados. Contas novas não usam email; contas antigas podem usar o email somente uma vez para migrar para o novo identificador. Não armazene credenciais ou chaves privadas no código-fonte.
 
 ---
 
