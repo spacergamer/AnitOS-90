@@ -225,7 +225,9 @@ $("openRecovery").addEventListener("click",()=>{
   $("recoveryForm").hidden=false;
   $("forgotPasswordLink").hidden=true;
   $("registerAction").hidden=true;
+  $("authBarTitle").textContent="RECUPERAÇÃO DE USUÁRIO";
   $("authHeading").textContent="Recuperar acesso";
+  $("recoveryCode").required=true;
   $("recoveryUsername").value=$("username").value.trim();
   $("recoveryCode").value="";
   message("recoveryMessage","");
@@ -290,7 +292,7 @@ $("revealRecoveryCode").addEventListener("click",async()=>{
     $("revealedCodeArea").hidden=false;
     $("recoveryCode").value=result.recoveryCode;
     $("recoveryUsername").value=$("modalRecoveryUsername").value.trim();
-    message("modalRecoveryMessage","Código gerado. Copie e guarde em local seguro.","success");
+    message("modalRecoveryMessage",(result.message||"Novo código gerado.")+" Copie e guarde em local seguro.","success");
   }catch(error){message("modalRecoveryMessage",error.message,"error");}
   finally{$("revealRecoveryCode").disabled=false;}
 });
