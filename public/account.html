@@ -178,6 +178,11 @@ async function api(url,options={}) {
   return payload;
 }
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
+function updatePublicCodeField(){
+  const legacyEmail=mode==="login"&&$("username").value.trim().includes("@");
+  $("publicCodeField").hidden=mode!=="login"||legacyEmail;
+  $("publicCode").required=mode==="login"&&!legacyEmail;
+}
 function setMode(next){
   mode=next;
   $("loginTab").classList.toggle("active",mode==="login");
@@ -195,17 +200,19 @@ function setMode(next){
   $("favoriteFood").required=mode==="register";
   $("favoriteAnimal").required=mode==="register";
   $("confirmPassword").required=mode==="register";
-  $("publicCode").required=mode==="login";
+  updatePublicCodeField();
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
   $("passwordHint").hidden=mode!=="register";
   $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
   $("username").placeholder=mode==="register"?"g_johnson":"bob.";
+  updatePublicCodeField();
   $("username").value="";
   $("publicCode").value="";
   message("authMessage","");
   message("identifierMessage","");
   $("recoveryModal").hidden=true;
 }
+$("username").addEventListener("input",updatePublicCodeField);
 $("loginTab").addEventListener("click",()=>setMode("login"));
 $("registerTab").addEventListener("click",()=>setMode("register"));
 $("recoveryTab").addEventListener("click",()=>setMode("recovery"));
