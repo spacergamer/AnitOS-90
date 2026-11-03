@@ -123,25 +123,8 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
-    -- Legacy accounts without a display name use their username as the public display name.
-    UPDATE anitos_users SET display_name = username
-      WHERE (display_name IS NULL OR trim(display_name) = '') AND username IS NOT NULL AND trim(username) <> '';
-    -- Display names now act as public @handles. Normalize legacy names and make them unique.
-    UPDATE anitos_users
-      SET display_name = CASE
-        WHEN length(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')) < 2
-          THEN 'user_' || substr(id, 1, 6)
-        ELSE left(lower(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')), 32)
-      END
-      WHERE display_name !~ '^[A-Za-z0-9_.-]{2,32}$' OR display_name <> lower(display_name);
-    WITH duplicates AS (
-      SELECT id, row_number() OVER (PARTITION BY lower(display_name) ORDER BY created_at, id) AS duplicate_rank
-      FROM anitos_users
-    )
-    UPDATE anitos_users u
-      SET display_name = left(u.display_name, 24) || '_' || substr(u.id, 1, 6)
-      FROM duplicates d
-      WHERE u.id = d.id AND d.duplicate_rank > 1;
+    UPDATE anitos_users SET display_name=coalesce(nullif(trim(display_name),''),employee_name,username)
+      WHERE display_name IS NULL OR trim(display_name)='';
     DROP INDEX IF EXISTS anitos_users_display_name_lower_idx;
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_salt text;
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_hash text;
