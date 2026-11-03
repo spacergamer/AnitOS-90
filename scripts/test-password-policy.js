@@ -9,10 +9,10 @@ async function main() {
       databaseWrites++;
       if (sql.includes("INSERT INTO anitos_users")) {
         return {rows: [{
-          id: params[0], email: params[1], display_name: params[2], role: params[3],
+          id: params[0], display_name: params[1], employee_name: params[2], role: "player",
           is_premium: false, is_dev: false, email_verified: true,
-          username: params[6], public_code: params[7], recovery_salt: params[8], recovery_hash: params[9],
-          recovery_code_salt: params[10], recovery_code_hash: params[11]
+          username: params[5], public_code: params[6], recovery_salt: params[7], recovery_hash: params[8],
+          recovery_code_salt: params[9], recovery_code_hash: params[10], profile_complete: false
         }]};
       }
       if (sql.includes("INSERT INTO anitos_sessions")) return {rows: []};
@@ -30,11 +30,10 @@ async function main() {
       method: "POST",
       headers: {"content-type": "application/json"},
       body: JSON.stringify({
-        displayName: "Teste " + suffix,
+        employeeName: "Teste " + suffix,
         username: "policy_" + suffix.replace(/[^a-z0-9]/g, "_"),
         favoriteFood: "Pizza",
         favoriteAnimal: "Gato",
-        role: "player",
         password,
         confirmPassword: password
       })
@@ -43,7 +42,7 @@ async function main() {
 
   try {
     const cases = [
-      ["short", "Ab1!short"],
+      ["strong-minimum", "Ab1!short"],
       ["no-uppercase", "anitosstrong1!"],
       ["no-lowercase", "ANITOSSTRONG1!"],
       ["no-number", "AnitosStrong!!"],
@@ -54,16 +53,18 @@ async function main() {
       assert.equal(response.status, 201, name + " password should be accepted; strength is a recommendation");
       const payload = await response.json();
       assert.equal(payload.user.credentialsReady, true, "new account must receive recovery credentials");
-      assert.match(payload.userTag, new RegExp("^policy_" + name.replace(/[^a-z0-9]/g, "_") + "#\\d{3,6}$"));
+      assert.match(payload.userTag, new RegExp("^policy_" + name.replace(/[^a-z0-9]/g, "_") + " #\\d{4}$"));
       assert.match(payload.recoveryCode, /^[A-Z2-9]{16}$/);
       assert.equal(payload.user.publicCode, payload.userTag.split("#")[1]);
     }
+    const shortResponse = await register("Ab1!sho", "short");
+    assert.equal(shortResponse.status, 400, "passwords shorter than eight characters must be rejected");
     const emptyResponse = await register("", "empty");
     assert.equal(emptyResponse.status, 400, "empty password must be rejected");
     const mismatchResponse = await fetch(base + "/api/auth/register", {
       method: "POST",
       headers: {"content-type": "application/json"},
-      body: JSON.stringify({displayName:"Teste",username:"mismatch",favoriteFood:"Pizza",favoriteAnimal:"Gato",role:"player",password:"senha",confirmPassword:"outra"})
+      body: JSON.stringify({employeeName:"Teste",username:"mismatch",favoriteFood:"Pizza",favoriteAnimal:"Gato",password:"Senha1234!",confirmPassword:"Senha4321!"})
     });
     assert.equal(mismatchResponse.status, 400, "password confirmation mismatch must be rejected");
     assert.equal(databaseWrites, cases.length * 2, "each accepted account creates a user and a session; invalid passwords must not write");
