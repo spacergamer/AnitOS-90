@@ -100,21 +100,13 @@ async function initializeAuthSchema(db) {
     DROP INDEX IF EXISTS anitos_users_public_code_idx;
     UPDATE anitos_users SET username=lower(left(regexp_replace(coalesce(nullif(trim(username),''),nullif(trim(display_name),''),'user_'||substr(id,1,6)),'[^A-Za-z0-9_.-]+','_','g'),32)) WHERE username IS NULL OR trim(username)='';
     UPDATE anitos_users SET username=lower(left(regexp_replace(trim(username),'[^A-Za-z0-9_.-]+','_','g'),32));
+    UPDATE anitos_users SET username='user_'||substr(id,1,8) WHERE length(username)<2;
     WITH duplicates AS (SELECT id,row_number() OVER(PARTITION BY lower(username) ORDER BY created_at,id) AS duplicate_rank FROM anitos_users WHERE username IS NOT NULL)
     UPDATE anitos_users u SET username=left(u.username,23)||'_'||substr(u.id,1,8) FROM duplicates d WHERE u.id=d.id AND d.duplicate_rank>1;
     UPDATE anitos_users SET public_code=lpad(floor(random()*10000)::int::text,4,'0') WHERE public_code IS NULL OR public_code !~ '^\d{4}$';
-    UPDATE anitos_users SET employee_name=coalesce(nullif(employee_name,''),display_name,username) WHERE employee_name IS NULL OR trim(employee_name)='';
+    UPDATE anitos_users SET employee_name=coalesce(nullif(trim(employee_name),''),display_name,username) WHERE employee_name IS NULL OR trim(employee_name)='';
     DROP INDEX IF EXISTS anitos_users_username_code_idx;
     CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_unique_idx ON anitos_users(lower(username));
-    CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
-      token_hash text PRIMARY KEY,
-      user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
-      purpose text NOT NULL CHECK (purpose IN ('verify_email','reset_password')),
-      expires_at timestamptz NOT NULL,
-      used_at timestamptz,
-      created_at timestamptz NOT NULL DEFAULT now()
-    );
-    CREATE INDEX IF NOT EXISTS anitos_auth_tokens_user_purpose_idx ON anitos_auth_tokens(user_id,purpose);
     CREATE TABLE IF NOT EXISTS anitos_sessions (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -319,11 +311,10 @@ function registerAuthRoutes(app, express, db) {
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
       if (!tag) return sendError(res, 400, "Informe um identificador válido no formato usuario#583104.");
-      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 1 e 200 caracteres.");
+      if (password.length < 8 || password.length > 200) return sendError(res, 400, "A nova senha deve ter pelo menos 8 caracteres e no máximo 200.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
       const usingRecoveryCode = Boolean(recoveryCode);
-      if (!usingRecoveryCode && (!displayName || !food || !animal))
-        return sendError(res, 400, "Informe o nome de exibição, a comida e o animal favoritos, ou use o código secreto de recuperação.");
+      if (!usingRecoveryCode) return sendError(res, 400, "Informe o código de recuperação. Se não o possui, use a recuperação alternativa.");
       const result = await db.query(
         "SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",
         [tag.username, tag.publicCode]
