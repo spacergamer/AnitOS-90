@@ -301,7 +301,7 @@ function registerAuthRoutes(app, express, db) {
       const user = result.rows[0];
       if (!user) return sendError(res, 403, "Os dados de recuperação não correspondem.");
       let recoveryValid = false;
-      if (usingRecoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
+      if (user.recovery_code_salt && user.recovery_code_hash) {
         const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
         const expected = Buffer.from(user.recovery_code_hash, "hex");
         recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
