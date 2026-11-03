@@ -50,28 +50,27 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>AUTH.SYS</span></div>
 <div class="content">
 <h2 id="authHeading">Entrar no AnitOS</h2>
-<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button><button id="recoveryTab" type="button">Esqueci a senha</button></div>
+<div class="tabs"><button id="loginTab" class="active" type="button">Entrar</button><button id="registerTab" type="button">Criar conta</button></div>
 <form id="authForm">
 <div id="employeeNameField" hidden><label for="employeeName">Nome de empregado</label><input id="employeeName" maxlength="60" autocomplete="name" placeholder="Ash Katarine Carter"></div>
-<div id="usernameField"><label for="username">Nome de usuário</label><input id="username" maxlength="32" required autocomplete="username" placeholder="bob."></div>
-<div id="publicCodeField"><label for="publicCode">Número identificador</label><input id="publicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="1972" autocomplete="off"></div>
+<div id="usernameField"><label for="username">Nome de usuário</label><div class="row"><input id="username" maxlength="32" required autocomplete="username" placeholder="bob."><span id="publicCodeSeparator">#</span><input id="publicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="1972" autocomplete="off" aria-label="Número identificador"></div></div>
 <div id="foodField" hidden><label for="favoriteFood">Comida favorita</label><input id="favoriteFood" maxlength="100" autocomplete="off" placeholder="Pudim"></div>
 <div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off" placeholder="Axolote"></div>
 <label for="password">Senha</label><div class="password-row"><input id="password" type="password" minlength="8" maxlength="200" required autocomplete="current-password" placeholder="Senha1234!"><button id="togglePassword" type="button" aria-pressed="false">Mostrar senha</button></div>
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" placeholder="Senha1234!"></div>
 <p id="passwordHint" class="muted" hidden>Guarde seu identificador e seu código de recuperação em um local seguro.</p>
+<p id="forgotPasswordLink"><button type="button" class="link-button" id="openRecovery">Esqueci a senha.</button></p>
 <div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
 <p id="identifierMessage" role="status" class="muted"></p>
 </form>
 <form id="recoveryForm" class="card" hidden>
-<h2>Recuperação de conta</h2>
+<h2>Recuperar acesso</h2>
 <label for="recoveryUsername">Nome de usuário</label><input id="recoveryUsername" maxlength="32" required placeholder="bob.">
-<label for="recoveryPublicCode">Número identificador</label><input id="recoveryPublicCode" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" required placeholder="1972">
-<label for="recoveryCode">Código de recuperação</label><input id="recoveryCode" maxlength="32" autocomplete="off" placeholder="Código secreto">
+<label for="recoveryCode">Código de recuperação</label><input id="recoveryCode" maxlength="32" autocomplete="off" placeholder="Ex.: ABCD-EFGH-1234">
 <p><button type="button" class="link-button" id="openRecoveryModal">Não obtenho o código</button></p>
-<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
-<label for="recoveryConfirmPassword">Confirmar senha</label><input id="recoveryConfirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
+<label for="recoveryNewPassword">Nova senha</label><input id="recoveryNewPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required placeholder="Senha1234!">
+<label for="recoveryConfirmPassword">Confirmar senha</label><input id="recoveryConfirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" required placeholder="Senha1234!">
 <div class="row" style="margin-top:10px"><button type="submit" id="recoverSubmit">Redefinir senha</button><button type="button" id="cancelRecovery">Voltar</button></div>
 <p id="recoveryMessage" role="status" class="muted"></p>
 </form>
@@ -89,7 +88,6 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="revealedCodeArea" hidden>
 <label>Código de recuperação</label>
 <div class="row"><strong id="revealedRecoveryCode" class="code"></strong><button type="button" id="copyRecoveryCode">Copiar</button></div>
-<button type="button" id="closeRecoveryModalAfterCopy" style="margin-top:10px">Fechar</button>
 </div>
 </div>
 </div>
@@ -112,7 +110,6 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <h2>Perfil</h2>
 <p class="muted">Complete sua identificação na Anitope Science.</p>
 <form id="profileForm">
-<label for="profileDisplayName">Nome de exibição</label><input id="profileDisplayName" maxlength="48" required>
 <label for="profilePhoto">Foto (URL da imagem)</label><input id="profilePhoto" type="url" maxlength="500" placeholder="https://exemplo.com/foto.png">
 <img id="profilePreview" alt="Prévia da foto de perfil" hidden style="display:block;max-width:120px;max-height:120px;object-fit:cover;margin-top:8px;border:2px inset #888">
 <label for="profileBio">Bio</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
@@ -179,20 +176,19 @@ async function api(url,options={}) {
 }
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 function updatePublicCodeField(){
-  const legacyEmail=mode==="login"&&$("username").value.trim().includes("@");
-  $("publicCodeField").hidden=mode!=="login"||legacyEmail;
-  $("publicCode").required=mode==="login"&&!legacyEmail;
+  const visible=mode==="login";
+  $("publicCode").hidden=!visible;
+  $("publicCodeSeparator").hidden=!visible;
+  $("publicCode").required=visible;
 }
 function setMode(next){
   mode=next;
   $("loginTab").classList.toggle("active",mode==="login");
   $("registerTab").classList.toggle("active",mode==="register");
-  $("recoveryTab").classList.toggle("active",mode==="recovery");
-  $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":mode==="register"?"Cadastrar ID A.S.":"Recuperação de conta";
+  $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":"Cadastrar ID A.S.";
   $("authForm").hidden=mode==="recovery";
   $("recoveryForm").hidden=mode!=="recovery";
   $("employeeNameField").hidden=mode!=="register";
-  $("publicCodeField").hidden=mode!=="login";
   $("foodField").hidden=mode!=="register";
   $("animalField").hidden=mode!=="register";
   $("confirmPasswordField").hidden=mode!=="register";
@@ -202,20 +198,28 @@ function setMode(next){
   $("confirmPassword").required=mode==="register";
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
   $("passwordHint").hidden=mode!=="register";
+  $("forgotPasswordLink").hidden=mode!=="login";
   $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
   $("username").placeholder=mode==="register"?"g_johnson":"bob.";
-  updatePublicCodeField();
   $("username").value="";
   $("publicCode").value="";
   updatePublicCodeField();
   message("authMessage","");
   message("identifierMessage","");
+  message("recoveryMessage","");
   $("recoveryModal").hidden=true;
 }
-$("username").addEventListener("input",updatePublicCodeField);
 $("loginTab").addEventListener("click",()=>setMode("login"));
 $("registerTab").addEventListener("click",()=>setMode("register"));
-$("recoveryTab").addEventListener("click",()=>setMode("recovery"));
+$("openRecovery").addEventListener("click",()=>{
+  $("authForm").hidden=true;
+  $("recoveryForm").hidden=false;
+  $("forgotPasswordLink").hidden=true;
+  $("authHeading").textContent="Recuperar acesso";
+  $("recoveryUsername").value=$("username").value.trim();
+  $("recoveryCode").value="";
+  message("recoveryMessage","");
+});
 $("togglePassword").addEventListener("click",()=>{
   const field=$("password"),show=field.type==="password";
   field.type=show?"text":"password";
@@ -248,7 +252,7 @@ $("authForm").addEventListener("submit",async event=>{
 $("recoveryForm").addEventListener("submit",async event=>{
   event.preventDefault();
   if($("recoveryNewPassword").value!==$("recoveryConfirmPassword").value){message("recoveryMessage","As senhas não coincidem.","error");return;}
-  const body={userTag:$("recoveryUsername").value.trim()+" #"+$("recoveryPublicCode").value.trim(),password:$("recoveryNewPassword").value,confirmPassword:$("recoveryConfirmPassword").value,recoveryCode:$("recoveryCode").value.trim()};
+  const body={username:$("recoveryUsername").value.trim(),password:$("recoveryNewPassword").value,confirmPassword:$("recoveryConfirmPassword").value,recoveryCode:$("recoveryCode").value.trim()};
   const codeInput=$("recoveryCode").value.trim();
   if(!codeInput){message("recoveryMessage","Informe o código de recuperação.","error");return;}
   $("recoverSubmit").disabled=true;
@@ -276,13 +280,12 @@ $("revealRecoveryCode").addEventListener("click",async()=>{
     $("revealedCodeArea").hidden=false;
     $("recoveryCode").value=result.recoveryCode;
     $("recoveryUsername").value=$("modalRecoveryUsername").value.trim();
-    $("recoveryPublicCode").value=result.publicCode||"";
     message("modalRecoveryMessage","Código gerado. Copie e guarde em local seguro.","success");
   }catch(error){message("modalRecoveryMessage",error.message,"error");}
   finally{$("revealRecoveryCode").disabled=false;}
 });
 $("copyRecoveryCode").addEventListener("click",async()=>{
-  try{await navigator.clipboard.writeText($("revealedRecoveryCode").textContent);message("modalRecoveryMessage","Código copiado.","success");}
+  try{await navigator.clipboard.writeText($("revealedRecoveryCode").textContent);$("recoveryModal").hidden=true;message("recoveryMessage","Código copiado. Cole-o no campo de recuperação.","success");}
   catch{message("modalRecoveryMessage","Não foi possível copiar automaticamente. Selecione o código e copie.","error");}
 });
 async function showNewCredentials(){
@@ -302,7 +305,6 @@ $("newCredentialsForm").addEventListener("submit",async event=>{
 });
 async function showProfileSetup(user){
   currentUser=user;$("authWindow").hidden=true;$("newCredentialsWindow").hidden=true;$("appWindow").hidden=true;$("profileWindow").hidden=false;
-  $("profileDisplayName").value=user.displayName||user.employeeName||"";
   $("profilePhoto").value=user.profilePhoto||"";
   $("profileBio").value=user.bio||"";
   $("profileMotivation").value=user.motivation||"";
@@ -316,7 +318,7 @@ $("profilePhoto").addEventListener("input",updateProfilePreview);
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();$("saveProfile").disabled=true;message("profileMessage","Salvando perfil…");
   try{
-    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileDisplayName").value,profilePhoto:$("profilePhoto").value,bio:$("profileBio").value,motivation:$("profileMotivation").value})});
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:currentUser?.displayName||currentUser?.employeeName||"Empregado Anitope",profilePhoto:$("profilePhoto").value,bio:$("profileBio").value,motivation:$("profileMotivation").value})});
     $("profileWindow").hidden=true;await showApp(result.user);
   }catch(error){message("profileMessage",error.message,"error");}
   finally{$("saveProfile").disabled=false;}
