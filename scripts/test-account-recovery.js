@@ -31,9 +31,9 @@ async function main() {
         if(user){user.recovery_code_salt=params[0];user.recovery_code_hash=params[1];}
         return {rows:[]};
       }
-      if (sql.includes("SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users")) {
-        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]&&row.public_code===params[1]);
-        return {rows:user?[{id:user.id,display_name:user.display_name,recovery_salt:user.recovery_salt,recovery_hash:user.recovery_hash,recovery_code_salt:user.recovery_code_salt,recovery_code_hash:user.recovery_code_hash}]:[]};
+      if (sql.includes("SELECT id,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1")) {
+        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
+        return {rows:user?[{id:user.id,recovery_code_salt:user.recovery_code_salt,recovery_code_hash:user.recovery_code_hash}]:[]};
       }
       if (sql.includes("UPDATE anitos_users SET password_salt=$1,password_hash=$2 WHERE id=$3")) {
         const user=users.get(params[2]);
@@ -75,7 +75,7 @@ async function main() {
     const [username,publicCode]=created.userTag.split("#").map(value=>value.trim());
 
     const wrongCode=await post("/api/auth/recover-account",{
-      userTag:created.userTag,recoveryCode:"WRONGRECOVERYCODE",
+      username,recoveryCode:"WRONGRECOVERYCODE",
       password:"NovaSenha123!",confirmPassword:"NovaSenha123!"
     });
     assert.equal(wrongCode.status,403,"an invalid recovery code must be rejected");
@@ -88,7 +88,7 @@ async function main() {
     assert.match(revealed.recoveryCode,/^[A-Z2-9]{16}$/);
 
     const codeRecovery=await post("/api/auth/recover-account",{
-      userTag:created.userTag,recoveryCode:revealed.recoveryCode,
+      username,recoveryCode:revealed.recoveryCode,
       password:"NovaSenha123!",confirmPassword:"NovaSenha123!"
     });
     assert.equal(codeRecovery.status,200,"the recovery code should reset the password");
@@ -102,11 +102,11 @@ async function main() {
     const oldPassword=await post("/api/auth/login",{username,publicCode,password:"Senha1234!"});
     assert.equal(oldPassword.status,401,"the old password must stop working after recovery");
 
-    const badTag=await post("/api/auth/recover-account",{
-      userTag:"ash_carter #12",recoveryCode:revealed.recoveryCode,
+    const badUsername=await post("/api/auth/recover-account",{
+      username:"a",recoveryCode:revealed.recoveryCode,
       password:"OutraSenha123!",confirmPassword:"OutraSenha123!"
     });
-    assert.equal(badTag.status,400,"account numbers must contain exactly four digits");
+    assert.equal(badUsername.status,400,"invalid usernames must be rejected");
     console.log("Username account recovery tests passed.");
   }finally{
     await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
