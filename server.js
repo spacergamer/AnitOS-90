@@ -36,8 +36,8 @@ app.use("/anitopeboard",express.static(boardDir));
 
 app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/account",(_q,r)=>r.sendFile(path.join(__dirname,"public","account.html")));
-app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
-app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
+app.get("/login.html",(_q,r)=>r.redirect(302,"/account"));
+app.get("/home.html",(_q,r)=>r.redirect(302,"/account"));
 app.get("/board.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
 app.get("/room.html",async(q,r)=>{
  try{
@@ -52,7 +52,7 @@ app.get("/room.html",async(q,r)=>{
  }catch(err){console.error("[auth] Falha ao proteger RGN:",err.message);return r.redirect(302,"/login.html")}
 });
 app.get("/rgn",(_q,r)=>r.redirect(302,"/room.html"));
-app.get("/",(_q,r)=>r.redirect(302,"/login.html"));
+app.get("/",(_q,r)=>r.redirect(302,"/account"));
 
 function code(){
  let c;

@@ -53,17 +53,12 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id: row.id, email: row.email || null, displayName: (row.display_name && row.display_name.trim()) || row.username || null, username: row.username || null, publicCode: row.public_code || null, credentialsReady: Boolean(row.username && row.public_code && row.recovery_salt && row.recovery_hash && row.recovery_code_salt && row.recovery_code_hash), role: row.role, premium: Boolean(row.is_premium), dev: Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,publicCode:row.public_code||null,userTag:row.username&&row.public_code?row.username+" #"+row.public_code:null,profilePhoto:row.profile_photo_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.public_code&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
 }
-function makePublicCode() {
-  // O sufixo público é numérico, aleatório e curto: de 3 a 6 dígitos.
-  const length = crypto.randomInt(3, 7);
-  const min = 10 ** (length - 1);
-  return String(crypto.randomInt(min, 10 ** length));
-}
+function makePublicCode() { return String(crypto.randomInt(0,10000)).padStart(4,"0"); }
 function makeRecoveryCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "";
@@ -71,7 +66,7 @@ function makeRecoveryCode() {
   return result;
 }
 function splitUserTag(value) {
-  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})#(\d{3,6})$/i);
+  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})\s*#\s*(\d{4})$/i);
   return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
 }
 
@@ -79,7 +74,7 @@ async function initializeAuthSchema(db) {
   await db.query(`
     CREATE TABLE IF NOT EXISTS anitos_users (
       id text PRIMARY KEY,
-      email text NOT NULL UNIQUE,
+      email text UNIQUE,
       display_name text NOT NULL,
       role text NOT NULL CHECK (role IN ('master','player')),
       password_salt text NOT NULL,
@@ -90,6 +85,12 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
     ALTER TABLE anitos_users ALTER COLUMN email DROP NOT NULL;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS employee_name text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_photo_url text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS bio text NOT NULL DEFAULT '';
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS motivation text NOT NULL DEFAULT '';
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_complete boolean NOT NULL DEFAULT true;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS legacy_login_enabled boolean NOT NULL DEFAULT true;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS username text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS public_code text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_salt text;
@@ -97,16 +98,15 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_salt text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_hash text;
     DROP INDEX IF EXISTS anitos_users_public_code_idx;
-    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_code_idx ON anitos_users(lower(username), public_code) WHERE username IS NOT NULL AND public_code IS NOT NULL;
-    CREATE TABLE IF NOT EXISTS anitos_auth_tokens (
-      token_hash text PRIMARY KEY,
-      user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
-      purpose text NOT NULL CHECK (purpose IN ('verify_email','reset_password')),
-      expires_at timestamptz NOT NULL,
-      used_at timestamptz,
-      created_at timestamptz NOT NULL DEFAULT now()
-    );
-    CREATE INDEX IF NOT EXISTS anitos_auth_tokens_user_purpose_idx ON anitos_auth_tokens(user_id,purpose);
+    UPDATE anitos_users SET username=lower(left(regexp_replace(coalesce(nullif(trim(username),''),nullif(trim(display_name),''),'user_'||substr(id,1,6)),'[^A-Za-z0-9_.-]+','_','g'),32)) WHERE username IS NULL OR trim(username)='';
+    UPDATE anitos_users SET username=lower(left(regexp_replace(trim(username),'[^A-Za-z0-9_.-]+','_','g'),32));
+    UPDATE anitos_users SET username='user_'||substr(id,1,8) WHERE length(username)<2;
+    WITH duplicates AS (SELECT id,row_number() OVER(PARTITION BY lower(username) ORDER BY created_at,id) AS duplicate_rank FROM anitos_users WHERE username IS NOT NULL)
+    UPDATE anitos_users u SET username=left(u.username,23)||'_'||substr(u.id,1,8) FROM duplicates d WHERE u.id=d.id AND d.duplicate_rank>1;
+    UPDATE anitos_users SET public_code=lpad(floor(random()*10000)::int::text,4,'0') WHERE public_code IS NULL OR public_code !~ '^\d{4}$';
+    UPDATE anitos_users SET employee_name=coalesce(nullif(trim(employee_name),''),display_name,username) WHERE employee_name IS NULL OR trim(employee_name)='';
+    DROP INDEX IF EXISTS anitos_users_username_code_idx;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_unique_idx ON anitos_users(lower(username));
     CREATE TABLE IF NOT EXISTS anitos_sessions (
       token_hash text PRIMARY KEY,
       user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
@@ -123,26 +123,9 @@ async function initializeAuthSchema(db) {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
-    -- Legacy accounts without a display name use their username as the public display name.
-    UPDATE anitos_users SET display_name = username
-      WHERE (display_name IS NULL OR trim(display_name) = '') AND username IS NOT NULL AND trim(username) <> '';
-    -- Display names now act as public @handles. Normalize legacy names and make them unique.
-    UPDATE anitos_users
-      SET display_name = CASE
-        WHEN length(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')) < 2
-          THEN 'user_' || substr(id, 1, 6)
-        ELSE left(lower(regexp_replace(trim(display_name), '[^A-Za-z0-9_.-]+', '_', 'g')), 32)
-      END
-      WHERE display_name !~ '^[A-Za-z0-9_.-]{2,32}$' OR display_name <> lower(display_name);
-    WITH duplicates AS (
-      SELECT id, row_number() OVER (PARTITION BY lower(display_name) ORDER BY created_at, id) AS duplicate_rank
-      FROM anitos_users
-    )
-    UPDATE anitos_users u
-      SET display_name = left(u.display_name, 24) || '_' || substr(u.id, 1, 6)
-      FROM duplicates d
-      WHERE u.id = d.id AND d.duplicate_rank > 1;
-        CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_display_name_lower_idx ON anitos_users (lower(display_name));
+    UPDATE anitos_users SET display_name=coalesce(nullif(trim(display_name),''),employee_name,username)
+      WHERE display_name IS NULL OR trim(display_name)='';
+    DROP INDEX IF EXISTS anitos_users_display_name_lower_idx;
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_salt text;
     ALTER TABLE anitos_campaigns ADD COLUMN IF NOT EXISTS join_password_hash text;
     CREATE TABLE IF NOT EXISTS anitos_campaign_members (
@@ -202,7 +185,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.email,u.display_name,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev
+        `SELECT u.id,u.display_name,u.employee_name,u.profile_photo_url,u.bio,u.motivation,u.profile_complete,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
@@ -227,147 +210,101 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/register", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const email = String(req.body?.email || "").trim().toLowerCase() || null;
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
-      const password = typeof req.body?.password === "string" ? req.body.password : "";
-      const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      const role = req.body?.role || "player";
-      if (displayName.length < 2) return sendError(res, 400, "Informe um nome de exibição com pelo menos 2 caracteres.");
-      if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
-      if (!food || !animal) return sendError(res, 400, "Informe sua comida favorita e seu animal favorito.");
-      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A senha deve ter entre 1 e 200 caracteres.");
-      if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
-      if (!["master", "player"].includes(role)) return sendError(res, 400, "Escolha o perfil Mestre ou Jogador.");
-      const id = crypto.randomUUID();
-      const passwordSalt = crypto.randomBytes(16).toString("hex");
-      const passwordHash = (await scrypt(password, passwordSalt, 64)).toString("hex");
-      const recoverySalt = crypto.randomBytes(16).toString("hex");
-      const recoveryHash = (await scrypt(normalizeAnswer(food) + "\u0000" + normalizeAnswer(animal), recoverySalt, 64)).toString("hex");
-      const recoveryCode = makeRecoveryCode();
-      const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
-      const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
-      let publicCode = makePublicCode();
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const result = await db.query(
-            "INSERT INTO anitos_users(id,email,display_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash) VALUES($1,$2,$3,$4,$5,$6,true,$7,$8,$9,$10,$11,$12) RETURNING id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",
-            [id, email, displayName, role, passwordSalt, passwordHash, username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash]
-          );
-          await createSession(id, res);
-          return res.status(201).json({user: safeUser(result.rows[0]), recoveryCode, userTag: username + "#" + publicCode});
-        } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_code_idx") {
-            publicCode = makePublicCode();
-            continue;
-          }
-          if (err.code === "23505") {
-            if (String(err.detail || "").includes("username")) return sendError(res, 409, "Esse nome de usuário já está em uso.");
-            return sendError(res, 409, "Já existe uma conta com esses dados.");
-          }
-          throw err;
-        }
-      }
-      return sendError(res, 503, "Não foi possível gerar um identificador único. Tente novamente.");
-    } catch (err) {
-      console.error("[auth] Falha ao criar conta:", err.message);
-      return sendError(res, 500, "Não foi possível criar a conta.");
-    }
-  });
-
-  app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      const login = String(req.body?.username || req.body?.email || "").trim();
-      const password = typeof req.body?.password === "string" ? req.body.password : "";
-      const tag = splitUserTag(login);
-      let result;
-      if (tag) {
-        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2", [tag.username, tag.publicCode]);
-      } else {
-        // Legacy accounts can authenticate once with their old email to register new credentials.
-        result = await db.query("SELECT id,email,display_name,role,is_premium,is_dev,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1)", [login]);
-      }
-      const user = result.rows[0];
-      if (!user) return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
-      const candidate = await scrypt(password, user.password_salt, 64);
-      const expected = Buffer.from(user.password_hash, "hex");
-      if (candidate.length !== expected.length || !crypto.timingSafeEqual(candidate, expected))
-        return sendError(res, 401, "Nome de usuário/código ou senha incorretos.");
-      await createSession(user.id, res);
-      return res.json({user: safeUser(user)});
-    } catch (err) {
-      console.error("[auth] Falha ao entrar:", err.message);
-      return sendError(res, 500, "Não foi possível iniciar a sessão.");
-    }
-  });
-
-  app.post("/api/auth/reveal-user-code", databaseRequired, limitAuthAttempts, async (req, res) => {
-    try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
-      const email = String(req.body?.email || "").trim().toLowerCase();
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
-      const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
-      if (!displayName || !username || !email)
-        return sendError(res, 400, "Informe o nome de exibição, o nome de usuário e o e-mail.");
-      const result = await db.query(
-        "SELECT display_name,username,email,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND lower(email)=$2",
-        [username, email]
+      const employeeName=String(req.body?.employeeName||"").trim().replace(/\s+/g," ").slice(0,60);
+      const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
+      const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
+      const password=typeof req.body?.password==="string"?req.body.password:"";
+      const confirmPassword=typeof req.body?.confirmPassword==="string"?req.body.confirmPassword:"";
+      if(employeeName.length<2)return sendError(res,400,"Informe seu nome de empregado.");
+      if(!/^[a-z0-9_.-]{2,32}$/.test(username))return sendError(res,400,"O nome de usuário deve ter de 2 a 32 caracteres: letras, números, ponto, hífen ou sublinhado.");
+      if(!food||!animal)return sendError(res,400,"Informe sua comida favorita e seu animal favorito.");
+      if(password.length<8||password.length>200)return sendError(res,400,"A senha deve ter pelo menos 8 caracteres e no máximo 200.");
+      if(password!==confirmPassword)return sendError(res,400,"As senhas não coincidem.");
+      const id=crypto.randomUUID(),passwordSalt=crypto.randomBytes(16).toString("hex");
+      const passwordHash=(await scrypt(password,passwordSalt,64)).toString("hex");
+      const recoverySalt=crypto.randomBytes(16).toString("hex");
+      const recoveryHash=(await scrypt(food+"\u0000"+animal,recoverySalt,64)).toString("hex");
+      const recoveryCode=makeRecoveryCode(),recoveryCodeSalt=crypto.randomBytes(16).toString("hex");
+      const recoveryCodeHash=(await scrypt(recoveryCode,recoveryCodeSalt,64)).toString("hex");
+      const publicCode=makePublicCode();
+      const result=await db.query(
+        "INSERT INTO anitos_users(id,email,display_name,employee_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete,legacy_login_enabled) VALUES($1,NULL,$2,$3,'player',$4,$5,true,$6,$7,$8,$9,$10,$11,false,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
+        [id,employeeName,employeeName,passwordSalt,passwordHash,username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
       );
-      const user = result.rows[0];
-      let recoveryValid = false;
-      if (user && user.email && recoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
-        const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
-        const expected = Buffer.from(user.recovery_code_hash, "hex");
-        recoveryValid = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR") && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      } else if (user && user.email && !recoveryCode && food && animal && user.recovery_salt && user.recovery_hash) {
-        const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
-        const expected = Buffer.from(user.recovery_hash, "hex");
-        recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      }
-      if (!recoveryValid) return sendError(res, 403, "Os dados de recuperação não correspondem.");
-      return res.json({ok:true,userTag:user.username + "#" + user.public_code});
-    } catch (err) {
-      console.error("[auth] Falha ao confirmar identidade:", err.message);
-      return sendError(res, 500, "Não foi possível confirmar os dados agora.");
+      await createSession(id,res);
+      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username+" #"+publicCode});
+    }catch(err){
+      if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
+      console.error("[auth] Falha ao criar conta:",err.message);
+      return sendError(res,500,"Não foi possível criar a conta.");
     }
+  });
+
+  app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req,res)=>{
+    try{
+      const input=String(req.body?.username||"").trim(),combined=splitUserTag(input);
+      const username=(combined?.username||input).replace(/^@/,"").toLowerCase();
+      const publicCode=combined?.publicCode||String(req.body?.publicCode||"").trim();
+      const password=typeof req.body?.password==="string"?req.body.password:"";
+      if(!username||!password)return sendError(res,400,"Informe seu nome de usuário e senha.");
+      let result,legacyLogin=false;
+      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)&&!publicCode){
+        result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
+        legacyLogin=true;
+      }else{
+        if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!/^[0-9]{4}$/.test(publicCode))return sendError(res,400,"Informe o nome de usuário e o número identificador de quatro dígitos.");
+        result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",[username,publicCode]);
+      }
+      const user=result.rows[0];
+      if(!user)return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      const candidate=await scrypt(password,user.password_salt,64),expected=Buffer.from(user.password_hash,"hex");
+      if(candidate.length!==expected.length||!crypto.timingSafeEqual(candidate,expected))return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      if(legacyLogin)await db.query("UPDATE anitos_users SET legacy_login_enabled=false WHERE id=$1",[user.id]);
+      await createSession(user.id,res);
+      return res.json({user:safeUser(user),legacyLogin});
+    }catch(err){console.error("[auth] Falha ao entrar:",err.message);return sendError(res,500,"Não foi possível iniciar a sessão.");}
+  });
+
+  app.post("/api/auth/reveal-recovery-code",databaseRequired,limitAuthAttempts,async(req,res)=>{
+    try{
+      const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
+      const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
+      if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!food||!animal)return sendError(res,400,"Informe o nome de usuário, a comida favorita e o animal favorito.");
+      const result=await db.query("SELECT id,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
+      const user=result.rows[0];let valid=false;
+      if(user?.recovery_salt&&user?.recovery_hash){
+        const candidate=await scrypt(food+"\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
+        valid=candidate.length===expected.length&&crypto.timingSafeEqual(candidate,expected);
+      }
+      if(!valid)return sendError(res,403,"As respostas não correspondem aos dados cadastrados.");
+      const recoveryCode=makeRecoveryCode(),salt=crypto.randomBytes(16).toString("hex");
+      const hash=(await scrypt(recoveryCode,salt,64)).toString("hex");
+      await db.query("UPDATE anitos_users SET recovery_code_salt=$1,recovery_code_hash=$2 WHERE id=$3",[salt,hash,user.id]);
+      return res.json({ok:true,recoveryCode,publicCode:user.public_code,message:"Novo código gerado. O código anterior foi substituído."});
+    }catch(err){console.error("[auth] Falha ao gerar código de recuperação:",err.message);return sendError(res,500,"Não foi possível gerar o código de recuperação.");}
   });
 
   app.post("/api/auth/recover-account", databaseRequired, limitAuthAttempts, async (req, res) => {
     try {
-      const displayName = String(req.body?.displayName || "").trim().replace(/\s+/g, " ").slice(0, 48);
-      const tag = splitUserTag(req.body?.userTag);
-      const food = normalizeAnswer(req.body?.favoriteFood);
-      const animal = normalizeAnswer(req.body?.favoriteAnimal);
+      const username = String(req.body?.username || "").trim().replace(/^@/, "").toLowerCase();
       const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
       const password = typeof req.body?.password === "string" ? req.body.password : "";
       const confirmPassword = typeof req.body?.confirmPassword === "string" ? req.body.confirmPassword : "";
-      if (!tag) return sendError(res, 400, "Informe um identificador válido no formato usuario#583104.");
-      if (password.length < 1 || password.length > 200) return sendError(res, 400, "A nova senha deve ter entre 1 e 200 caracteres.");
+      if (!/^[a-z0-9_.-]{2,32}$/.test(username)) return sendError(res, 400, "Informe um nome de usuário válido.");
+      if (!recoveryCode) return sendError(res, 400, "Informe o código de recuperação.");
+      if (password.length < 8 || password.length > 200) return sendError(res, 400, "A nova senha deve ter pelo menos 8 caracteres e no máximo 200.");
       if (password !== confirmPassword) return sendError(res, 400, "As senhas não coincidem.");
-      const usingRecoveryCode = Boolean(recoveryCode);
-      if (!usingRecoveryCode && (!displayName || !food || !animal))
-        return sendError(res, 400, "Informe o nome de exibição, a comida e o animal favoritos, ou use o código secreto de recuperação.");
       const result = await db.query(
-        "SELECT id,display_name,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",
-        [tag.username, tag.publicCode]
+        "SELECT id,recovery_code_salt,recovery_code_hash FROM anitos_users WHERE lower(username)=$1",
+        [username]
       );
       const user = result.rows[0];
       if (!user) return sendError(res, 403, "Os dados de recuperação não correspondem.");
       let recoveryValid = false;
-      if (usingRecoveryCode && user.recovery_code_salt && user.recovery_code_hash) {
+      if (user.recovery_code_salt && user.recovery_code_hash) {
         const candidate = await scrypt(recoveryCode, user.recovery_code_salt, 64);
         const expected = Buffer.from(user.recovery_code_hash, "hex");
         recoveryValid = candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-      } else if (!usingRecoveryCode && user.recovery_salt && user.recovery_hash) {
-        const sameDisplayName = user.display_name.toLocaleLowerCase("pt-BR") === displayName.toLocaleLowerCase("pt-BR");
-        const candidate = await scrypt(food + "\u0000" + animal, user.recovery_salt, 64);
-        const expected = Buffer.from(user.recovery_hash, "hex");
-        recoveryValid = sameDisplayName && candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
       }
       if (!recoveryValid) return sendError(res, 403, "Os dados de recuperação não correspondem.");
       const salt = crypto.randomBytes(16).toString("hex");
@@ -394,31 +331,38 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode = makeRecoveryCode();
       const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
-      let publicCode = makePublicCode();
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const result = await db.query(
-            "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,email_verified=true WHERE id=$7 AND (username IS NULL OR recovery_code_hash IS NULL) RETURNING id",
-            [username, publicCode, recoverySalt, recoveryHash, recoveryCodeSalt, recoveryCodeHash, req.user.id]
-          );
-          if (!result.rows[0]) return sendError(res, 409, "Esta conta já possui novas credenciais. Entre novamente.");
-          await db.query("DELETE FROM anitos_sessions WHERE user_id=$1", [req.user.id]);
-          clearSessionCookie(res);
-          return res.json({ok:true,userTag:username + "#" + publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
-        } catch (err) {
-          if (err.code === "23505" && err.constraint === "anitos_users_username_code_idx") {
-            publicCode = makePublicCode();
-            continue;
-          }
-          if (err.code === "23505") return sendError(res, 409, "Não foi possível salvar essas credenciais. Tente novamente.");
-          throw err;
-        }
+      const publicCode = makePublicCode();
+      try {
+        const result = await db.query(
+          "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,legacy_login_enabled=false WHERE id=$7 AND recovery_code_hash IS NULL RETURNING id",
+          [username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash,req.user.id]
+        );
+        if(!result.rows[0])return sendError(res,409,"Esta conta já possui novas credenciais. Entre novamente.");
+        await db.query("DELETE FROM anitos_sessions WHERE user_id=$1",[req.user.id]);
+        clearSessionCookie(res);
+        return res.json({ok:true,userTag:username+" #"+publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
+      }catch(err){
+        if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
+        throw err;
       }
-      return sendError(res, 503, "Não foi possível gerar um identificador único. Tente novamente.");
     } catch (err) {
       console.error("[auth] Falha ao salvar novas credenciais:", err.message);
       return sendError(res, 500, "Não foi possível salvar as novas credenciais.");
     }
+  });
+
+  app.post("/api/auth/profile",databaseRequired,requireAuth,limitAuthAttempts,async(req,res)=>{
+    try{
+      const displayName=String(req.body?.displayName||"").trim().replace(/\s+/g," ").slice(0,48);
+      const profilePhoto=String(req.body?.profilePhoto||"").trim().slice(0,500);
+      const bio=String(req.body?.bio||"").trim().slice(0,280);
+      const motivation=String(req.body?.motivation||"").trim().slice(0,3000);
+      if(displayName.length<2)return sendError(res,400,"Informe um nome de perfil com pelo menos 2 caracteres.");
+      if(profilePhoto){let parsed;try{parsed=new URL(profilePhoto)}catch{return sendError(res,400,"A foto precisa usar um endereço HTTP ou HTTPS válido.")}if(!["http:","https:"].includes(parsed.protocol))return sendError(res,400,"Endereço de foto inválido.");}
+      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,bio=$3,motivation=$4,profile_complete=true WHERE id=$5 RETURNING id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,bio,motivation,req.user.id]);
+      if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
+      return res.json({ok:true,user:safeUser(result.rows[0])});
+    }catch(err){console.error("[auth] Falha ao salvar perfil:",err.message);return sendError(res,500,"Não foi possível salvar o perfil.");}
   });
 
   app.get("/api/auth/me", requireAuth, (req, res) => res.json({user: req.user}));
@@ -449,7 +393,7 @@ function registerAuthRoutes(app, express, db) {
     }
 
     try {
-      const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,email,display_name,role,is_premium,is_dev", [req.user.id]);
+      const result = await db.query("UPDATE anitos_users SET is_premium=true,is_dev=true WHERE id=$1 RETURNING id,display_name,employee_name,username,public_code,role,is_premium,is_dev", [req.user.id]);
       if (!result.rows[0]) return sendError(res, 404, "Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0]),message:"AnitOS Pro ativado com sucesso."});
     } catch (err) {
@@ -619,7 +563,7 @@ function registerAuthRoutes(app, express, db) {
       const owner = await db.query("SELECT id FROM anitos_campaigns WHERE id=$1 AND owner_id=$2", [req.params.id, req.user.id]);
       if (!owner.rows[0]) return sendError(res, 404, "Campanha não encontrada ou sem permissão.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.email,u.username,u.public_code,u.role,m.joined_at
+        `SELECT u.id,u.display_name,u.employee_name,u.username,u.public_code,u.role,m.joined_at
          FROM anitos_campaign_members m JOIN anitos_users u ON u.id=m.user_id
          WHERE m.campaign_id=$1 ORDER BY m.joined_at`,
         [req.params.id]
@@ -753,13 +697,11 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/characters/:id/assign", requireAuth, async (req, res) => {
     if (req.user.role !== "master") return sendError(res, 403, "Somente Mestres podem atribuir fichas.");
-    const playerEmail = typeof req.body?.playerEmail === "string" ? req.body.playerEmail.trim().toLowerCase() : "";
+    const playerUsername = typeof req.body?.playerUsername === "string" ? req.body.playerUsername.trim().replace(/^@/, "").toLowerCase() : "";
     const playerHandle = typeof req.body?.playerHandle === "string" ? req.body.playerHandle.trim().replace(/^@/, "").toLowerCase() : "";
     const legacyPlayerId = String(req.body?.playerId || "");
-    if (playerEmail && (playerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail))) {
-      return sendError(res, 400, "Informe um email válido para o jogador.");
-    }
-    if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um @nome válido.");
+    if (playerUsername && !/^[a-z0-9_.-]{2,32}$/.test(playerUsername)) return sendError(res, 400, "Informe um nome de usuário válido.");
+    if (playerHandle && !/^[a-z0-9_.-]{2,32}$/.test(playerHandle)) return sendError(res, 400, "Informe um nome de usuário válido.");
     let client;
     let ownsClient = false;
     try {
@@ -780,10 +722,10 @@ function registerAuthRoutes(app, express, db) {
       }
       let playerId = legacyPlayerId || null;
       let assignedPlayerHandle = null;
-      if (playerEmail || playerHandle) {
+      if (playerUsername || playerHandle) {
         const member = await client.query(
           `SELECT u.id,u.display_name FROM anitos_users u
-           WHERE ${playerEmail ? "lower(u.email)=$2" : "lower(u.display_name)=$2"}
+           WHERE lower(u.username)=$2
              AND (
                (u.role='master' AND u.id=$3)
                OR (u.role='player' AND EXISTS (
@@ -792,11 +734,11 @@ function registerAuthRoutes(app, express, db) {
                ))
              )
            LIMIT 1`,
-          [character.rows[0].campaign_id, playerEmail || playerHandle, req.user.id]
+          [character.rows[0].campaign_id, playerUsername || playerHandle, req.user.id]
         );
         if (!member.rows[0]) {
           if (ownsClient) await client.query("ROLLBACK");
-          return sendError(res, 404, playerHandle ? "Não existe um jogador com esse @nome participando desta campanha." : "Não existe um jogador com esse email participando desta campanha.");
+          return sendError(res, 404, "Não existe um jogador com esse nome de usuário participando desta campanha.");
         }
         playerId = member.rows[0].id;
         assignedPlayerHandle = member.rows[0].display_name;

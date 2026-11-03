@@ -7,8 +7,8 @@ async function main() {
   const masterToken = "a".repeat(64);
   const playerToken = "b".repeat(64);
   const hashes = new Map([
-    [crypto.createHash("sha256").update(masterToken).digest("hex"), {id:"master-1",email:"master@example.test",display_name:"Mestre",role:"master"}],
-    [crypto.createHash("sha256").update(playerToken).digest("hex"), {id:"player-1",email:"player@example.test",display_name:"Jogador",role:"player"}]
+    [crypto.createHash("sha256").update(masterToken).digest("hex"), {id:"master-1",username:"mestre",employee_name:"Mestre",display_name:"Mestre",role:"master"}],
+    [crypto.createHash("sha256").update(playerToken).digest("hex"), {id:"player-1",username:"jogador",employee_name:"Jogador",display_name:"Jogador",role:"player"}]
   ]);
   const calls = [];
   const db = {
@@ -24,13 +24,7 @@ async function main() {
         assert.equal(params[1],"master-1");
         return {rows:[{id:params[0],campaign_id:"campaign-1"}]};
       }
-      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.email)=$2")) {
-        assert.equal(params[0],"campaign-1");
-        if (params[1] === "master@example.test") return {rows:[{id:"master-1",display_name:"Mestre"}]};
-        assert.equal(params[1],"player@example.test");
-        return {rows:[{id:"player-1",display_name:"Jogador"}]};
-      }
-      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.display_name)=$2")) {
+      if (sql.includes("SELECT u.id,u.display_name FROM anitos_users u") && sql.includes("lower(u.username)=$2")) {
         assert.equal(params[0],"campaign-1");
         if (params[1] === "mestre") return {rows:[{id:"master-1",display_name:"Mestre"}]};
         assert.equal(params[1],"jogador");
@@ -54,34 +48,34 @@ async function main() {
   async function post(path,token,body){return fetch(base+path,{method:"POST",headers:{"content-type":"application/json",cookie:"anitos_session="+token},body:JSON.stringify(body)})}
   async function patch(path,token,body){return fetch(base+path,{method:"PATCH",headers:{"content-type":"application/json",cookie:"anitos_session="+token},body:JSON.stringify(body)})}
   try {
-    const assigned=await post("/api/characters/character-1/assign",masterToken,{playerEmail:" PLAYER@EXAMPLE.TEST "});
-    assert.equal(assigned.status,200,"Master should assign by case-insensitive email");
+    const assigned=await post("/api/characters/character-1/assign",masterToken,{playerUsername:" JOGADOR "});
+    assert.equal(assigned.status,200,"Master should assign by case-insensitive username");
     assert.equal((await assigned.json()).character.assigned_player_id,"player-1");
-    const byHandle=await post("/api/characters/character-1/assign",masterToken,{playerHandle:"@Jogador"});
-    assert.equal(byHandle.status,200,"Master should assign by case-insensitive @handle");
+    const byHandle=await post("/api/characters/character-1/assign",masterToken,{playerUsername:"@Jogador"});
+    assert.equal(byHandle.status,200,"Master should assign by case-insensitive username");
     assert.equal((await byHandle.json()).character.assigned_player_id,"player-1");
-    const moved=await post("/api/characters/character-2/assign",masterToken,{playerHandle:"jogador"});
+    const moved=await post("/api/characters/character-2/assign",masterToken,{playerUsername:"jogador"});
     assert.equal(moved.status,200,"A player can be moved to another character");
     assert.equal((await moved.json()).character.assigned_player_id,"player-1");
-    const selfAssigned=await post("/api/characters/character-1/assign",masterToken,{playerHandle:"@Mestre"});
+    const selfAssigned=await post("/api/characters/character-1/assign",masterToken,{playerUsername:"@Mestre"});
     assert.equal(selfAssigned.status,200,"A master should be able to assign a character to themselves");
     const selfBody=await selfAssigned.json();
     assert.equal(selfBody.character.assigned_player_id,"master-1");
     assert.equal(selfBody.character.assigned_player_handle,"Mestre");
     assert.ok(calls.some(call=>call.sql.includes("UPDATE anitos_characters SET assigned_player_id=NULL")&&call.params[3]==="character-2"),
       "Reassignment must clear the player's previous character in the campaign");
-    const removed=await post("/api/characters/character-2/assign",masterToken,{playerHandle:""});
+    const removed=await post("/api/characters/character-2/assign",masterToken,{playerUsername:""});
     assert.equal(removed.status,200,"Master should be able to remove an assignment");
     assert.equal((await removed.json()).character.assigned_player_id,null);
-    const invalid=await post("/api/characters/character-1/assign",masterToken,{playerEmail:"not-an-email"});
-    assert.equal(invalid.status,400,"Invalid email must be rejected");
-    const playerAssign=await post("/api/characters/character-1/assign",playerToken,{playerEmail:"player@example.test"});
+    const invalid=await post("/api/characters/character-1/assign",masterToken,{playerUsername:"bad username"});
+    assert.equal(invalid.status,400,"Invalid username must be rejected");
+    const playerAssign=await post("/api/characters/character-1/assign",playerToken,{playerUsername:"jogador"});
     assert.equal(playerAssign.status,403,"Players must not assign character sheets");
     const playerEdit=await patch("/api/characters/character-1",playerToken,{data:{hp:999}});
     assert.equal(playerEdit.status,403,"Players must not edit character sheet values or items");
     assert.equal(calls.filter(c=>c.sql.includes("UPDATE anitos_characters SET assigned_player_id=$1")).length,5,
       "Only authorized master assignment and unassignment requests should update the database");
-    console.log("Character assignment-by-email/@handle and player read-only tests passed.");
+    console.log("Character assignment-by-username and player read-only tests passed.");
   } finally {await new Promise((resolve,reject)=>server.close(err=>err?reject(err):resolve()))}
 }
 main().catch(error=>{console.error(error);process.exitCode=1});

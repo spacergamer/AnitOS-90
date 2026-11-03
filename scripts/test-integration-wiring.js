@@ -26,37 +26,43 @@ assert.match(room, /id="roomPaneSheet"/);
 assert.match(room, /id="roomPaneChat"/);
 assert.match(room, /function activateRoomTab\(tabName\)/);
 
-// Username#3-to-6-digit account tags and a separate recovery secret use salted hashing.
+// Username plus a four-digit account number, password hashes and code-based recovery.
 const accountPage = fs.readFileSync("public/account.html", "utf8");
 assert.match(auth, /ADD COLUMN IF NOT EXISTS username text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS public_code text/);
+assert.match(auth, /ADD COLUMN IF NOT EXISTS employee_name text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_salt text/);
 assert.match(auth, /ADD COLUMN IF NOT EXISTS recovery_hash text/);
 assert.match(auth, /function makePublicCode\(\)/);
-assert.match(auth, /crypto\.randomInt\(3, 7\)/);
+assert.match(auth, /crypto\.randomInt\(0,10000\)/);
+assert.match(auth, /CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_unique_idx/);
 assert.match(auth, /function makeRecoveryCode\(\)/);
 assert.match(auth, /recovery_code_hash text/);
-assert.match(auth, /const usingRecoveryCode = Boolean\(recoveryCode\)/);
-assert.match(auth, /if \(usingRecoveryCode && user\.recovery_code_salt/);
-assert.match(auth, /if \(!usingRecoveryCode && user\.recovery_salt/);
-assert.match(auth, /recovery_code_salt=\$5,recovery_code_hash=\$6/);
 assert.match(auth, /function splitUserTag\(value\)/);
-assert.match(auth, /\\d\{3,6\}/);
-assert.match(auth, /scrypt\(password, passwordSalt, 64\)/);
-assert.match(auth, /scrypt\(food \+ "\\u0000" \+ animal, recoverySalt, 64\)/);
+assert.match(auth, /\\d\{4\}/);
+assert.match(auth, /scrypt\(password,passwordSalt,64\)/);
+assert.match(auth, /app\.post\("\/api\/auth\/reveal-recovery-code"/);
 assert.match(auth, /app\.post\("\/api\/auth\/recover-account"/);
-assert.match(auth, /app\.post\("\/api\/auth\/credentials", databaseRequired, requireAuth/);
-assert.match(auth, /DELETE FROM anitos_sessions WHERE user_id=\$1/);
-assert.match(auth, /limitAuthAttempts/);
-assert.match(accountPage, /id="recoveryTab"/);
+assert.match(auth, /app\.post\("\/api\/auth\/profile"/);
+assert.match(auth, /legacy_login_enabled=true/);
+assert.match(auth, /email_verified,username,public_code/);
+assert.match(accountPage, /id="employeeName"/);
+assert.match(accountPage, /id="username"/);
+assert.match(accountPage, /id="publicCode"/);
+assert.match(accountPage, /id="togglePassword"/);
+assert.match(accountPage, /id="openRegister"[^>]*>\s*Criar conta/);
+assert.match(accountPage, /id="cancelRegister"/);
+assert.doesNotMatch(accountPage, /id="loginTab"|id="registerTab"|class="tabs"/);
+assert.match(accountPage, /id="recoveryUsername"/);
 assert.match(accountPage, /id="recoveryCode"/);
-assert.match(accountPage, /function updateRecoveryRequirements\(\)/);
-assert.doesNotMatch(accountPage, /usuario#CODIGO12/);
-assert.doesNotMatch(accountPage, /id="recoveryConfirmPassword"[^>]*minlength="12"/);
-assert.match(accountPage, /id="newCredentialsWindow"/);
-assert.match(accountPage, /id="confirmPassword"/);
-assert.match(accountPage, /id="recoveryConfirmPassword"/);
-assert.doesNotMatch(accountPage, /resendVerification|request-password-reset|verify-email|reset-password/);
+assert.doesNotMatch(accountPage, /id="recoveryPublicCode"/);
+assert.match(accountPage, /id="revealRecoveryCode"/);
+assert.match(accountPage, /id="profilePhoto"/);
+assert.match(accountPage, /id="profileBio"/);
+assert.match(accountPage, /id="profileMotivation"/);
+assert.match(accountPage, /api\("\/api\/auth\/profile"/);
+assert.doesNotMatch(accountPage, /recoveryEmail|playerEmail|email address/i);
+assert.doesNotMatch(accountPage, /id="roleField"/);
 assert.match(room, /pingTimeoutTimer=setTimeout\(\(\)=>\{/);
 assert.match(room, /socket\.disconnect\(\);\s*socket\.connect\(\);/);
 assert.match(room, /A conexão parou de responder\. Tentando recuperar a sessão/);
@@ -75,7 +81,7 @@ assert.doesNotMatch(auth, /FROM anitos_campaigns c\s+LEFT JOIN anitos_campaign_m
 
 // The integrated pages must resolve to the same server-side routes.
 assert.match(server, /app\.get\("\/room\.html"/);
-assert.match(server, /app\.get\("\/account",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","account\.html"\)\)\)/);
+assert.match(server, /app\.get\("\/login\.html",\(_q,r\)=>r\.redirect\(302,"\/account"\)\)/);
 assert.match(server, /app\.get\("\/board\.html",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","board\.html"\)\)\)/);
 assert.match(server, /app\.get\("\/anitopeboard\/",\(_q,r\)=>r\.sendFile\(path\.join\(__dirname,"public","board\.html"\)\)\)/);
 
