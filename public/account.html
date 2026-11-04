@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ANITOPE SCIENCE — Acesso</title>
+<title>ANITOPE SCIENCE − Acesso</title>
 <link rel="icon" href="/anitopeboard/img/as.ico">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
@@ -38,7 +38,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <body>
 <main>
 <section class="window">
-<div class="bar"><span>ANITOPE SCIENCE — TERMINAL DE ACESSO</span><span>■ ×</span></div>
+<div class="bar"><span>ANITOPE SCIENCE − TERMINAL DE ACESSO</span><span>■ ×</span></div>
 <div class="content">
 <h1>ANITOPEBOARD / RGN</h1>
 <p>Uma conta. Campanhas persistentes. Interfaces independentes.</p>
@@ -128,7 +128,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="grid">
 <form class="card" id="createCampaign" hidden>
 <h2>Nova campanha</h2>
-<label for="campaignTitle">Nome da campanha</label><input id="campaignTitle" maxlength="100" required placeholder="Ex.: Light Fade — Ato I">
+<label for="campaignTitle">Nome da campanha</label><input id="campaignTitle" maxlength="100" required placeholder="Ex.: Light Fade − Ato I">
 <button type="submit" style="margin-top:10px">Criar campanha</button>
 </form>
 <form class="card" id="joinCampaign" hidden>
@@ -487,7 +487,7 @@ async function openAssignedSheets(campaign) {
   assignedSheetCampaign = campaign;
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = false;
-  $("sheetTitle").textContent = "FICHAS — " + campaign.title;
+  $("sheetTitle").textContent = "FICHAS − " + campaign.title;
   $("sheetList").replaceChildren();
   message("sheetMessage", "Buscando fichas atribuídas a esta conta…");
   await refreshAssignedSheets(true);
@@ -579,7 +579,7 @@ async function openMasterManager(campaign) {
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = true;
   $("masterWindow").hidden = false;
-  $("masterTitle").textContent = "FICHAS — " + campaign.title;
+  $("masterTitle").textContent = "FICHAS − " + campaign.title;
   $("masterCharacterList").replaceChildren();
   message("masterMessage", "Carregando jogadores e fichas…");
   try {
