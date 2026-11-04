@@ -10,7 +10,7 @@ async function main() {
     async query(sql, params = []) {
       if (sql.includes("INSERT INTO anitos_users")) {
         const user = {
-          id:params[0], email:null, display_name:params[1], employee_name:params[2], role:"player",
+          id:params[0], display_name:params[1], employee_name:params[2], role:"player",
           password_salt:params[3], password_hash:params[4], is_premium:false, is_dev:false,
           username:params[5], recovery_salt:params[6], recovery_hash:params[7],
           recovery_code_salt:params[8], recovery_code_hash:params[9], profile_complete:false

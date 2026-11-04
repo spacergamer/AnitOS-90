@@ -177,8 +177,7 @@ async function api(url,options={}) {
 }
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 function updatePublicCodeField(){
-  const legacyEmail=mode==="login"&&$("username").value.trim().includes("@");
-  const visible=mode==="login"&&!legacyEmail;
+  const visible=mode==="login";
   $("publicCode").hidden=!visible;
   $("publicCodeSeparator").hidden=!visible;
   $("publicCode").required=visible;

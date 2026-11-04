@@ -9,13 +9,17 @@ CREATE TABLE IF NOT EXISTS anitos_state (
 
 CREATE TABLE IF NOT EXISTS anitos_users (
   id text PRIMARY KEY,
-  email text NOT NULL UNIQUE,
   display_name text NOT NULL,
   role text NOT NULL CHECK (role IN ('master','player')),
   password_salt text NOT NULL,
   password_hash text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Keep existing installations aligned with the username-only account model.
+ALTER TABLE anitos_users DROP COLUMN IF EXISTS email;
+ALTER TABLE anitos_users DROP COLUMN IF EXISTS email_verified;
+ALTER TABLE anitos_users DROP COLUMN IF EXISTS legacy_login_enabled;
 
 CREATE TABLE IF NOT EXISTS anitos_sessions (
   token_hash text PRIMARY KEY,
