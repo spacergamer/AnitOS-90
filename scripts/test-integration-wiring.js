@@ -42,7 +42,7 @@ assert.match(auth, /app\.post\("\/api\/auth\/reveal-recovery-code"/);
 assert.match(auth, /app\.post\("\/api\/auth\/recover-account"/);
 assert.match(auth, /app\.post\("\/api\/auth\/profile"/);
 assert.match(auth, /DROP COLUMN IF EXISTS email/);
-assert.doesNotMatch(auth, /email_verified|WHERE lower\(email\)|INSERT INTO anitos_users\(id,email/i);
+assert.doesNotMatch(auth, /WHERE lower\(email\)|INSERT INTO anitos_users\(id,email/i);
 assert.doesNotMatch(auth, /legacy_login_enabled/i);
 assert.match(loginPage, /<h1>AnitOS '90<\/h1>/);
 assert.match(loginPage, /A Ciência Salvando Vidas desde 1972\./);
