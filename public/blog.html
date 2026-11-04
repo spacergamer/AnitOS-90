@@ -265,18 +265,12 @@ function setProfilePreview(){
   $("summaryGreeting").textContent=greeting+", "+(currentUser?.displayName||"usuário")+"!";
   $("memberSince").textContent=currentUser?.createdAt?new Date(currentUser.createdAt).toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}):"Data indisponível";
   $("profileBio").textContent=currentUser?.bio||"Este usuário ainda não escreveu uma bio.";
-  renderProfileFieldsView(currentUser?.customFields||[]);
   editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
   renderProfileFieldEditor();
   $("profileNameInput").value=currentUser?.displayName||"";
   $("profileBioInput").value=currentUser?.bio||"";
   $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
   $("profileBannerPreview").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
-}
-function renderProfileFieldsView(fields){
-  const body=$("profileFieldsView");body.replaceChildren();
-  if(!fields.length){const tr=document.createElement("tr"),a=document.createElement("td"),b=document.createElement("td");a.textContent="Informações";b.textContent="Nenhuma informação adicionada.";tr.append(a,b);body.append(tr);return;}
-  for(const field of fields){const tr=document.createElement("tr"),label=document.createElement("td"),value=document.createElement("td");label.textContent=field.label;value.textContent=field.value;tr.append(label,value);body.append(tr);}
 }
 function renderProfileFieldEditor(){
   const root=$("profileFieldEditor");root.replaceChildren();
