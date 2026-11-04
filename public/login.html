@@ -310,7 +310,7 @@ $("copyCreatedRecoveryCode").addEventListener("click",async()=>{
   if(!code){message("createdRecoveryCodeMessage","Nenhum código disponível para copiar.","error");return;}
   try{
     await navigator.clipboard.writeText(code);
-    message("createdRecoveryCodeMessage","Código de segurança copiado! Guarde-o em um local seguro.","success");
+    message("createdRecoveryCodeMessage","Copiado! Guarde-o em um local seguro.","success");
   }catch{
     message("createdRecoveryCodeMessage","Não foi possível copiar automaticamente. Selecione o código e copie manualmente.","error");
   }
