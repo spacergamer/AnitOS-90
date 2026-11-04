@@ -106,7 +106,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
       <p class="muted">ID CADASTRADO</p>
       <h2 id="registrationCredentialsTitle">Suas credenciais</h2>
       <p>Nome de usuário</p><strong id="createdUsername" class="membership-code"></strong>
-      <p>Código de segurança</p><strong id="createdRecoveryCode" class="membership-code"></strong>
+      <p>Código de segurança</p><div class="row"><strong id="createdRecoveryCode" class="membership-code"></strong><button type="button" id="copyCreatedRecoveryCode">Copiar</button></div><p id="createdRecoveryCodeMessage" class="muted" role="status" aria-live="polite"></p>
       <p class="muted"><strong>Guarde este código em um local seguro</strong>. Ele será exibido somente agora e poderá ser útil no futuro.</p>
       <button type="button" id="continueAfterCredentials">Continuar</button>
     </div>
@@ -304,6 +304,16 @@ $("revealRecoveryCode").addEventListener("click",async()=>{
 $("copyRecoveryCode").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText($("revealedRecoveryCode").textContent);$("recoveryModal").hidden=true;message("recoveryMessage","Código copiado. Cole-o no campo de recuperação.","success");}
   catch{message("modalRecoveryMessage","Não foi possível copiar automaticamente. Selecione o código e copie.","error");}
+});
+$("copyCreatedRecoveryCode").addEventListener("click",async()=>{
+  const code=$("createdRecoveryCode").textContent.trim();
+  if(!code){message("createdRecoveryCodeMessage","Nenhum código disponível para copiar.","error");return;}
+  try{
+    await navigator.clipboard.writeText(code);
+    message("createdRecoveryCodeMessage","Código de segurança copiado! Guarde-o em um local seguro.","success");
+  }catch{
+    message("createdRecoveryCodeMessage","Não foi possível copiar automaticamente. Selecione o código e copie manualmente.","error");
+  }
 });
 async function showNewCredentials(){
   $("authWindow").hidden=true;$("profileWindow").hidden=true;$("appWindow").hidden=true;$("registrationCredentialsModal").hidden=true;
