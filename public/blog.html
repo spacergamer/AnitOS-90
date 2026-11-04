@@ -176,7 +176,7 @@ button:disabled{opacity:.6;cursor:wait}
           <div class="summary-counters">
             <div><strong>Recados</strong><span>—</span></div>
             <div><strong>Postagens</strong><span>—</span></div>
-            <div><strong>Mesas</strong><span id="summaryCampaignCount">0</span></div>
+            <div><strong>Mesas</strong><span>—</span></div>
             <div><strong>Mensagens</strong><span>—</span></div>
           </div>
           <div class="summary-details">
@@ -347,7 +347,6 @@ $("profileForm").addEventListener("submit",async event=>{
     const result=await api("/api/campaigns");
     const campaigns=Array.isArray(result.campaigns)?result.campaigns:[];
     $("campaignCount").textContent="("+campaigns.length+")";
-    $("summaryCampaignCount").textContent=campaigns.length;
     const list=$("campaignList");list.replaceChildren();
     if(!campaigns.length){const empty=document.createElement("p");empty.className="empty-state";empty.textContent="Você ainda não participa de campanhas.";list.append(empty);return;}
     campaigns.slice(0,4).forEach(campaign=>{
