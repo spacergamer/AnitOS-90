@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,profileBanner:row.profile_banner_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
@@ -82,6 +82,7 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users DROP COLUMN IF EXISTS legacy_login_enabled;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS employee_name text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_photo_url text;
+    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_banner_url text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS bio text NOT NULL DEFAULT '';
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS motivation text NOT NULL DEFAULT '';
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_complete boolean NOT NULL DEFAULT true;
@@ -164,7 +165,7 @@ async function initializeAuthSchema(db) {
 }
 
 function registerAuthRoutes(app, express, db) {
-  app.use("/api", express.json({limit: "1mb"}));
+  app.use("/api", express.json({limit: "2mb"}));
 
   app.get("/account", (_req, res) => res.sendFile(require("node:path").join(__dirname, "public", "account.html")));
 
@@ -179,7 +180,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.employee_name,u.profile_photo_url,u.bio,u.motivation,u.profile_complete,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev
+        `SELECT u.id,u.display_name,u.employee_name,u.profile_photo_url,u.profile_banner_url,u.bio,u.motivation,u.profile_complete,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
@@ -339,14 +340,15 @@ function registerAuthRoutes(app, express, db) {
     try{
       const displayName=String(req.body?.displayName||"").trim().replace(/\s+/g," ").slice(0,48);
       const profilePhoto=String(req.body?.profilePhoto||"").trim();
+      const profileBanner=String(req.body?.profileBanner||"").trim();
       const bio=String(req.body?.bio||"").trim().slice(0,280);
-      const motivation=String(req.body?.motivation||"").trim().slice(0,3000);
-      if(displayName.length<2)return sendError(res,400,"Informe um nome de perfil com pelo menos 2 caracteres.");
-      if(profilePhoto){
-        if(profilePhoto.length>850000)return sendError(res,413,"A imagem do perfil excede o limite permitido.");
-        if(!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(profilePhoto))return sendError(res,400,"Envie uma imagem PNG, JPG ou WebP válida.");
+      if(displayName.length<2)return sendError(res,400,"Informe um nome de exibição com pelo menos 2 caracteres.");
+      for(const [label,image,max] of [["foto",profilePhoto,450000],["banner",profileBanner,900000]]){
+        if(!image)continue;
+        if(image.length>max)return sendError(res,413,"A imagem de "+label+" excede o limite permitido.");
+        if(!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(image))return sendError(res,400,"Envie uma imagem PNG, JPG ou WebP válida para "+label+".");
       }
-      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,bio=$3,motivation=$4,profile_complete=true WHERE id=$5 RETURNING id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,bio,motivation,req.user.id]);
+      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,profile_banner_url=$3,bio=$4,profile_complete=true WHERE id=$5 RETURNING id,display_name,employee_name,profile_photo_url,profile_banner_url,bio,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,profileBanner||null,bio,req.user.id]);
       if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0])});
     }catch(err){console.error("[auth] Falha ao salvar perfil:",err.message);return sendError(res,500,"Não foi possível salvar o perfil.");}
