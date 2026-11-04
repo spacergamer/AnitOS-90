@@ -131,7 +131,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <h2>Perfil</h2>
 <p class="muted">Complete sua personalidade na Anitope Science.</p>
 <form id="profileForm">
-<label>Foto</label><div id="photoDropZone" class="photo-drop" tabindex="0" role="button" aria-label="Enviar foto por arquivo ou arrastar até aqui"><input id="profilePhotoFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><span>Arraste uma imagem aqui ou <button type="button" id="chooseProfilePhoto" class="link-button">escolha um arquivo</button></span><small>PNG, JPG ou WebP · até 8 MB</small></div>
+<label>Foto</label><input id="profilePhoto" type="hidden"><div id="photoDropZone" class="photo-drop" tabindex="0" role="button" aria-label="Enviar foto por arquivo ou arrastar até aqui"><input id="profilePhotoFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><span>Arraste uma imagem aqui ou <button type="button" id="chooseProfilePhoto" class="link-button">escolha um arquivo</button></span><small>PNG, JPG ou WebP · até 8 MB</small></div>
 <img id="profilePreview" alt="Prévia da foto de perfil" hidden style="display:block;max-width:120px;max-height:120px;object-fit:cover;margin-top:8px;border:2px inset #888">
 <label for="profileBio">Biografia</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
 <label for="profileMotivation">Por que escolheu a Anitope Science?</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
