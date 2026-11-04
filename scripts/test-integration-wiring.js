@@ -57,7 +57,7 @@ assert.match(loginPage, /id="revealRecoveryCode"/);
 assert.match(loginPage, /id="profilePhoto"/);
 assert.match(loginPage, /id="profileBio"/);
 assert.match(loginPage, /id="profileMotivation"/);
-assert.match(loginPage, /Por que escolheu a Anitope Science\? \(Redação\)/);
+assert.match(loginPage, /Por que escolheu a Anitope Science\?/);\nassert.match(loginPage, /id="profilePhotoFile" type="file"/);\nassert.match(loginPage, /id="photoDropZone"/);\nassert.doesNotMatch(loginPage, /FOTO \(URL da imagem\)|id="profilePhoto" type="url"/);
 assert.match(loginPage, /id="registrationCredentialsModal"/);
 assert.doesNotMatch(loginPage, /window\.alert\(/);
 assert.match(loginPage, /scroll-lines/);
