@@ -70,7 +70,9 @@ button:disabled{opacity:.6;cursor:wait}
 .card h2{font-size:25px;color:var(--blue);margin:0 0 5px}
 .muted,small{font-size:19px;color:#444}
 .profile-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10001}
-.profile-editor-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;z-index:10002;margin:0;box-shadow:4px 4px 0 #000}\n[hidden]{display:none!important}\n.profile-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-editor-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;z-index:10002;margin:0;box-shadow:4px 4px 0 #000}
+[hidden]{display:none!important}
+.profile-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .profile-editor .wide{grid-column:1/-1}
 .profile-editor textarea{min-height:90px}
 .profile-preview-banner{height:74px;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
@@ -80,6 +82,49 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-side-note{font-size:19px;color:#333;line-height:1.2}
 @media(max-width:760px){body{padding:10px}.profile-layout{grid-template-columns:1fr}.profile-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profile-sidebar .orkut-box{margin:0}.profile-editor{grid-template-columns:1fr}.profile-editor .wide{grid-column:auto}.site-tab{min-width:0;flex:1 1 30%;padding:6px 5px}}
 @media(max-width:460px){.site-header{align-items:center}.brand-logo{width:42px;height:42px;flex-basis:42px}.brand-title{font-size:28px}.brand-subtitle{font-size:16px}.profile-sidebar{grid-template-columns:1fr}.profile-field-row{grid-template-columns:1fr}.site-nav{gap:3px;padding:5px}.site-tab{font-size:20px;flex:1 1 42%}}
+
+.dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+.profile-panel,.dashboard-main{min-width:0}
+.profile-panel{padding:4px}
+.profile-panel-content{background:#fff;border:2px inset var(--dark);margin-top:4px;padding:8px}
+.profile-cover{height:88px;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
+.profile-panel-identity{text-align:center;padding:0 5px 8px}
+.profile-avatar{display:block;width:94px;height:94px;margin:-28px auto 5px;position:relative;object-fit:cover;background:#e6eaf0;border:3px solid #fff;box-shadow:1px 1px 2px #000}
+.profile-display-name{font-size:27px;line-height:1.05;font-weight:bold;color:#000;overflow-wrap:anywhere}
+.profile-handle{font-size:19px;color:#444;margin-top:3px}
+.profile-edit-link{display:inline-block;margin-top:3px;padding:0;border:0;background:transparent;color:var(--blue);font:17px 'VT323',monospace;text-decoration:underline;cursor:pointer}
+.profile-edit-link:hover{color:#0000cc;background:transparent}
+.profile-extra{border-top:1px solid #aaa;padding:8px 3px 2px;text-align:left;font-size:19px;white-space:pre-wrap;overflow-wrap:anywhere}
+.profile-menu{display:grid;gap:3px;margin-top:7px}
+.profile-menu-item{display:block;width:100%;padding:5px 9px;text-align:left;background:#e5e5e5;border:1px solid #999;color:var(--blue);font:20px 'VT323',monospace;cursor:pointer}
+.profile-menu-item:hover,.profile-menu-item.active{background:#fff;color:#000080;text-decoration:underline}
+.profile-menu-item.active{font-weight:bold;border-left:4px solid var(--cyan)}
+.summary-panel{margin-bottom:14px}
+.summary-greeting{font-size:32px;color:var(--blue);margin:0 0 10px}
+.summary-counters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+.summary-counters>div{background:#e7e7e7;border:1px solid #999;padding:7px;text-align:center;display:grid;gap:2px}
+.summary-counters strong{font-size:19px;color:var(--blue)}
+.summary-counters span{font-size:25px;font-weight:bold}
+.summary-details{border-top:1px solid #aaa;padding-top:7px}
+.summary-details p{margin:5px 0;line-height:1.2}
+.unavailable-value{color:#555}
+.dashboard-widgets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+.dashboard-widget{min-width:0;margin:0}
+.dashboard-widget .orkut-box-content{height:100%;min-height:160px}
+.dashboard-widget h2{font-size:23px;color:var(--blue);margin:0 0 9px;line-height:1.1}
+.count-label{font-size:18px;color:#555;font-weight:normal}
+.empty-state{font-size:19px;color:#444;line-height:1.2;margin:8px 0}
+.widget-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:8px;border-top:1px solid #aaa}
+.widget-actions button,.widget-actions a{font:18px 'VT323',monospace;color:var(--blue);text-decoration:underline;background:none;border:0;padding:0;cursor:pointer}
+.campaign-list{display:grid;gap:7px}
+.campaign-item{padding:6px;background:#eee;border:1px solid #aaa;min-width:0}
+.campaign-item a{font-weight:bold;overflow-wrap:anywhere}
+.campaign-item small{display:block}
+.dashboard-notice{display:none;margin-top:10px;padding:7px;background:#111;color:var(--cyan);border:2px inset var(--dark)}
+.dashboard-notice.visible{display:block}
+@media(max-width:900px){.dashboard-grid{grid-template-columns:220px minmax(0,1fr)}.dashboard-widgets{grid-template-columns:1fr 1fr}.dashboard-widget:last-child{grid-column:1/-1}}
+@media(max-width:650px){.dashboard-grid{grid-template-columns:1fr}.profile-panel{max-width:none}.profile-panel-content{display:grid;grid-template-columns:1fr}.dashboard-widgets{grid-template-columns:1fr}.dashboard-widget:last-child{grid-column:auto}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 </head>
 <body>
@@ -100,34 +145,75 @@ button:disabled{opacity:.6;cursor:wait}
   <div id="navMessage" class="nav-message" role="status" aria-live="polite"></div>
 </header>
 <main>
-  <h1 class="page-heading">Perfil de usuário</h1>
-  <div class="profile-layout">
-    <aside class="profile-sidebar">
-      <section class="orkut-box">
+  <div class="dashboard-grid">
+    <aside class="profile-panel orkut-box">
+      <div class="orkut-box-title">Perfil</div>
+      <div class="profile-panel-content">
         <div class="profile-cover" id="profileCover"></div>
-        <div class="profile-identity">
+        <div class="profile-panel-identity">
           <img class="profile-avatar" id="profileAvatar" alt="Foto de perfil">
-          <div class="profile-identity-text">
-            <div class="profile-display-name" id="profileDisplayName"></div>
-            <div class="profile-handle" id="profileHandle"></div>
-            <button type="button" id="openProfileEditor" class="profile-edit-link">Editar perfil</button>
+          <div class="profile-display-name" id="profileDisplayName"></div>
+          <div class="profile-handle" id="profileHandle"></div>
+          <button type="button" id="openProfileEditor" class="profile-edit-link">editar perfil</button>
+        </div>
+        <div class="profile-extra" id="profileExtra">Informações extras ainda não adicionadas.</div>
+      </div>
+      <nav class="profile-menu" aria-label="Menu do perfil">
+        <a class="profile-menu-item active" href="/blog.html">Perfil</a>
+        <button class="profile-menu-item" type="button" data-panel-nav="Correio">Correio</button>
+        <a class="profile-menu-item" href="#campaignsPanel">Campanhas</a>
+        <button class="profile-menu-item" type="button" data-panel-nav="Bate-papo">Bate-papo</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Postagens">Postagens</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Comunidade">Comunidade</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Configurações">Configurações</button>
+      </nav>
+    </aside>
+    <section class="dashboard-main">
+      <section class="orkut-box summary-panel">
+        <div class="orkut-box-title">Resumo</div>
+        <div class="orkut-box-content">
+          <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
+          <div class="summary-counters">
+            <div><strong>Recados</strong><span>—</span></div>
+            <div><strong>Postagens</strong><span>—</span></div>
+            <div><strong>Mesas</strong><span id="summaryCampaignCount">0</span></div>
+            <div><strong>Mensagens</strong><span>—</span></div>
+          </div>
+          <div class="summary-details">
+            <p><strong>Membro desde:</strong> <span id="memberSince">Carregando...</span></p>
+            <p><strong>Resumo dos últimos 30 dias:</strong> <span class="unavailable-value">Estatísticas sociais ainda não disponíveis.</span></p>
+            <p><strong>Frase do dia:</strong> <span class="unavailable-value">Aguardando a lista de frases.</span></p>
           </div>
         </div>
       </section>
-      <section class="orkut-box">
-        <div class="orkut-box-title">Quem sou eu</div>
-        <div class="orkut-box-content"><div class="profile-bio" id="profileBio">Este usuário ainda não escreveu uma bio.</div></div>
-      </section>
-    </aside>
-    <section class="profile-main">
-      <section class="orkut-box">
-        <div class="orkut-box-title">Sobre mim</div>
-        <div class="orkut-box-content">
-          <table class="profile-scrap-table"><tbody id="profileFieldsView"><tr><td>Informações</td><td>Nenhuma informação adicionada.</td></tr></tbody></table>
-        </div>
-      </section>
+      <div class="dashboard-widgets">
+        <section class="orkut-box dashboard-widget" id="requestsPanel">
+          <div class="orkut-box-title">Pedidos</div>
+          <div class="orkut-box-content">
+            <h2>Novos pedidos de amizade <span class="count-label">(indisponível)</span></h2>
+            <p class="empty-state">O sistema de amizades ainda não foi implementado.</p>
+          </div>
+        </section>
+        <section class="orkut-box dashboard-widget" id="friendsPanel">
+          <div class="orkut-box-title">Amigos</div>
+          <div class="orkut-box-content">
+            <h2>Meus amigos <span class="count-label">(indisponível)</span></h2>
+            <p class="empty-state">Sua lista de amigos aparecerá aqui quando o sistema estiver disponível.</p>
+            <div class="widget-actions"><button type="button" data-panel-nav="Amigos">ver todos</button><button type="button" data-panel-nav="Gerenciar amigos">gerenciar</button></div>
+          </div>
+        </section>
+        <section class="orkut-box dashboard-widget" id="campaignsPanel">
+          <div class="orkut-box-title">Campanhas</div>
+          <div class="orkut-box-content">
+            <h2>Minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
+            <div id="campaignList" class="campaign-list"><p class="empty-state">Carregando campanhas...</p></div>
+            <div class="widget-actions"><a href="/home.html">ver todas</a></div>
+          </div>
+        </section>
+      </div>
     </section>
   </div>
+  <div id="dashboardNotice" class="dashboard-notice" role="status" aria-live="polite"></div>
   <div id="profileEditorBackdrop" class="profile-editor-backdrop" hidden></div>
   <section class="orkut-box profile-editor-modal" id="profileEditorWindow" hidden>
     <div class="orkut-box-title">Editar perfil</div>
@@ -173,7 +259,11 @@ function setProfilePreview(){
   $("profileCover").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
   $("profileAvatar").src=currentUser?.profilePhoto||"";
   $("profileDisplayName").textContent=currentUser?.displayName||"Usuário";
-  $("profileHandle").textContent="@"+(currentUser?.username||"");
+  $("profileHandle").textContent=currentUser?.username||"";
+  const hour=new Date().getHours();
+  const greeting=hour<12?"Bom dia":hour<18?"Boa tarde":"Boa noite";
+  $("summaryGreeting").textContent=greeting+", "+(currentUser?.displayName||"usuário")+"!";
+  $("memberSince").textContent=currentUser?.createdAt?new Date(currentUser.createdAt).toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}):"Data indisponível";
   $("profileBio").textContent=currentUser?.bio||"Este usuário ainda não escreveu uma bio.";
   renderProfileFieldsView(currentUser?.customFields||[]);
   editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
@@ -209,6 +299,11 @@ $("addProfileField").addEventListener("click",()=>{
 
 
 
+document.querySelectorAll("[data-panel-nav]").forEach(button=>button.addEventListener("click",()=>{
+  const notice=$("dashboardNotice");
+  notice.textContent=button.dataset.panelNav+" ainda não está disponível. Esta área será adicionada futuramente.";
+  notice.classList.add("visible");
+}));
 document.querySelectorAll("[data-nav]").forEach(button=>button.addEventListener("click",()=>{
   const feature=button.dataset.nav==="friends"?"Amigos":"Bate-papo";
   const notice=$("navMessage");
@@ -254,6 +349,24 @@ $("profileForm").addEventListener("submit",async event=>{
   finally{button.disabled=false;}
 });
 
+(async function loadCampaigns(){
+  try{
+    const result=await api("/api/campaigns");
+    const campaigns=Array.isArray(result.campaigns)?result.campaigns:[];
+    $("campaignCount").textContent="("+campaigns.length+")";
+    $("summaryCampaignCount").textContent=campaigns.length;
+    const list=$("campaignList");list.replaceChildren();
+    if(!campaigns.length){const empty=document.createElement("p");empty.className="empty-state";empty.textContent="Você ainda não participa de campanhas.";list.append(empty);return;}
+    campaigns.slice(0,4).forEach(campaign=>{
+      const item=document.createElement("div");item.className="campaign-item";
+      const link=document.createElement("a");link.href="/home.html";link.textContent=campaign.title||"Campanha";
+      const meta=document.createElement("small");meta.textContent=campaign.is_owner?"Você é o Mestre":"Participante";
+      item.append(link,meta);list.append(item);
+    });
+  }catch{
+    $("campaignList").textContent="Não foi possível carregar suas campanhas.";
+  }
+})();
 (async function bootBlog(){try{const result=await api("/api/auth/me");currentUser=result.user;pendingProfilePhoto=currentUser?.profilePhoto||null;pendingProfileBanner=currentUser?.profileBanner||null;setProfilePreview();}catch{window.location.replace("/login.html?reason=session");}})();
 </script>
 </body>
