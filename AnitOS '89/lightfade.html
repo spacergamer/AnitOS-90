@@ -1393,7 +1393,7 @@
                 console.error('[ANITOPEBOARD] Falha ao sincronizar campanha:', error);
                 const label = document.getElementById('remote-save-label');
                 if (revision === remoteSaveRevision) {
-                    if (label) label.textContent = 'ERRO AO SALVAR — exporte um backup e confira sua conexão.';
+                    if (label) label.textContent = 'ERRO AO SALVAR − exporte um backup e confira sua conexão.';
                     const feedback = document.getElementById('campaign-save-feedback');
                     if (feedback) feedback.textContent = 'Falha no servidor. Exporte um backup e tente novamente.';
                 }
@@ -2063,7 +2063,7 @@
         function renderDataTab(container) {
             container.innerHTML = `
                 <div class="char-card">
-                    <div class="section-title">DADOS — ANITOPE RNG</div>
+                    <div class="section-title">DADOS − ANITOPE RNG</div>
                     <p>Abra o RGN em outra aba para manter esta campanha aberta. Assim você pode continuar editando o ANITOPEBOARD e alternar para a sala de dados quando precisar.</p>
                     <div class="flex-row" style="margin-top:14px; flex-wrap:wrap;">
                         <a class="btn" href="/room.html?campaign=${encodeURIComponent(remoteCampaignId)}" target="_blank" rel="noopener noreferrer">ABRIR RGN EM NOVA ABA ↗</a>
