@@ -46,6 +46,8 @@ main{width:min(1120px,100%);margin:0 auto;position:relative;z-index:1}
 .profile-identity-text{min-width:0;padding-bottom:5px}
 .profile-display-name{font-size:27px;line-height:1.05;font-weight:bold;color:#000;overflow-wrap:anywhere}
 .profile-handle{font-size:19px;color:#444;margin-top:4px}
+.profile-edit-link{display:inline-block;margin-top:3px;padding:0;border:0;background:transparent;color:var(--blue);font:17px 'VT323',monospace;text-decoration:underline;cursor:pointer}
+.profile-edit-link:hover{color:#0000cc;background:transparent}
 .profile-bio{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.25;color:#111}
 .profile-scrap-table{width:100%;border-collapse:collapse;font:20px 'VT323',monospace}
 .profile-scrap-table td{border-bottom:1px solid #aaa;padding:7px 8px;vertical-align:top;line-height:1.2}
@@ -67,7 +69,8 @@ button:disabled{opacity:.6;cursor:wait}
 .card{background:#fff;border:2px inset var(--dark);padding:12px;margin-top:12px}
 .card h2{font-size:25px;color:var(--blue);margin:0 0 5px}
 .muted,small{font-size:19px;color:#444}
-.profile-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10001}\n.profile-editor-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;z-index:10002;margin:0;box-shadow:4px 4px 0 #000}\n[hidden]{display:none!important}\n.profile-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10001}
+.profile-editor-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;z-index:10002;margin:0;box-shadow:4px 4px 0 #000}\n[hidden]{display:none!important}\n.profile-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .profile-editor .wide{grid-column:1/-1}
 .profile-editor textarea{min-height:90px}
 .profile-preview-banner{height:74px;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
@@ -107,9 +110,9 @@ button:disabled{opacity:.6;cursor:wait}
           <div class="profile-identity-text">
             <div class="profile-display-name" id="profileDisplayName"></div>
             <div class="profile-handle" id="profileHandle"></div>
+            <button type="button" id="openProfileEditor" class="profile-edit-link">Editar perfil</button>
           </div>
         </div>
-        <div class="orkut-box-content" id="profileIntro"><button type="button" id="openProfileEditor" class="primary-button">Editar</button></div>
       </section>
       <section class="orkut-box">
         <div class="orkut-box-title">Quem sou eu</div>
@@ -154,6 +157,7 @@ async function api(url, options = {}) {
 function openProfileEditor(){
   $("profileEditorBackdrop").hidden=false;
   $("profileEditorWindow").hidden=false;
+  $("profileNameInput").focus();
 }
 function closeProfileEditor(){
   $("profileEditorWindow").hidden=true;
