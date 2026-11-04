@@ -345,11 +345,14 @@ function registerAuthRoutes(app, express, db) {
   app.post("/api/auth/profile",databaseRequired,requireAuth,limitAuthAttempts,async(req,res)=>{
     try{
       const displayName=String(req.body?.displayName||"").trim().replace(/\s+/g," ").slice(0,48);
-      const profilePhoto=String(req.body?.profilePhoto||"").trim().slice(0,500);
+      const profilePhoto=String(req.body?.profilePhoto||"").trim();
       const bio=String(req.body?.bio||"").trim().slice(0,280);
       const motivation=String(req.body?.motivation||"").trim().slice(0,3000);
       if(displayName.length<2)return sendError(res,400,"Informe um nome de perfil com pelo menos 2 caracteres.");
-      if(profilePhoto){let parsed;try{parsed=new URL(profilePhoto)}catch{return sendError(res,400,"A foto precisa usar um endereço HTTP ou HTTPS válido.")}if(!["http:","https:"].includes(parsed.protocol))return sendError(res,400,"Endereço de foto inválido.");}
+      if(profilePhoto){
+        if(profilePhoto.length>850000)return sendError(res,413,"A imagem do perfil excede o limite permitido.");
+        if(!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(profilePhoto))return sendError(res,400,"Envie uma imagem PNG, JPG ou WebP válida.");
+      }
       const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,bio=$3,motivation=$4,profile_complete=true WHERE id=$5 RETURNING id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,bio,motivation,req.user.id]);
       if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0])});

@@ -25,7 +25,7 @@ input,select{width:100%;font:inherit;padding:5px;border:2px inset var(--dark);ba
 .membership-window>.bar button{padding:0 8px;min-width:32px}
 .membership-content{padding:22px}
 .membership-content h2{font-size:36px;margin:4px 0 16px;color:var(--blue)}
-.membership-code{display:block;overflow-wrap:anywhere;font-size:26px;letter-spacing:2px;background:#111;color:var(--cyan);padding:10px;margin:8px 0}
+.photo-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:112px;padding:16px;border:2px dashed #555;background:#e8e8e8;text-align:center}.photo-drop.dragover{background:#d2ffff;border-color:#008080}.photo-drop small{font-size:17px}.membership-code{display:block;overflow-wrap:anywhere;font-size:26px;letter-spacing:2px;background:#111;color:var(--cyan);padding:10px;margin:8px 0}
 
 button,.button{font:inherit;background:var(--win);border-top:2px solid var(--light);border-left:2px solid var(--light);border-right:2px solid var(--black);border-bottom:2px solid var(--black);padding:5px 12px;cursor:pointer;color:#111;text-decoration:none;display:inline-block}
 button:active,.button:active{border:2px inset var(--dark)}
@@ -65,7 +65,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div id="animalField" hidden><label for="favoriteAnimal">Animal favorito</label><input id="favoriteAnimal" maxlength="100" autocomplete="off" placeholder="Axolote"></div>
 <label for="password">Senha</label><div class="password-row"><input id="password" type="password" minlength="8" maxlength="200" required autocomplete="current-password" placeholder="Senha1234!"><button id="togglePassword" type="button" aria-pressed="false">Mostrar senha</button></div>
 <div id="confirmPasswordField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" minlength="8" maxlength="200" autocomplete="new-password" placeholder="Senha1234!"></div>
-<p id="passwordHint" class="muted" hidden>Guarde seu identificador e seu código de recuperação em um local seguro.</p>
+
 <p id="forgotPasswordLink"><button type="button" class="link-button" id="openRecovery">Esqueci a senha.</button></p>
 <div class="row" style="margin-top:14px"><button id="submitAuth" type="submit">Entrar</button><button id="cancelRegister" type="button" hidden>Voltar</button></div>
 <p id="authMessage" role="status" class="muted"></p>
@@ -103,11 +103,11 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
   <section class="membership-window" role="dialog" aria-modal="true" aria-labelledby="registrationCredentialsTitle">
     <div class="bar"><span>ANITOPE SCIENCE — IDENTIFICAÇÃO</span><button type="button" id="closeRegistrationCredentials" aria-label="Continuar">×</button></div>
     <div class="membership-content">
-      <p class="muted">CADASTRO CONCLUÍDO</p>
+      <p class="muted">ID CADASTRADO</p>
       <h2 id="registrationCredentialsTitle">Suas credenciais</h2>
       <p>Nome de usuário</p><strong id="createdUsername" class="membership-code"></strong>
-      <p>Código de recuperação</p><strong id="createdRecoveryCode" class="membership-code"></strong>
-      <p class="muted">Guarde o código de recuperação em um local seguro. Ele será exibido somente nesta etapa.</p>
+      <p>Código de segurança</p><strong id="createdRecoveryCode" class="membership-code"></strong>
+      <p class="muted"><strong>Guarde este código em um local seguro</strong>. Ele será exibido somente agora e poderá ser útil no futuro.</p>
       <button type="button" id="continueAfterCredentials">Continuar</button>
     </div>
   </section>
@@ -129,12 +129,12 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <div class="bar"><span>IDENTIFICAÇÃO DE USUÁRIO</span><span>PROFILE.SYS</span></div>
 <div class="content">
 <h2>Perfil</h2>
-<p class="muted">Complete sua identificação na Anitope Science.</p>
+<p class="muted">Complete sua personalidade na Anitope Science.</p>
 <form id="profileForm">
-<label for="profilePhoto">FOTO (URL da imagem)</label><input id="profilePhoto" type="url" maxlength="500" placeholder="https://exemplo.com/foto.png">
+<label>Foto</label><input id="profilePhoto" type="hidden"><div id="photoDropZone" class="photo-drop" tabindex="0" role="button" aria-label="Enviar foto por arquivo ou arrastar até aqui"><input id="profilePhotoFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><span>Arraste uma imagem aqui ou <button type="button" id="chooseProfilePhoto" class="link-button">escolha um arquivo</button></span><small>PNG, JPG ou WebP · até 8 MB</small></div>
 <img id="profilePreview" alt="Prévia da foto de perfil" hidden style="display:block;max-width:120px;max-height:120px;object-fit:cover;margin-top:8px;border:2px inset #888">
-<label for="profileBio">Bio</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
-<label for="profileMotivation">Por que escolheu a Anitope Science? (Redação)</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
+<label for="profileBio">Biografia</label><textarea id="profileBio" maxlength="280" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
+<label for="profileMotivation">Por que escolheu a Anitope Science?</label><textarea id="profileMotivation" maxlength="3000" rows="6" placeholder="Escreva sua redação..."></textarea>
 <button type="submit" id="saveProfile" style="margin-top:12px">Finalizar cadastro</button>
 <p id="profileMessage" role="status" class="muted"></p>
 </form>
@@ -198,7 +198,7 @@ async function api(url,options={}) {
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 function setMode(next){
   mode=next;
-  $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":"Cadastrar ID A.S.";
+  $("authHeading").textContent=mode==="login"?"Entrar no AnitOS":"Registrar";
   $("authForm").hidden=mode==="recovery";
   $("recoveryForm").hidden=mode!=="recovery";
   $("employeeNameField").hidden=mode!=="register";
@@ -210,11 +210,10 @@ function setMode(next){
   $("favoriteAnimal").required=mode==="register";
   $("confirmPassword").required=mode==="register";
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
-  $("passwordHint").hidden=mode!=="register";
   $("forgotPasswordLink").hidden=mode!=="login";
   $("registerAction").hidden=mode!=="login";
   $("cancelRegister").hidden=mode!=="register";
-  $("submitAuth").textContent=mode==="register"?"Cadastrar ID A.S.":"Entrar";
+  $("submitAuth").textContent=mode==="register"?"Registrar":"Entrar";
   $("username").placeholder=mode==="register"?"g_johnson":"bob.";
   $("username").value="";
   message("authMessage","");
