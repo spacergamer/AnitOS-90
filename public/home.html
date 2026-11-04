@@ -52,6 +52,17 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 
 @media(max-width:600px){.account-actions{gap:4px}.account-actions button{font-size:17px;padding:4px}.membership-content{padding:14px}.pro-price{font-size:36px}}[hidden]{display:none!important}
 @media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
+
+.home-layout{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:16px;align-items:start}
+.home-main{min-width:0;grid-column:1;grid-row:1}
+.home-sidebar{grid-column:2;grid-row:1;position:sticky;top:14px;background:#bdbdbd;border:2px outset #eee;padding:7px;box-shadow:2px 2px 0 #555}
+.home-sidebar-title{background:var(--blue);color:#fff;padding:5px 7px;font-size:20px;margin-bottom:7px;text-align:center}
+.home-nav-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;margin:4px 0;padding:8px 9px;font-size:23px;background:#c0c0c0;border:2px outset #fff}
+.home-nav-item span{width:23px;text-align:center;color:var(--blue)}
+.home-nav-item:active{border-style:inset}
+.home-sidebar-separator{height:2px;border-top:1px solid #777;border-bottom:1px solid #fff;margin:9px 2px}
+.home-nav-exit{color:#8b0000}
+@media(max-width:760px){.home-layout{grid-template-columns:1fr}.home-sidebar{grid-column:1;grid-row:1;position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.home-sidebar-title,.home-sidebar-separator{grid-column:1/-1}.home-nav-item{margin:0}}
 </style>
 </head>
 <body>
@@ -66,7 +77,18 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 
 <section class="window" id="appWindow" hidden>
 <div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><div class="account-actions"><button type="button" id="showMembership">Seja Membro</button><button id="deleteAccount" type="button">Deletar conta</button><button id="logout" type="button">Encerrar Sessão</button></div></div>
-<div class="content">
+<div class="content home-layout">
+<aside class="home-sidebar" aria-label="Menu principal">
+  <div class="home-sidebar-title">ANITOPE NETWORK</div>
+  <button type="button" class="home-nav-item"><span>◉</span> Perfil</button>
+  <button type="button" class="home-nav-item"><span>♧</span> Amigos</button>
+  <button type="button" class="home-nav-item"><span>▣</span> Bate-papo</button>
+  <button type="button" class="home-nav-item"><span>◎</span> Salas Online</button>
+  <button type="button" class="home-nav-item"><span>★</span> Seja Membro</button>
+  <div class="home-sidebar-separator"></div>
+  <button type="button" class="home-nav-item home-nav-exit"><span>↪</span> Sair</button>
+</aside>
+<div class="home-main">
 <p id="roleLabel"></p>
 <div id="membershipModal" class="modal-backdrop" hidden role="presentation">
   <section class="membership-window" role="dialog" aria-modal="true" aria-labelledby="membershipTitle">
@@ -115,6 +137,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 <h2 style="margin-top:22px">Minhas campanhas</h2>
 <p id="campaignMessage" class="muted">Carregando campanhas…</p>
 <div id="campaignList" class="grid"></div>
+</div>
 </div>
 </section>
 <section class="window" id="sheetWindow" hidden>
