@@ -46,7 +46,7 @@ assert.match(loginPage, /<h1>AnitOS '90<\/h1>/);
 assert.match(loginPage, /A Ciência Salvando Vidas desde 1972\./);
 assert.match(loginPage, /id="employeeName"/);
 assert.match(loginPage, /id="username"/);
-assert.doesNotMatch(loginPage, /publicCode|public_code|>#<\/span>/);
+assert.doesNotMatch(loginPage, /id="publicCode"|id="publicCodeSeparator"|>#<\/span>/);
 assert.match(loginPage, /id="togglePassword"/);
 assert.match(loginPage, /id="openRegister"[^>]*>\s*Criar conta/);
 assert.match(loginPage, /id="cancelRegister"/);
