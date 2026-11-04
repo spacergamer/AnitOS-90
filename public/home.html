@@ -11,7 +11,16 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--teal),#000033);font-family:'VT323',monospace;font-size:22px;color:#111;padding:24px}
 body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%);background-size:100% 4px}body::before{z-index:10000;animation:scroll-lines 8s linear infinite}body::after{z-index:9999}@keyframes scroll-lines{0%{background-position:0 0}100%{background-position:0 100%}}@media(prefers-reduced-motion:reduce){body::before{animation:none}}
-main{max-width:960px;margin:0 auto;position:relative;z-index:1}
+main{max-width:1180px;margin:0 auto;position:relative;z-index:1}
+.home-shell{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:16px;align-items:start}
+.home-sidebar{background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);padding:7px;box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light)}
+.home-sidebar-title{background:var(--blue);color:#fff;padding:5px 7px;font-size:20px;margin-bottom:7px;text-align:center}
+.home-nav-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;margin:4px 0;padding:8px 9px;font-size:23px;background:#c0c0c0;border:2px outset #fff}
+.home-nav-item span{width:23px;text-align:center;color:var(--blue)}
+.home-nav-item:active{border-style:inset}
+.home-sidebar-separator{height:2px;border-top:1px solid #777;border-bottom:1px solid #fff;margin:9px 2px}
+.home-nav-exit{color:#8b0000}
+@media(max-width:760px){.home-shell{grid-template-columns:1fr}.home-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.home-sidebar-title,.home-sidebar-separator{grid-column:1/-1}.home-nav-item{margin:0}}
 .window{background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light);padding:4px;margin:0 0 18px}
 .bar{background:linear-gradient(90deg,var(--blue),#1084d0);color:white;padding:4px 8px;font-weight:bold;display:flex;justify-content:space-between;gap:10px}
 .content{padding:18px}
@@ -53,16 +62,6 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 @media(max-width:600px){.account-actions{gap:4px}.account-actions button{font-size:17px;padding:4px}.membership-content{padding:14px}.pro-price{font-size:36px}}[hidden]{display:none!important}
 @media(max-width:600px){body{padding:10px}.content{padding:12px}h1{font-size:32px}}
 
-.home-layout{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:16px;align-items:start}
-.home-main{min-width:0;grid-column:1;grid-row:1}
-.home-sidebar{grid-column:2;grid-row:1;position:sticky;top:14px;background:#bdbdbd;border:2px outset #eee;padding:7px;box-shadow:2px 2px 0 #555}
-.home-sidebar-title{background:var(--blue);color:#fff;padding:5px 7px;font-size:20px;margin-bottom:7px;text-align:center}
-.home-nav-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;margin:4px 0;padding:8px 9px;font-size:23px;background:#c0c0c0;border:2px outset #fff}
-.home-nav-item span{width:23px;text-align:center;color:var(--blue)}
-.home-nav-item:active{border-style:inset}
-.home-sidebar-separator{height:2px;border-top:1px solid #777;border-bottom:1px solid #fff;margin:9px 2px}
-.home-nav-exit{color:#8b0000}
-@media(max-width:760px){.home-layout{grid-template-columns:1fr}.home-sidebar{grid-column:1;grid-row:1;position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.home-sidebar-title,.home-sidebar-separator{grid-column:1/-1}.home-nav-item{margin:0}}
 </style>
 </head>
 <body>
@@ -75,19 +74,10 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </div>
 </section>
 
-<section class="window" id="appWindow" hidden>
+<div class="home-shell" id="homeShell" hidden>
+<section class="window" id="appWindow">
 <div class="bar"><span id="welcome">CENTRAL DO USUÁRIO</span><div class="account-actions"><button type="button" id="showMembership">Seja Membro</button><button id="deleteAccount" type="button">Deletar conta</button><button id="logout" type="button">Encerrar Sessão</button></div></div>
-<div class="content home-layout">
-<aside class="home-sidebar" aria-label="Menu principal">
-  <div class="home-sidebar-title">ANITOPE NETWORK</div>
-  <button type="button" class="home-nav-item"><span>◉</span> Perfil</button>
-  <button type="button" class="home-nav-item"><span>♧</span> Amigos</button>
-  <button type="button" class="home-nav-item"><span>▣</span> Bate-papo</button>
-  <button type="button" class="home-nav-item"><span>◎</span> Salas Online</button>
-  <button type="button" class="home-nav-item"><span>★</span> Seja Membro</button>
-  <div class="home-sidebar-separator"></div>
-  <button type="button" class="home-nav-item home-nav-exit"><span>↪</span> Sair</button>
-</aside>
+<div class="content">
 <div class="home-main">
 <p id="roleLabel"></p>
 <div id="membershipModal" class="modal-backdrop" hidden role="presentation">
@@ -140,6 +130,17 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
 </div>
 </div>
 </section>
+<aside class="home-sidebar" id="homeSidebar" aria-label="Menu principal">
+  <div class="home-sidebar-title">ANITOPE NETWORK</div>
+  <button type="button" class="home-nav-item"><span>◉</span> Perfil</button>
+  <button type="button" class="home-nav-item"><span>♧</span> Amigos</button>
+  <button type="button" class="home-nav-item"><span>▣</span> Bate-papo</button>
+  <button type="button" class="home-nav-item"><span>◎</span> Salas Online</button>
+  <button type="button" class="home-nav-item"><span>★</span> Seja Membro</button>
+  <div class="home-sidebar-separator"></div>
+  <button type="button" class="home-nav-item home-nav-exit"><span>↪</span> Sair</button>
+</aside>
+</div>
 <section class="window" id="sheetWindow" hidden>
 <div class="bar"><span id="sheetTitle">FICHAS ATRIBUÍDAS</span><button id="closeSheets" type="button">Voltar</button></div>
 <div class="content"><p id="sheetMessage" class="muted">Carregando fichas…</p><p id="sheetUpdated" class="muted">Atualização automática a cada 1 segundo.</p><div id="sheetList" class="grid"></div></div>
@@ -272,6 +273,7 @@ $("deleteAccount").addEventListener("click", async () => {
 $("logout").addEventListener("click", async () => {
   try { await api("/api/auth/logout", {method:"POST",body:"{}"}); } catch {}
   currentUser = null;
+  $("homeShell").hidden = true;
   $("appWindow").hidden = true;
   window.location.replace("/login.html");
 });
@@ -374,6 +376,7 @@ $("closeSheets").addEventListener("click", () => {
   assignedSheetTimer = null;
   assignedSheetCampaign = null;
   $("sheetWindow").hidden = true;
+  $("homeShell").hidden = false;
   $("appWindow").hidden = false;
 });
 function renderSheetData(value) {
@@ -444,6 +447,7 @@ async function openAssignedSheets(campaign) {
   if (assignedSheetTimer) clearInterval(assignedSheetTimer);
   assignedSheetTimer = null;
   assignedSheetCampaign = campaign;
+  $("homeShell").hidden = true;
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = false;
   $("sheetTitle").textContent = "FICHAS − " + campaign.title;
@@ -506,6 +510,7 @@ let managedCampaign = null;
 let managedMembers = [];
 $("closeMaster").addEventListener("click", () => {
   $("masterWindow").hidden = true;
+  $("homeShell").hidden = false;
   $("appWindow").hidden = false;
 });
 $("createCharacterForm").addEventListener("submit", async event => {
@@ -535,6 +540,7 @@ $("createCharacterForm").addEventListener("submit", async event => {
 });
 async function openMasterManager(campaign) {
   managedCampaign = campaign;
+  $("homeShell").hidden = true;
   $("appWindow").hidden = true;
   $("sheetWindow").hidden = true;
   $("masterWindow").hidden = false;
@@ -676,6 +682,7 @@ async function loadCampaigns() {
 }
 async function showApp(user) {
   currentUser = user;
+  $("homeShell").hidden = false;
   $("appWindow").hidden = false;
   $("welcome").textContent = "USUÁRIO: @" + user.displayName;
   $("roleLabel").textContent = "Perfil: " + (user.role === "master" ? "Mestre" : "Jogador") + " · @" + user.displayName + (user.dev ? " · DEV" : "") + (user.premium ? " · Premium" : "");
