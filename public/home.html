@@ -198,6 +198,10 @@ function openMembership() {
 }
 function closeMembership() { $("membershipModal").hidden = true; }
 $("showMembership").addEventListener("click", openMembership);
+if(new URLSearchParams(window.location.search).get("open")==="membership"){
+  openMembership();
+  history.replaceState(null,"",window.location.pathname);
+}
 $("closeMembership").addEventListener("click", closeMembership);
 $("membershipModal").addEventListener("click", event => {
   if (event.target === $("membershipModal")) closeMembership();
