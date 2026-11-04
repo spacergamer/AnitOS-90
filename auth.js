@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,profileBanner:row.profile_banner_url||null,bio:row.bio||"",customFields:Array.isArray(row.profile_fields)?row.profile_fields:[],motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,profileBanner:row.profile_banner_url||null,bio:row.bio||"",customFields:Array.isArray(row.profile_fields)?row.profile_fields:[],motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,createdAt:row.created_at||null,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
@@ -181,7 +181,7 @@ function registerAuthRoutes(app, express, db) {
       const token = readCookie(req, COOKIE);
       if (!/^[a-f0-9]{64}$/.test(token)) return sendError(res, 401, "Faça login para continuar.");
       const result = await db.query(
-        `SELECT u.id,u.display_name,u.employee_name,u.profile_photo_url,u.profile_banner_url,u.bio,u.profile_fields,u.motivation,u.profile_complete,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev
+        `SELECT u.id,u.display_name,u.employee_name,u.profile_photo_url,u.profile_banner_url,u.bio,u.profile_fields,u.motivation,u.profile_complete,u.username,u.public_code,u.recovery_salt,u.recovery_hash,u.recovery_code_salt,u.recovery_code_hash,u.role,u.is_premium,u.is_dev,u.created_at
          FROM anitos_sessions s JOIN anitos_users u ON u.id=s.user_id
          WHERE s.token_hash=$1 AND s.expires_at>now()`,
         [tokenHash(token)]
