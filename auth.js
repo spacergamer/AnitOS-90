@@ -225,7 +225,7 @@ function registerAuthRoutes(app, express, db) {
         [id,employeeName,employeeName,passwordSalt,passwordHash,username,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
       );
       await createSession(id,res);
-      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username+" #"+publicCode});
+      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username});
     }catch(err){
       if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
       console.error("[auth] Falha ao criar conta:",err.message);
