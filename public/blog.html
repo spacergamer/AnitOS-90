@@ -144,7 +144,6 @@ function readProfileImage(file,kind){
     reader.readAsDataURL(file);
   });
 }
-$("openProfile").addEventListener("click",openProfile);
 $("closeProfile").addEventListener("click",closeProfile);
 $("profilePhotoInput").addEventListener("change",async()=>{try{pendingProfilePhoto=await readProfileImage($("profilePhotoInput").files[0],"photo");$("profilePhotoPreview").src=pendingProfilePhoto||"";}catch(e){message("profileMessage",e.message,"error");}});
 $("profileBannerInput").addEventListener("change",async()=>{try{pendingProfileBanner=await readProfileImage($("profileBannerInput").files[0],"banner");$("profileBannerPreview").style.backgroundImage=pendingProfileBanner?"url("+JSON.stringify(pendingProfileBanner)+")":"";}catch(e){message("profileMessage",e.message,"error");}});
