@@ -109,7 +109,21 @@ button:disabled{opacity:.6;cursor:wait}
             <div class="profile-handle" id="profileHandle"></div>
           </div>
         </div>
-        <div class="orkut-box-content"><div class="profile-side-note">Este é o seu espaço na Anitope Network.</div></div>
+        <div class="orkut-box-content" id="profileIntro"><div class="profile-side-note">Este é o seu espaço na Anitope Network.</div><div style="margin-top:10px"><button type="button" id="openProfileEditor" class="primary-button">Editar</button></div></div>
+      <section class="orkut-box" id="profileEditorWindow" hidden>
+        <div class="orkut-box-title">Editar perfil</div>
+        <div class="orkut-box-content">
+          <p class="muted">Personalize sua página. Seu nome de usuário não pode ser alterado.</p>
+          <form id="profileForm" class="profile-editor">
+            <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
+            <div><label for="profilePhotoInput">Foto de perfil</label><input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp"><img id="profilePhotoPreview" class="profile-preview-photo" alt="Prévia da foto"></div>
+            <div><label for="profileBannerInput">Banner</label><input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="profileBannerPreview" class="profile-preview-banner"></div></div>
+            <div class="wide"><label for="profileBioInput">Bio</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
+            <div class="wide"><label>Informações personalizadas</label><p class="muted">Crie campos como “Relacionamento” e “Solteiro”.</p><div id="profileFieldEditor" class="profile-field-editor"></div><button type="button" id="addProfileField">Adicionar informação</button></div>
+            <div class="wide"><button type="submit" id="saveProfile" class="primary-button">Salvar alterações</button> <button type="button" id="cancelProfileEdit">Cancelar</button><span id="profileMessage" class="muted profile-message" aria-live="polite"></span></div>
+          </form>
+        </div>
+      </section>
       </section>
       <section class="orkut-box">
         <div class="orkut-box-title">Quem sou eu</div>
@@ -123,20 +137,7 @@ button:disabled{opacity:.6;cursor:wait}
           <table class="profile-scrap-table"><tbody id="profileFieldsView"><tr><td>Informações</td><td>Nenhuma informação adicionada.</td></tr></tbody></table>
         </div>
       </section>
-      <section class="orkut-box">
-        <div class="orkut-box-title">Editar perfil</div>
-        <div class="orkut-box-content">
-          <p class="muted">Personalize sua página. Seu nome de usuário não pode ser alterado.</p>
-          <form id="profileForm" class="profile-editor">
-            <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
-            <div><label for="profilePhotoInput">Foto de perfil</label><input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp"><img id="profilePhotoPreview" class="profile-preview-photo" alt="Prévia da foto"></div>
-            <div><label for="profileBannerInput">Banner</label><input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="profileBannerPreview" class="profile-preview-banner"></div></div>
-            <div class="wide"><label for="profileBioInput">Bio</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
-            <div class="wide"><label>Informações personalizadas</label><p class="muted">Crie campos como “Relacionamento” e “Solteiro”.</p><div id="profileFieldEditor" class="profile-field-editor"></div><button type="button" id="addProfileField">Adicionar informação</button></div>
-            <div class="wide"><button type="submit" id="saveProfile" class="primary-button">Salvar alterações</button><span id="profileMessage" class="muted profile-message" aria-live="polite"></span></div>
-          </form>
-        </div>
-      </section>
+      
     </section>
   </div>
 </main>
@@ -149,6 +150,17 @@ async function api(url, options = {}) {
  if(!response.ok) throw new Error(payload.error||"O servidor não conseguiu concluir a operação.");
  return payload;
 }
+
+function openProfileEditor(){
+  $("profileIntro").hidden=true;
+  $("profileEditorWindow").hidden=false;
+}
+function closeProfileEditor(){
+  $("profileEditorWindow").hidden=true;
+  $("profileIntro").hidden=false;
+}
+$("openProfileEditor").addEventListener("click",openProfileEditor);
+$("cancelProfileEdit").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 let pendingProfilePhoto=null,pendingProfileBanner=null;
 let editableProfileFields=[];
