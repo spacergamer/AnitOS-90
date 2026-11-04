@@ -68,7 +68,6 @@ async function initializeAuthSchema(db) {
   await db.query(`
     CREATE TABLE IF NOT EXISTS anitos_users (
       id text PRIMARY KEY,
-      email text UNIQUE,
       display_name text NOT NULL,
       role text NOT NULL CHECK (role IN ('master','player')),
       password_salt text NOT NULL,
@@ -77,14 +76,15 @@ async function initializeAuthSchema(db) {
     );
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS is_dev boolean NOT NULL DEFAULT false;
-    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
-    ALTER TABLE anitos_users ALTER COLUMN email DROP NOT NULL;
+    -- Email is no longer an account identifier or a required account field.
+    ALTER TABLE anitos_users DROP COLUMN IF EXISTS email;
+    ALTER TABLE anitos_users DROP COLUMN IF EXISTS email_verified;
+    ALTER TABLE anitos_users DROP COLUMN IF EXISTS legacy_login_enabled;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS employee_name text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_photo_url text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS bio text NOT NULL DEFAULT '';
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS motivation text NOT NULL DEFAULT '';
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS profile_complete boolean NOT NULL DEFAULT true;
-    ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS legacy_login_enabled boolean NOT NULL DEFAULT true;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS username text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS public_code text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_salt text;
@@ -221,7 +221,7 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode=makeRecoveryCode(),recoveryCodeSalt=crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash=(await scrypt(recoveryCode,recoveryCodeSalt,64)).toString("hex");
       const result=await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,employee_name,role,password_salt,password_hash,email_verified,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete,legacy_login_enabled) VALUES($1,NULL,$2,$3,'player',$4,$5,true,$6,$7,$8,$9,$10,false,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
+        "INSERT INTO anitos_users(id,display_name,employee_name,role,password_salt,password_hash,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete) VALUES($1,$2,$3,'player',$4,$5,$6,$7,$8,$9,$10,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
         [id,employeeName,employeeName,passwordSalt,passwordHash,username,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
       );
       await createSession(id,res);
@@ -239,21 +239,14 @@ function registerAuthRoutes(app, express, db) {
       const username=input.replace(/^@/,"").toLowerCase();
       const password=typeof req.body?.password==="string"?req.body.password:"";
       if(!username||!password)return sendError(res,400,"Informe seu nome de usuário e senha.");
-      let result,legacyLogin=false;
-      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)){
-        result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
-        legacyLogin=true;
-      }else{
-        if(!/^[a-z0-9_.-]{2,32}$/.test(username))return sendError(res,400,"Informe um nome de usuário válido.");
-        result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1",[username]);
-      }
+      if(!/^[a-z0-9_.-]{2,32}$/.test(username))return sendError(res,400,"Informe um nome de usuário válido.");
+      const result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1",[username]);
       const user=result.rows[0];
       if(!user)return sendError(res,401,"Nome de usuário ou senha incorretos.");
       const candidate=await scrypt(password,user.password_salt,64),expected=Buffer.from(user.password_hash,"hex");
       if(candidate.length!==expected.length||!crypto.timingSafeEqual(candidate,expected))return sendError(res,401,"Nome de usuário ou senha incorretos.");
-      if(legacyLogin)await db.query("UPDATE anitos_users SET legacy_login_enabled=false WHERE id=$1",[user.id]);
       await createSession(user.id,res);
-      return res.json({user:safeUser(user),legacyLogin});
+      return res.json({user:safeUser(user)});
     }catch(err){console.error("[auth] Falha ao entrar:",err.message);return sendError(res,500,"Não foi possível iniciar a sessão.");}
   });
 
@@ -325,7 +318,7 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
       try {
         const result = await db.query(
-          "UPDATE anitos_users SET username=$1,recovery_salt=$2,recovery_hash=$3,recovery_code_salt=$4,recovery_code_hash=$5,legacy_login_enabled=false WHERE id=$6 AND recovery_code_hash IS NULL RETURNING id",
+          "UPDATE anitos_users SET username=$1,recovery_salt=$2,recovery_hash=$3,recovery_code_salt=$4,recovery_code_hash=$5 WHERE id=$6 AND recovery_code_hash IS NULL RETURNING id",
           [username,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash,req.user.id]
         );
         if(!result.rows[0])return sendError(res,409,"Esta conta já possui novas credenciais. Entre novamente.");
