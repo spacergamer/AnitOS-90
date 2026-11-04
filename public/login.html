@@ -107,7 +107,7 @@ textarea{width:100%;min-height:130px;font:18px 'VT323',monospace;padding:8px;bor
       <h2 id="registrationCredentialsTitle">Suas credenciais</h2>
       <p>Nome de usuário</p><strong id="createdUsername" class="membership-code"></strong>
       <p>Código de segurança</p><strong id="createdRecoveryCode" class="membership-code"></strong>
-      <p class="muted">**Guarde este código em um local seguro**. Ele será exibido somente agora e poderá ser útil no futuro.</p>
+      <p class="muted"><strong>Guarde este código em um local seguro</strong>. Ele será exibido somente agora e poderá ser útil no futuro.</p>
       <button type="button" id="continueAfterCredentials">Continuar</button>
     </div>
   </section>
@@ -210,7 +210,6 @@ function setMode(next){
   $("favoriteAnimal").required=mode==="register";
   $("confirmPassword").required=mode==="register";
   $("password").autocomplete=mode==="register"?"new-password":"current-password";
-  $("passwordHint").hidden=mode!=="register";
   $("forgotPasswordLink").hidden=mode!=="login";
   $("registerAction").hidden=mode!=="login";
   $("cancelRegister").hidden=mode!=="register";
