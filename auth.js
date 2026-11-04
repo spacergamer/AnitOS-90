@@ -53,23 +53,17 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,publicCode:row.public_code||null,userTag:row.username&&row.public_code?row.username+" #"+row.public_code:null,profilePhoto:row.profile_photo_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.public_code&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,bio:row.bio||"",motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
 }
-function makePublicCode() { return String(crypto.randomInt(0,10000)).padStart(4,"0"); }
 function makeRecoveryCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "";
   while (result.length < 16) result += alphabet[crypto.randomInt(alphabet.length)];
   return result;
 }
-function splitUserTag(value) {
-  const match = String(value || "").trim().match(/^([a-z0-9_.-]{2,32})\s*#\s*(\d{4})$/i);
-  return match ? {username: match[1].toLowerCase(), publicCode: match[2]} : null;
-}
-
 async function initializeAuthSchema(db) {
   await db.query(`
     CREATE TABLE IF NOT EXISTS anitos_users (
@@ -226,13 +220,12 @@ function registerAuthRoutes(app, express, db) {
       const recoveryHash=(await scrypt(food+"\u0000"+animal,recoverySalt,64)).toString("hex");
       const recoveryCode=makeRecoveryCode(),recoveryCodeSalt=crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash=(await scrypt(recoveryCode,recoveryCodeSalt,64)).toString("hex");
-      const publicCode=makePublicCode();
       const result=await db.query(
-        "INSERT INTO anitos_users(id,email,display_name,employee_name,role,password_salt,password_hash,email_verified,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete,legacy_login_enabled) VALUES($1,NULL,$2,$3,'player',$4,$5,true,$6,$7,$8,$9,$10,$11,false,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
-        [id,employeeName,employeeName,passwordSalt,passwordHash,username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
+        "INSERT INTO anitos_users(id,email,display_name,employee_name,role,password_salt,password_hash,email_verified,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete,legacy_login_enabled) VALUES($1,NULL,$2,$3,'player',$4,$5,true,$6,$7,$8,$9,$10,false,false) RETURNING id,display_name,employee_name,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,profile_complete",
+        [id,employeeName,employeeName,passwordSalt,passwordHash,username,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash]
       );
       await createSession(id,res);
-      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username+" #"+publicCode});
+      return res.status(201).json({user:safeUser(result.rows[0]),recoveryCode,userTag:username});
     }catch(err){
       if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
       console.error("[auth] Falha ao criar conta:",err.message);
@@ -242,23 +235,22 @@ function registerAuthRoutes(app, express, db) {
 
   app.post("/api/auth/login", databaseRequired, limitAuthAttempts, async (req,res)=>{
     try{
-      const input=String(req.body?.username||"").trim(),combined=splitUserTag(input);
-      const username=(combined?.username||input).replace(/^@/,"").toLowerCase();
-      const publicCode=combined?.publicCode||String(req.body?.publicCode||"").trim();
+      const input=String(req.body?.username||"").trim();
+      const username=input.replace(/^@/,"").toLowerCase();
       const password=typeof req.body?.password==="string"?req.body.password:"";
       if(!username||!password)return sendError(res,400,"Informe seu nome de usuário e senha.");
       let result,legacyLogin=false;
-      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)&&!publicCode){
-        result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
+      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)){
+        result=await db.query("SELECT id,email,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(email)=lower($1) AND legacy_login_enabled=true",[input.toLowerCase()]);
         legacyLogin=true;
       }else{
-        if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!/^[0-9]{4}$/.test(publicCode))return sendError(res,400,"Informe o nome de usuário e o número identificador de quatro dígitos.");
-        result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,public_code,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1 AND public_code=$2",[username,publicCode]);
+        if(!/^[a-z0-9_.-]{2,32}$/.test(username))return sendError(res,400,"Informe um nome de usuário válido.");
+        result=await db.query("SELECT id,display_name,employee_name,profile_photo_url,bio,motivation,profile_complete,role,is_premium,is_dev,username,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash,password_salt,password_hash FROM anitos_users WHERE lower(username)=$1",[username]);
       }
       const user=result.rows[0];
-      if(!user)return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      if(!user)return sendError(res,401,"Nome de usuário ou senha incorretos.");
       const candidate=await scrypt(password,user.password_salt,64),expected=Buffer.from(user.password_hash,"hex");
-      if(candidate.length!==expected.length||!crypto.timingSafeEqual(candidate,expected))return sendError(res,401,"Nome de usuário, identificador ou senha incorretos.");
+      if(candidate.length!==expected.length||!crypto.timingSafeEqual(candidate,expected))return sendError(res,401,"Nome de usuário ou senha incorretos.");
       if(legacyLogin)await db.query("UPDATE anitos_users SET legacy_login_enabled=false WHERE id=$1",[user.id]);
       await createSession(user.id,res);
       return res.json({user:safeUser(user),legacyLogin});
@@ -270,7 +262,7 @@ function registerAuthRoutes(app, express, db) {
       const username=String(req.body?.username||"").trim().replace(/^@/,"").toLowerCase();
       const food=normalizeAnswer(req.body?.favoriteFood),animal=normalizeAnswer(req.body?.favoriteAnimal);
       if(!/^[a-z0-9_.-]{2,32}$/.test(username)||!food||!animal)return sendError(res,400,"Informe o nome de usuário, a comida favorita e o animal favorito.");
-      const result=await db.query("SELECT id,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
+      const result=await db.query("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1",[username]);
       const user=result.rows[0];let valid=false;
       if(user?.recovery_salt&&user?.recovery_hash){
         const candidate=await scrypt(food+"\u0000"+animal,user.recovery_salt,64),expected=Buffer.from(user.recovery_hash,"hex");
@@ -280,7 +272,7 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode=makeRecoveryCode(),salt=crypto.randomBytes(16).toString("hex");
       const hash=(await scrypt(recoveryCode,salt,64)).toString("hex");
       await db.query("UPDATE anitos_users SET recovery_code_salt=$1,recovery_code_hash=$2 WHERE id=$3",[salt,hash,user.id]);
-      return res.json({ok:true,recoveryCode,publicCode:user.public_code,message:"Novo código gerado. O código anterior foi substituído."});
+      return res.json({ok:true,recoveryCode,message:"Novo código gerado. O código anterior foi substituído."});
     }catch(err){console.error("[auth] Falha ao gerar código de recuperação:",err.message);return sendError(res,500,"Não foi possível gerar o código de recuperação.");}
   });
 
@@ -331,16 +323,15 @@ function registerAuthRoutes(app, express, db) {
       const recoveryCode = makeRecoveryCode();
       const recoveryCodeSalt = crypto.randomBytes(16).toString("hex");
       const recoveryCodeHash = (await scrypt(recoveryCode, recoveryCodeSalt, 64)).toString("hex");
-      const publicCode = makePublicCode();
       try {
         const result = await db.query(
-          "UPDATE anitos_users SET username=$1,public_code=$2,recovery_salt=$3,recovery_hash=$4,recovery_code_salt=$5,recovery_code_hash=$6,legacy_login_enabled=false WHERE id=$7 AND recovery_code_hash IS NULL RETURNING id",
-          [username,publicCode,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash,req.user.id]
+          "UPDATE anitos_users SET username=$1,recovery_salt=$2,recovery_hash=$3,recovery_code_salt=$4,recovery_code_hash=$5,legacy_login_enabled=false WHERE id=$6 AND recovery_code_hash IS NULL RETURNING id",
+          [username,recoverySalt,recoveryHash,recoveryCodeSalt,recoveryCodeHash,req.user.id]
         );
         if(!result.rows[0])return sendError(res,409,"Esta conta já possui novas credenciais. Entre novamente.");
         await db.query("DELETE FROM anitos_sessions WHERE user_id=$1",[req.user.id]);
         clearSessionCookie(res);
-        return res.json({ok:true,userTag:username+" #"+publicCode,recoveryCode,message:"Credenciais cadastradas. Guarde o identificador e o código secreto de recuperação. Entre novamente com o identificador e sua senha atual."});
+        return res.json({ok:true,userTag:username,recoveryCode,message:"Credenciais cadastradas. Guarde o código secreto de recuperação. Entre novamente com seu nome de usuário e sua senha atual."});
       }catch(err){
         if(err.code==="23505")return sendError(res,409,"Esse nome de usuário já está em uso.");
         throw err;

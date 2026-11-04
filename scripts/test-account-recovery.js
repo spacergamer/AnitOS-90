@@ -12,8 +12,8 @@ async function main() {
         const user = {
           id:params[0], email:null, display_name:params[1], employee_name:params[2], role:"player",
           password_salt:params[3], password_hash:params[4], is_premium:false, is_dev:false,
-          username:params[5], public_code:params[6], recovery_salt:params[7], recovery_hash:params[8],
-          recovery_code_salt:params[9], recovery_code_hash:params[10], profile_complete:false
+          username:params[5], recovery_salt:params[6], recovery_hash:params[7],
+          recovery_code_salt:params[8], recovery_code_hash:params[9], profile_complete:false
         };
         users.set(user.id,user);
         return {rows:[{...user}]};
@@ -21,10 +21,6 @@ async function main() {
       if (sql.includes("INSERT INTO anitos_sessions")) {
         sessions.set(params[0],params[1]);
         return {rows:[]};
-      }
-      if (sql.includes("SELECT id,public_code,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1")) {
-        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
-        return {rows:user?[{id:user.id,public_code:user.public_code,recovery_salt:user.recovery_salt,recovery_hash:user.recovery_hash}]:[]};
       }
       if (sql.includes("SELECT id,recovery_salt,recovery_hash FROM anitos_users WHERE lower(username)=$1")) {
         const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
@@ -49,8 +45,8 @@ async function main() {
         sessionDeletes++;
         return {rows:[]};
       }
-      if (sql.includes("FROM anitos_users WHERE lower(username)=$1 AND public_code=$2")) {
-        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]&&row.public_code===params[1]);
+      if (sql.includes("SELECT id,display_name,employee_name") && sql.includes("FROM anitos_users WHERE lower(username)=$1")) {
+        const user=[...users.values()].find(row=>row.username.toLowerCase()===params[0]);
         return {rows:user?[{...user}]:[]};
       }
       throw new Error("Unexpected query in account recovery test: "+sql);
@@ -72,11 +68,11 @@ async function main() {
     });
     assert.equal(registration.status,201,"registration should succeed without an email");
     const created=await registration.json();
-    assert.match(created.userTag,/^ash_carter #\d{4}$/);
+    assert.equal(created.userTag,"ash_carter");
     assert.match(created.recoveryCode,/^[A-Z2-9]{16}$/);
     assert.equal(created.user.credentialsReady,true);
     assert.equal(created.user.profileComplete,false);
-    const [username,publicCode]=created.userTag.split("#").map(value=>value.trim());
+    const username=created.userTag;
 
     const wrongCode=await post("/api/auth/recover-account",{
       username,recoveryCode:"WRONGRECOVERYCODE",
@@ -98,12 +94,12 @@ async function main() {
     assert.equal(codeRecovery.status,200,"the recovery code should reset the password");
     assert.equal(sessionDeletes,1,"successful recovery must invalidate existing sessions");
 
-    const login=await post("/api/auth/login",{username,publicCode,password:"NovaSenha123!"});
+    const login=await post("/api/auth/login",{username,password:"NovaSenha123!"});
     assert.equal(login.status,200,"the new password must work with username and account number");
     const loginPayload=await login.json();
     assert.equal(loginPayload.user.credentialsReady,true);
 
-    const oldPassword=await post("/api/auth/login",{username,publicCode,password:"Senha1234!"});
+    const oldPassword=await post("/api/auth/login",{username,password:"Senha1234!"});
     assert.equal(oldPassword.status,401,"the old password must stop working after recovery");
 
     const badUsername=await post("/api/auth/recover-account",{

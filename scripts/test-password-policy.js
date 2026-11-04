@@ -11,8 +11,8 @@ async function main() {
         return {rows: [{
           id: params[0], display_name: params[1], employee_name: params[2], role: "player",
           is_premium: false, is_dev: false, email_verified: true,
-          username: params[5], public_code: params[6], recovery_salt: params[7], recovery_hash: params[8],
-          recovery_code_salt: params[9], recovery_code_hash: params[10], profile_complete: false
+          username: params[5], recovery_salt: params[6], recovery_hash: params[7],
+          recovery_code_salt: params[8], recovery_code_hash: params[9], profile_complete: false
         }]};
       }
       if (sql.includes("INSERT INTO anitos_sessions")) return {rows: []};
@@ -53,9 +53,9 @@ async function main() {
       assert.equal(response.status, 201, name + " password should be accepted; strength is a recommendation");
       const payload = await response.json();
       assert.equal(payload.user.credentialsReady, true, "new account must receive recovery credentials");
-      assert.match(payload.userTag, new RegExp("^policy_" + name.replace(/[^a-z0-9]/g, "_") + " #\\d{4}$"));
+      assert.equal(payload.userTag, payload.user.username);
       assert.match(payload.recoveryCode, /^[A-Z2-9]{16}$/);
-      assert.equal(payload.user.publicCode, payload.userTag.split("#")[1]);
+      assert.equal(payload.user.publicCode, undefined);
     }
     const shortResponse = await register("Ab1!sho", "short");
     assert.equal(shortResponse.status, 400, "passwords shorter than eight characters must be rejected");
