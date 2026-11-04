@@ -38,6 +38,7 @@ app.get("/health",(_q,r)=>r.json({ok:true}));
 app.get("/account",(_q,r)=>r.redirect(302,"/login.html"));
 app.get("/login.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","login.html")));
 app.get("/home.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","home.html")));
+app.get("/blog.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","blog.html")));
 app.get("/board.html",(_q,r)=>r.sendFile(path.join(__dirname,"public","board.html")));
 app.get("/room.html",async(q,r)=>{
  try{
