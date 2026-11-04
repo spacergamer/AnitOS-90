@@ -343,6 +343,48 @@ function updateProfilePreview(){
   const url=$("profilePhoto").value.trim(),preview=$("profilePreview");
   if(url){preview.src=url;preview.hidden=false;}else{preview.removeAttribute("src");preview.hidden=true;}
 }
+const photoDropZone=$("photoDropZone"),photoFileInput=$("profilePhotoFile");
+function openPhotoPicker(){photoFileInput.click();}
+$("chooseProfilePhoto").addEventListener("click",event=>{event.stopPropagation();openPhotoPicker();});
+photoDropZone.addEventListener("click",event=>{if(event.target.closest("button"))return;openPhotoPicker();});
+photoDropZone.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openPhotoPicker();}});
+photoFileInput.addEventListener("change",()=>{
+  const file=photoFileInput.files?.[0];
+  if(!file)return;
+  if(!["image/png","image/jpeg","image/webp"].includes(file.type)){
+    message("profileMessage","Formato inválido. Escolha PNG, JPG ou WebP.","error");
+    photoFileInput.value="";
+    return;
+  }
+  if(file.size>8*1024*1024){
+    message("profileMessage","A imagem ultrapassa o limite de 8 MB.","error");
+    photoFileInput.value="";
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    if(typeof reader.result!=="string"){message("profileMessage","Não foi possível carregar essa imagem.","error");return;}
+    $("profilePhoto").value=reader.result;
+    updateProfilePreview();
+    message("profileMessage","Foto selecionada com sucesso.","success");
+  };
+  reader.onerror=()=>message("profileMessage","Não foi possível ler o arquivo selecionado.","error");
+  reader.readAsDataURL(file);
+});
+for(const eventName of ["dragenter","dragover"]){
+  photoDropZone.addEventListener(eventName,event=>{event.preventDefault();photoDropZone.classList.add("dragover");});
+}
+for(const eventName of ["dragleave","drop"]){
+  photoDropZone.addEventListener(eventName,event=>{event.preventDefault();photoDropZone.classList.remove("dragover");});
+}
+photoDropZone.addEventListener("drop",event=>{
+  const file=event.dataTransfer?.files?.[0];
+  if(!file)return;
+  const transfer=new DataTransfer();
+  transfer.items.add(file);
+  photoFileInput.files=transfer.files;
+  photoFileInput.dispatchEvent(new Event("change",{bubbles:true}));
+});
 $("profilePhoto").addEventListener("input",updateProfilePreview);
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();$("saveProfile").disabled=true;message("profileMessage","Salvando perfil…");
