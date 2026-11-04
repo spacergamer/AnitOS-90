@@ -264,7 +264,6 @@ function setProfilePreview(){
   const greeting=hour<12?"Bom dia":hour<18?"Boa tarde":"Boa noite";
   $("summaryGreeting").textContent=greeting+", "+(currentUser?.displayName||"usuário")+"!";
   $("memberSince").textContent=currentUser?.createdAt?new Date(currentUser.createdAt).toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}):"Data indisponível";
-  $("profileBio").textContent=currentUser?.bio||"Este usuário ainda não escreveu uma bio.";
   editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
   renderProfileFieldEditor();
   $("profileNameInput").value=currentUser?.displayName||"";
