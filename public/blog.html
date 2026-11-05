@@ -88,7 +88,7 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-banner-panel .profile-cover{height:170px;width:100%;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
 .profile-panel{grid-area:profile}
 .dashboard-main{grid-area:summary}
-.dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:12px;align-items:start}.dashboard-column{display:grid;gap:12px;align-content:start;min-width:0}
+.dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);grid-template-areas:"summary friends" "requests campaigns";gap:12px;align-items:start}.summary-panel{grid-area:summary}.requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}#friendsPanel{grid-area:friends}#campaignsPanel{grid-area:campaigns}
 .summary-panel{margin:0}
 #requestsPanel{grid-area:auto}
 #friendsPanel{grid-area:auto}
@@ -146,7 +146,7 @@ button:disabled{opacity:.6;cursor:wait}
 .dashboard-notice{display:none;margin-top:10px;padding:7px;background:#111;color:var(--cyan);border:2px inset var(--dark)}
 .dashboard-notice.visible{display:block}
 @media(max-width:1100px){.dashboard-grid{grid-template-columns:220px minmax(0,1fr)}.dashboard-main{grid-template-columns:minmax(0,1fr) minmax(250px,.8fr)}}
-@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.dashboard-main{grid-template-columns:1fr}.dashboard-column{display:contents}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.dashboard-main{grid-template-columns:1fr;grid-template-areas:"summary" "requests" "friends" "campaigns"}.requests-stack{display:contents}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .clock-window{position:fixed;right:18px;bottom:18px;width:min(340px,calc(100vw - 24px));z-index:10003;margin:0;box-shadow:4px 4px 0 #000}
 .clock-display{background:#080808;color:var(--cyan);border:3px inset var(--dark);padding:12px;text-align:center;font-size:54px;line-height:1.1;text-shadow:0 0 8px rgba(5,255,161,.55);font-variant-numeric:tabular-nums}
 .clock-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
@@ -221,7 +221,6 @@ button:disabled{opacity:.6;cursor:wait}
       </nav>
     </aside>
     <section class="dashboard-main">
-      <div class="dashboard-column dashboard-left-column">
       <section class="orkut-box summary-panel">
         <div class="orkut-box-title">Resumo</div>
         <div class="orkut-box-content">
@@ -239,6 +238,7 @@ button:disabled{opacity:.6;cursor:wait}
           </div>
         </div>
       </section>
+      <div class="requests-stack">
       <section class="orkut-box dashboard-widget" id="requestsPanel">
         <div class="orkut-box-title">Pedidos</div>
         <div class="orkut-box-content">
@@ -250,7 +250,6 @@ button:disabled{opacity:.6;cursor:wait}
         <div class="profile-cover" id="profileCover"></div>
       </section>
       </div>
-      <div class="dashboard-column dashboard-right-column">
       <section class="orkut-box dashboard-widget" id="friendsPanel">
         <div class="orkut-box-title">Amigos</div>
         <div class="orkut-box-content">
@@ -267,7 +266,6 @@ button:disabled{opacity:.6;cursor:wait}
           <div class="widget-actions"><a href="/home.html">ver todas</a><button type="button" data-panel-nav="gerenciar campanhas">gerenciar</button></div>
         </div>
       </section>
-      </div>
     </section>
   </div>
   <div id="dashboardNotice" class="dashboard-notice" role="status" aria-live="polite"></div>
