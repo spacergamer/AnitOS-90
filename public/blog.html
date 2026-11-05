@@ -246,8 +246,8 @@ button:disabled{opacity:.6;cursor:wait}
           </div>
           <div class="summary-details">
             <p><strong>Membro desde:</strong> <span id="memberSince">carregando...</span></p>
-            <p><strong>Resumo dos últimos 30 dias:</strong> <span class="unavailable-value">estatísticas sociais ainda não disponíveis.</span></p>
-            <p><strong>Frase do dia:</strong> <span class="unavailable-value">aguardando a lista de frases.</span></p>
+            <p><strong>Resumo dos últimos 30 dias:</strong> <span id="monthlySummary">0 curtidas, 0 respostas e 0 reações</span></p>
+            <p><strong>Frase do dia:</strong> <span id="dailyPhrase"></span></p>
           </div>
         </div>
       </section>
@@ -398,14 +398,108 @@ $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 let pendingProfilePhoto=null,pendingProfileBanner=null;
 let editableProfileFields=[];
+const memberMonths=["Jan.","Fev.","Mar.","Abr.","Mai.","Jun.","Jul.","Ago.","Set.","Out.","Nov.","Dez."];
+function formatMemberSince(value){
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return "Data indisponível";
+  return date.getDate()+" de "+memberMonths[date.getMonth()]+" de "+date.getFullYear();
+}
+const dailyPhrases=[
+"O livre arbítrio custa caro.",
+"Toda arte se origina da criatividade humana com objetivo de transmitir uma mensagem, ideia ou sentimento.",
+"Que meu sangue escorra para que o seu circule em ti.",
+"A vida, não é sobre desistir, a vida, não é sobre levantar a cada queda, mas, sobre continuar de pé, resistindo a balas e facas.",
+"O momento em que um indivíduo é capaz de compreender a diferença entre o bem e o mal, poderá responder por e contra suas ações.",
+"Ninguém te conhece tão bem, quanto você mesmo. Até mesmo quando você percebe que não sabe nada sobre si.",
+"Conquiste o mundo pisando nele, deixem pisar em ti para que conquistem o mundo, proteja mundos de que sejam pisados.",
+"Você não pode escolher quem quer ser, o que quer, onde, e quando será. Ainda sim, tenta ser essa pessoa.",
+"Permita que te odeiem, mas não odeies de volta. Nem a eles, e nem a ti.",
+"Eu queria que até aqueles que não tem dentes pudessem sorrir.",
+"Se a ideia não é nova, ela não funciona, mas ainda nem todos conhecem ideias passadas.",
+"Dividir teus bens com o próximo, mas não dividir a ti com o mundo; se quieres amar, deverá amar a ti primeiro, pois sem teu corpo, sua capacidade de amar será nula.",
+"Diante de um mundo de causas simples, uma sociedade busca causas maiores.",
+"Em um mundo de grandes causas, uma sociedade busca causas menores.",
+"Isto é a vida real? ou é apenas fantasia?",
+"Não se amoldem ao padrão deste mundo, mas transformem-se pela renovação da sua mente.",
+"O que as suas mãos tiverem que fazer, que o façam com toda a sua força, pois na sepultura, para onde você vai, não há atividade nem planejamento, não há conhecimento nem sabedoria.",
+"Desejar algo maior pra sua vida não significa que você está insatisfeito com o que tem.",
+"Só tenho a agradecer a cada um dos desafios que me trouxeram até aqui.",
+"Não espere pelo momento perfeito, comece hoje, com o que tem.",
+"Se seus sonhos não dão um frio na barriga, talvez ainda não sejam grandes o bastante.",
+"A autoconfiança é o primeiro passo para grandes feitos.",
+"Cada pequeno passo deve ser celebrado.",
+"A persistência não é apenas continuar, mas também saber começar de novo.",
+"A flexibilidade é um superpoder, ajuste-se para seguir em frente.",
+"Os erros são degraus para o sucesso.",
+"O agora é o único momento que você realmente tem.",
+"Indev!",
+"Esta mensagem nunca aparecerá no seu perfil, estranho não é?",
+"Experimente também o Horror way!",
+"Leia mais livros!",
+"Yanny ou Laurel?",
+"Site foda pra caralho, por Spacer Gamer456",
+"Hatsune Miku deve ser sua maior inspiração.",
+"Mulheres são reais (isso é oficial)",
+"Aerospace Team pra sempre!",
+"Eu penso, logo existo.",
+"Seja a mudança que você quer ver no mundo.",
+"Só sei que nada sei.",
+"A vida é o que acontece enquanto você está ocupado fazendo outros planos.",
+"John Lennon uma vez disse: \"Eu sou John Lennon\".",
+"bob.",
+"Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.",
+"Grandes poderes trazem grandes responsabilidades.",
+"Que a Força esteja com você.",
+"A imaginação é mais importante que o conhecimento.",
+"Ao o infinito... e além!",
+"Amigo, estou aqui...",
+"Faça ou não faça. Tentativa não há.",
+"O que não me mata, me fortalece.",
+"Viver é a coisa mais rara do mundo, e a maioria das pessoas apenas existe.",
+"No fim, nós vamos lembrar não das palavras dos nossos inimigos, mas do silêncio dos nossos amigos.",
+"O amor é a única força capaz de transformar um inimigo em amigo.",
+"A felicidade só é real quando compartilhada.",
+"A vida é como uma caixa de chocolates.",
+"Hakuna Matata",
+"O essencial é invisível aos olhos.",
+"Tudo vai ficar bem no final. Se não ficou bem, é porque ainda não é o final.",
+"Eu trabalho duro para que meu gato tenha uma vida melhor.",
+"Se a vida te der limões, peça sal e tequila.",
+"Sempre quis ser alguém, mas agora percebo que deveria ter sido mais específico.",
+"A vida é curta. Sorria enquanto você ainda tem dentes.",
+"Levo semanas para me preparar bem para o improviso",
+"Eu queria concordar com você, mas aí seríamos dois errados.",
+"Eu não falhei. Apenas descobri 10 mil maneiras que não funcionam.",
+"A preguiça é a mãe de todos os vícios, mas uma mãe tem que trabalhar, né?",
+"Não leve a vida tão a sério. Você nunca vai sair vivo dela.",
+"O cérebro é maravilhoso. Começa a funcionar quando você acorda e não para até chegar no trabalho."
+];
+function updateDailyPhrase(){
+  const now=new Date();
+  const dayKey=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  const accountKey=String(currentUser?.username||"guest").toLowerCase();
+  const storageKey="anitos-daily-phrase-"+accountKey+"-"+dayKey;
+  let index;
+  try{
+    const saved=localStorage.getItem(storageKey);
+    if(saved!==null&&Number.isInteger(Number(saved))&&Number(saved)>=0&&Number(saved)<dailyPhrases.length)index=Number(saved);
+    else{index=Math.floor(Math.random()*dailyPhrases.length);localStorage.setItem(storageKey,String(index));}
+  }catch{
+    let hash=0;const seed=accountKey+"|"+dayKey;
+    for(let i=0;i<seed.length;i++)hash=(Math.imul(hash,31)+seed.charCodeAt(i))|0;
+    index=(hash>>>0)%dailyPhrases.length;
+  }
+  $("dailyPhrase").textContent=dailyPhrases[index];
+}
 function setProfilePreview(){
   $("profileCover").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
   $("profileAvatar").src=currentUser?.profilePhoto||"";
   $("profileDisplayName").textContent=currentUser?.displayName||"Usuário";
   $("profileHandle").textContent=currentUser?.username||"";
   updateTimeGreeting();
+  updateDailyPhrase();
 
-  $("memberSince").textContent=currentUser?.createdAt?new Date(currentUser.createdAt).toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}):"Data indisponível";
+  $("memberSince").textContent=currentUser?.createdAt?formatMemberSince(currentUser.createdAt):"Data indisponível";
   editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
   renderProfileFieldEditor();
   $("profileNameInput").value=currentUser?.displayName||"";
