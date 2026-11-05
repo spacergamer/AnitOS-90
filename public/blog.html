@@ -123,7 +123,7 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-edit-link{display:inline-block;margin-top:3px;padding:0;border:0;background:transparent;color:var(--blue);font:17px 'VT323',monospace;text-decoration:underline;cursor:pointer}
 .profile-edit-link:hover{color:#0000cc;background:transparent}
 .profile-extra{border-top:1px solid #aaa;padding:8px 3px 2px;text-align:left;font-size:19px;white-space:pre-wrap;overflow-wrap:anywhere}
-.profile-menu{display:grid;gap:3px;margin-top:7px}
+.profile-menu{display:grid;gap:10px;margin-top:7px}.profile-menu-section{display:grid;gap:3px;padding-top:9px;border-top:2px groove #fff}.profile-menu-section:first-child{padding-top:0;border-top:0}
 .profile-menu-item{display:block;width:100%;padding:5px 9px;text-align:left;background:#e5e5e5;border:1px solid #999;color:var(--blue);font:20px 'VT323',monospace;cursor:pointer}
 .profile-menu-item:hover,.profile-menu-item.active{background:#fff;color:#000080;text-decoration:underline}
 .profile-menu-item.active{font-weight:bold;border-left:4px solid var(--cyan)}
@@ -216,14 +216,20 @@ button:disabled{opacity:.6;cursor:wait}
         <div class="profile-extra" id="profileExtra">Informações extras ainda não adicionadas.</div>
       </div>
       <nav class="profile-menu" aria-label="Menu do perfil">
-        <a class="profile-menu-item active" href="/blog.html">perfil</a>
-        <button class="profile-menu-item" type="button" id="openProfileEditor">editar perfil</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="correio">correio</button>
-        <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
-        <button class="profile-menu-item" type="button" data-panel-nav="bate-papo">bate-papo</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="postagens">postagens</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="comunidade">comunidade</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="configurações">configurações</button>
+        <div class="profile-menu-section">
+          <button class="profile-menu-item" type="button" id="openProfileEditor">editar perfil</button>
+        </div>
+        <div class="profile-menu-section">
+          <a class="profile-menu-item active" href="/blog.html">perfil</a>
+          <button class="profile-menu-item" type="button" data-panel-nav="correio">correio</button>
+          <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
+        </div>
+        <div class="profile-menu-section">
+          <button class="profile-menu-item" type="button" data-panel-nav="bate-papo">bate-papo</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="postagens">postagens</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="comunidade">comunidade</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="configurações">configurações</button>
+        </div>
       </nav>
       </aside>
     </div>
