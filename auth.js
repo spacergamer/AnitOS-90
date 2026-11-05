@@ -53,7 +53,7 @@ function tokenHash(token) {
 }
 
 function safeUser(row) {
-  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,profilePhoto:row.profile_photo_url||null,profileBanner:row.profile_banner_url||null,bio:row.bio||"",customFields:Array.isArray(row.profile_fields)?row.profile_fields:[],motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,createdAt:row.created_at||null,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
+  return {id:row.id,employeeName:row.employee_name||row.display_name||null,displayName:(row.display_name&&row.display_name.trim())||row.employee_name||row.username||null,username:row.username||null,userTag:row.username||null,publicCode:row.public_code||null,profilePhoto:row.profile_photo_url||null,profileBanner:row.profile_banner_url||null,bio:row.bio||"",customFields:Array.isArray(row.profile_fields)?row.profile_fields:[],motivation:row.motivation||"",profileComplete:row.profile_complete!==false,credentialsReady:Boolean(row.username&&row.recovery_salt&&row.recovery_hash&&row.recovery_code_salt&&row.recovery_code_hash),role:row.role,createdAt:row.created_at||null,premium:Boolean(row.is_premium),dev:Boolean(row.is_dev)};
 }
 function normalizeAnswer(value) {
   return String(value || "").normalize("NFKC").trim().toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").slice(0, 100);
