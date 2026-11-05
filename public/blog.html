@@ -152,6 +152,24 @@ button:disabled{opacity:.6;cursor:wait}
 .clock-close{float:right;padding:0 7px;margin:-2px 0 0 8px}
 @media(max-width:460px){.clock-window{right:8px;bottom:8px}}
 
+/* Layout dos cartões sociais */
+#requestsPanel .orkut-box-content{min-height:0;height:auto}
+#friendsPanel .orkut-box-content{min-height:0;height:auto}
+#friendsPanel{align-self:start}
+.friend-request-card{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;padding:8px;background:#eee;border:1px solid #aaa}
+.friend-demo-photo{width:64px;height:64px;object-fit:cover;border:2px inset var(--dark);background:#ddd}
+.friend-request-copy{min-width:0}
+.friend-request-name{font-weight:bold;font-size:22px;overflow-wrap:anywhere}
+.friend-request-question{margin:4px 0 7px;font-size:20px}
+.friend-request-actions{display:flex;gap:8px}
+.friend-request-actions button{min-width:64px}
+.friend-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.friend-list-card{display:grid;grid-template-columns:58px minmax(0,1fr);gap:7px;align-items:center;min-width:0}
+.friend-list-card .friend-demo-photo{width:58px;height:58px}
+.friend-list-name{font-weight:bold;overflow-wrap:anywhere;line-height:1.05}
+.friend-message-count{font-size:17px;color:#444;line-height:1.05;margin-top:3px}
+@media(max-width:760px){.friend-list-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.friend-list-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -281,25 +299,41 @@ let demoFriends=[];
 let demoCampaigns=[];
 window.loadedCampaigns=[];
 function showDemoNotice(text){const n=$("dashboardNotice");n.textContent=text;n.classList.add("visible");}
+function demoPhoto(initials){
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" fill="#008080"/><rect x="7" y="7" width="82" height="82" fill="#c0c0c0" stroke="#fff" stroke-width="3"/><circle cx="48" cy="35" r="16" fill="#000080"/><path d="M19 80c2-18 14-27 29-27s27 9 29 27" fill="#000080"/><text x="48" y="91" text-anchor="middle" font-family="monospace" font-size="9" fill="#fff">'+initials+'</text></svg>';
+  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
 function renderDemoFriends(){
   $("friendRequestCount").textContent=String(demoFriendRequests.length);
   $("friendCount").textContent=String(demoFriends.length);
   const requests=$("friendRequestList");requests.replaceChildren();
   if(!demoFriendRequests.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Você ainda não recebeu pedidos de amizade.";requests.append(p);}
   demoFriendRequests.forEach(person=>{
-    const item=document.createElement("div");item.className="campaign-item";
-    const name=document.createElement("strong");name.textContent=person.name;
-    const handle=document.createElement("small");handle.textContent="@"+person.username+" · Pedido de amizade";
-    const accept=document.createElement("button");accept.type="button";accept.className="primary-button";accept.textContent="Aceitar";
-    accept.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);demoFriends.push(person);renderDemoFriends();showDemoNotice(person.name+" agora está na sua lista de amigos.");});
-    item.append(name,handle,accept);requests.append(item);
+    const card=document.createElement("div");card.className="friend-request-card";
+    const photo=document.createElement("img");photo.className="friend-demo-photo";photo.src=person.photo;photo.alt="Foto de "+person.name;
+    const copy=document.createElement("div");copy.className="friend-request-copy";
+    const name=document.createElement("div");name.className="friend-request-name";name.textContent=person.name;
+    const question=document.createElement("p");question.className="friend-request-question";question.textContent=person.name+" é seu(sua) amigo(a)?";
+    const actions=document.createElement("div");actions.className="friend-request-actions";
+    const yes=document.createElement("button");yes.type="button";yes.className="primary-button";yes.textContent="Sim";
+    yes.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);demoFriends.push({...person,messages:3});renderDemoFriends();showDemoNotice(person.name+" foi adicionado(a) aos seus amigos.");});
+    const no=document.createElement("button");no.type="button";no.textContent="Não";
+    no.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);renderDemoFriends();showDemoNotice("Pedido de "+person.name+" recusado na demonstração.");});
+    actions.append(yes,no);copy.append(name,question,actions);card.append(photo,copy);requests.append(card);
   });
-  const friends=$("friendList");friends.replaceChildren();
+  const friends=$("friendList");friends.replaceChildren();friends.className="friend-list-grid";
   if(!demoFriends.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Sua lista de amigos aparecerá aqui.";friends.append(p);}
-  demoFriends.forEach(person=>{const item=document.createElement("div");item.className="campaign-item";const name=document.createElement("strong");name.textContent=person.name;const handle=document.createElement("small");handle.textContent="@"+person.username;item.append(name,handle);friends.append(item);});
+  demoFriends.forEach(person=>{
+    const card=document.createElement("div");card.className="friend-list-card";
+    const photo=document.createElement("img");photo.className="friend-demo-photo";photo.src=person.photo;photo.alt="Foto de "+person.name;
+    const copy=document.createElement("div");copy.className="friend-list-copy";
+    const name=document.createElement("div");name.className="friend-list-name";name.textContent=person.name;
+    const messages=document.createElement("div");messages.className="friend-message-count";messages.textContent="("+person.messages+" mensagens para você)";
+    copy.append(name,messages);card.append(photo,copy);friends.append(card);
+  });
 }
 function addDemoFriendRequest(){
-  if(!demoFriendRequests.length&&!demoFriends.some(x=>x.username==="teste_amigo"))demoFriendRequests.push({id:"friend-demo-1",name:"Alex Morgan",username:"teste_amigo"});
+  if(!demoFriendRequests.length&&!demoFriends.some(x=>x.username==="teste_amigo"))demoFriendRequests.push({id:"friend-demo-1",name:"Alex Morgan",username:"teste_amigo",photo:demoPhoto("AM")});
   renderDemoFriends();showDemoNotice("FRIEND7: pedido de amizade de Alex Morgan adicionado. Clique em Aceitar para testar o painel Amigos.");
 }
 function renderCampaignList(campaigns){
