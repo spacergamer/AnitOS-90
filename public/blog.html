@@ -407,7 +407,7 @@ async function api(url, options = {}) {
 function openProfileEditor(){
   $("profileEditorBackdrop").hidden=false;
   $("profileEditorWindow").hidden=false;
-  if(currentUser?.profileBanner&&!bannerSourceImage)loadBannerForEditor(currentUser.profileBanner);
+  loadBannerForEditor(currentUser?.profileBanner||"");
   requestAnimationFrame(()=>{syncBannerPreviewRatio();layoutBannerCrop();});
   $("profileNameInput").focus();
 }
@@ -644,10 +644,11 @@ function loadBannerForEditor(source){
   image.src=source;
 }
 function syncBannerPreviewRatio(){
-  const target=$("profileCover").getBoundingClientRect();
+  const target=$("profileCover");
   const preview=$("profileBannerPreview");
-  if(target.width>0&&target.height>0){
-    preview.style.aspectRatio=target.width+" / "+target.height;
+  const width=target.clientWidth,height=target.clientHeight;
+  if(width>0&&height>0){
+    preview.style.aspectRatio=width+" / "+height;
     preview.style.height="auto";
   }
 }
@@ -682,7 +683,20 @@ function exportBannerCrop(){
 $("profilePhotoPick").addEventListener("click",()=>$("profilePhotoInput").click());
 $("profileBannerPick").addEventListener("click",()=>$("profileBannerInput").click());
 $("profilePhotoInput").addEventListener("change",async()=>{try{const file=$("profilePhotoInput").files[0];if(!file)return;pendingProfilePhoto=await readProfileImage(file,"photo");$("profilePhotoPreview").src=pendingProfilePhoto;}catch(e){message("profileMessage",e.message,"error");}});
-$("profileBannerInput").addEventListener("change",async()=>{try{const file=$("profileBannerInput").files[0];if(!file)return;const source=await readProfileImage(file,"banner");loadBannerForEditor(source);}catch(e){message("profileMessage",e.message,"error");}});
+$("profileBannerInput").addEventListener("change",async()=>{
+  const input=$("profileBannerInput");
+  const file=input.files[0];
+  if(!file)return;
+  try{
+    const source=await readProfileImage(file,"banner");
+    loadBannerForEditor(source);
+    message("profileMessage","Nova bandeira carregada. Ajuste o enquadramento antes de salvar.");
+  }catch(e){
+    message("profileMessage",e.message,"error");
+  }finally{
+    input.value="";
+  }
+});
 $("profileBannerZoom").addEventListener("input",()=>{bannerZoom=Number($("profileBannerZoom").value);layoutBannerCrop();});
 $("profileBannerPreview").addEventListener("pointerdown",event=>{
   if(!bannerSourceImage||event.target.closest("button"))return;
