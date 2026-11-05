@@ -661,9 +661,10 @@ function exportBannerCrop(){
   const top=(height-bannerSourceImage.naturalHeight*scale)/2+bannerOffsetY;
   const sx=Math.max(0,-left/scale),sy=Math.max(0,-top/scale);
   const sw=width/scale,sh=height/scale;
-  const canvas=document.createElement("canvas");canvas.width=1400;canvas.height=Math.round(1400*height/width);
+  const outputScale=Math.min(1,1200/width,500/height);
+  const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(width*outputScale));canvas.height=Math.max(1,Math.round(height*outputScale));
   canvas.getContext("2d").drawImage(bannerSourceImage,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
-  return Promise.resolve(canvas.toDataURL("image/jpeg",.86));
+  return Promise.resolve(canvas.toDataURL("image/jpeg",.78));
 }
 $("profilePhotoPick").addEventListener("click",()=>$("profilePhotoInput").click());
 $("profileBannerPreview").addEventListener("click",()=>$("profileBannerInput").click());
