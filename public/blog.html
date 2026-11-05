@@ -85,15 +85,15 @@ button:disabled{opacity:.6;cursor:wait}
 
 .dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1.7fr) minmax(260px,1fr);grid-template-areas:"profile summary social" "profile requests social";gap:14px;align-items:start}
 .profile-sidebar{grid-area:profile;display:grid;gap:12px;align-content:start;min-width:0}
-.profile-banner-panel{grid-area:banner;margin:0;min-width:0}
+.profile-banner-panel{grid-area:auto;margin:0;min-width:0}
 .profile-banner-panel .profile-cover{height:170px;width:100%;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
 .profile-panel{grid-area:auto}
 .dashboard-main{display:contents}
 .summary-panel{grid-area:summary}
 .requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}
 .social-side-stack{grid-area:social;display:grid;gap:12px;align-content:start;min-width:0}
-#friendsPanel{grid-area:friends}
-#campaignsPanel{grid-area:campaigns}
+#friendsPanel{grid-area:auto}
+#campaignsPanel{grid-area:auto}
 .social-side-stack>.orkut-box{margin:0}
 .summary-panel{margin:0}
 #requestsPanel{grid-area:auto}
