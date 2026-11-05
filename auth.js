@@ -369,7 +369,7 @@ function registerAuthRoutes(app, express, db) {
   app.get("/api/profile/daily-phrase",databaseRequired,requireAuth,async(req,res)=>{
     const day=String(req.query?.day||"");
     const count=Number(req.query?.count);
-    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)||!Number.isInteger(count)||count<1||count>500){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isInteger(count)||count<1||count>500){
       return sendError(res,400,"Data ou quantidade de frases inválida.");
     }
     try{
@@ -379,11 +379,11 @@ function registerAuthRoutes(app, express, db) {
       );
       if(result.rows[0])return res.json({ok:true,index:result.rows[0].phrase_index});
       const saved=await db.query(
-        "SELECT phrase_index AS index FROM anitos_daily_phrases WHERE user_id=$1 AND phrase_date=$2::date",
+        "SELECT phrase_index FROM anitos_daily_phrases WHERE user_id=$1 AND phrase_date=$2::date",
         [req.user.id,day]
       );
       if(!saved.rows[0])return sendError(res,500,"Não foi possível recuperar a frase do dia.");
-      return res.json({ok:true,index:saved.rows[0].index});
+      return res.json({ok:true,index:saved.rows[0].phrase_index});
     }catch(err){
       console.error("[profile] Falha ao obter frase diária:",err.message);
       return sendError(res,500,"Não foi possível carregar a frase do dia.");
