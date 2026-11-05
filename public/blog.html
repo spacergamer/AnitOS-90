@@ -518,7 +518,7 @@ function setProfilePreview(){
   $("profileCover").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
   $("profileAvatar").src=currentUser?.profilePhoto||"";
   $("profileDisplayName").textContent=currentUser?.displayName||"Usuário";
-  $("profileHandle").textContent=currentUser?.username||"";
+  $("profileHandle").textContent=(currentUser?.username?"@"+currentUser.username:"")+(currentUser?.publicCode?"  #"+currentUser.publicCode:"");
   updateTimeGreeting();
   updateDailyPhrase();
 
