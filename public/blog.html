@@ -408,7 +408,7 @@ function openProfileEditor(){
   $("profileEditorBackdrop").hidden=false;
   $("profileEditorWindow").hidden=false;
   if(currentUser?.profileBanner&&!bannerSourceImage)loadBannerForEditor(currentUser.profileBanner);
-  requestAnimationFrame(()=>layoutBannerCrop());
+  requestAnimationFrame(()=>{syncBannerPreviewRatio();layoutBannerCrop();});
   $("profileNameInput").focus();
 }
 function closeProfileEditor(){
@@ -643,7 +643,16 @@ function loadBannerForEditor(source){
   image.onerror=()=>message("profileMessage","Não foi possível carregar a bandeira atual.","error");
   image.src=source;
 }
+function syncBannerPreviewRatio(){
+  const target=$("profileCover").getBoundingClientRect();
+  const preview=$("profileBannerPreview");
+  if(target.width>0&&target.height>0){
+    preview.style.aspectRatio=target.width+" / "+target.height;
+    preview.style.height="auto";
+  }
+}
 function layoutBannerCrop(){
+  syncBannerPreviewRatio();
   if(!bannerSourceImage)return;
   const area=$("profileBannerPreview"),image=bannerSourceImage;
   const width=area.clientWidth,height=area.clientHeight;
@@ -691,7 +700,7 @@ $("profileBannerPreview").addEventListener("pointerup",()=>{
   bannerDrag=null;
 });
 $("profileBannerPreview").addEventListener("pointercancel",()=>{bannerDrag=null;});
-window.addEventListener("resize",layoutBannerCrop);
+window.addEventListener("resize",()=>{syncBannerPreviewRatio();layoutBannerCrop();});
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
   try{
