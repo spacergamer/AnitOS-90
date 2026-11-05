@@ -85,11 +85,11 @@ button:disabled{opacity:.6;cursor:wait}
 
 .dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-areas:"profile summary";gap:14px;align-items:start}
 .profile-sidebar{grid-area:profile;display:grid;gap:12px;align-content:start;min-width:0}
-.profile-banner-panel{margin:0;min-width:0}
+.profile-banner-panel{grid-area:banner;margin:0;min-width:0}
 .profile-banner-panel .profile-cover{height:170px;width:100%;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
 .profile-panel{grid-area:auto}
 .dashboard-main{grid-area:summary}
-.dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);grid-template-areas:"summary friends" "requests friends" ". campaigns";gap:12px;align-items:start}.summary-panel{grid-area:summary}.requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}#friendsPanel{grid-area:friends}#campaignsPanel{grid-area:campaigns}
+.dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);grid-template-areas:"summary banner" "requests friends" ". campaigns";gap:12px;align-items:start}.summary-panel{grid-area:summary}.requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}#bannerPanel{grid-area:banner}#friendsPanel{grid-area:friends}#campaignsPanel{grid-area:campaigns}
 .summary-panel{margin:0}
 #requestsPanel{grid-area:auto}
 #friendsPanel{grid-area:auto}
@@ -147,7 +147,7 @@ button:disabled{opacity:.6;cursor:wait}
 .dashboard-notice{display:none;margin-top:10px;padding:7px;background:#111;color:var(--cyan);border:2px inset var(--dark)}
 .dashboard-notice.visible{display:block}
 @media(max-width:1100px){.dashboard-grid{grid-template-columns:220px minmax(0,1fr)}.dashboard-main{grid-template-columns:minmax(0,1fr) minmax(250px,.8fr)}}
-@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.dashboard-main{grid-template-columns:1fr;grid-template-areas:"summary" "requests" "friends" "campaigns"}.requests-stack{display:contents}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.dashboard-main{grid-template-columns:1fr;grid-template-areas:"summary" "requests" "banner" "friends" "campaigns"}.requests-stack{display:contents}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .clock-window{position:fixed;right:18px;bottom:18px;width:min(340px,calc(100vw - 24px));z-index:10003;margin:0;box-shadow:4px 4px 0 #000}
 .clock-display{background:#080808;color:var(--cyan);border:3px inset var(--dark);padding:12px;text-align:center;font-size:54px;line-height:1.1;text-shadow:0 0 8px rgba(5,255,161,.55);font-variant-numeric:tabular-nums}
 .clock-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
@@ -199,12 +199,6 @@ button:disabled{opacity:.6;cursor:wait}
 <main>
   <div class="dashboard-grid">
     <div class="profile-sidebar">
-      <section class="orkut-box profile-banner-panel" aria-label="Bandeira">
-        <div class="orkut-box-title">Bandeira</div>
-        <div class="orkut-box-content">
-          <div class="profile-cover" id="profileCover"></div>
-        </div>
-      </section>
       <aside class="profile-panel orkut-box">
       <div class="orkut-box-title">Perfil</div>
       <div class="profile-panel-content">
@@ -256,6 +250,12 @@ button:disabled{opacity:.6;cursor:wait}
         </div>
       </section>
       </div>
+      <section class="orkut-box profile-banner-panel" id="bannerPanel" aria-label="Bandeira">
+        <div class="orkut-box-title">Bandeira</div>
+        <div class="orkut-box-content">
+          <div class="profile-cover" id="profileCover"></div>
+        </div>
+      </section>
       <section class="orkut-box dashboard-widget" id="friendsPanel">
         <div class="orkut-box-title">Amigos</div>
         <div class="orkut-box-content">
