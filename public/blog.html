@@ -420,7 +420,6 @@ $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 let pendingProfilePhoto=null,pendingProfileBanner=null;
 let bannerSourceImage=null,bannerOffsetX=0,bannerOffsetY=0,bannerZoom=1,bannerDrag=null;
-let bannerWasDragged=false,suppressBannerClick=false;
 const memberMonths=["Jan.","Fev.","Mar.","Abr.","Mai.","Jun.","Jul.","Ago.","Set.","Out.","Nov.","Dez."];
 function formatMemberSince(value){
   const date=new Date(value);
@@ -685,23 +684,20 @@ $("profileBannerInput").addEventListener("change",async()=>{try{const file=$("pr
 $("profileBannerZoom").addEventListener("input",()=>{bannerZoom=Number($("profileBannerZoom").value);layoutBannerCrop();});
 $("profileBannerPreview").addEventListener("pointerdown",event=>{
   if(!bannerSourceImage||event.target.closest("button"))return;
-  bannerWasDragged=false;
   bannerDrag={x:event.clientX,y:event.clientY,offsetX:bannerOffsetX,offsetY:bannerOffsetY};
   $("profileBannerPreview").setPointerCapture(event.pointerId);
 });
 $("profileBannerPreview").addEventListener("pointermove",event=>{
   if(!bannerDrag)return;
   const deltaX=event.clientX-bannerDrag.x,deltaY=event.clientY-bannerDrag.y;
-  if(Math.hypot(deltaX,deltaY)>5)bannerWasDragged=true;
   bannerOffsetX=bannerDrag.offsetX+deltaX;
   bannerOffsetY=bannerDrag.offsetY+deltaY;
   layoutBannerCrop();
 });
 $("profileBannerPreview").addEventListener("pointerup",()=>{
-  if(bannerDrag&&bannerWasDragged)suppressBannerClick=true;
   bannerDrag=null;
 });
-$("profileBannerPreview").addEventListener("pointercancel",()=>{bannerDrag=null;bannerWasDragged=false;});
+$("profileBannerPreview").addEventListener("pointercancel",()=>{bannerDrag=null;});
 window.addEventListener("resize",()=>{layoutBannerPreviewSize();layoutBannerCrop();});
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
