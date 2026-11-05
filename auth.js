@@ -350,6 +350,8 @@ function registerAuthRoutes(app, express, db) {
       const profilePhoto=String(req.body?.profilePhoto||"").trim();
       const profileBanner=String(req.body?.profileBanner||"").trim();
       const bio=String(req.body?.bio||"").trim().slice(0,280);
+      const requestedRole=req.body?.role===undefined?null:String(req.body.role);
+      if(requestedRole!==null&&!["master","player"].includes(requestedRole))return sendError(res,400,"Tipo de perfil inválido.");
       const submittedFields=Array.isArray(req.body?.customFields)?req.body.customFields:null;
       if(submittedFields&&submittedFields.length>30)return sendError(res,400,"Você pode adicionar até 30 informações ao perfil.");
       const customFields=submittedFields===null?null:submittedFields.map(field=>({label:String(field?.label||"").trim().slice(0,32),value:String(field?.value||"").trim().slice(0,120)})).filter(field=>field.label&&field.value);
@@ -359,7 +361,7 @@ function registerAuthRoutes(app, express, db) {
         if(image.length>max)return sendError(res,413,"A imagem de "+label+" excede o limite permitido.");
         if(!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(image))return sendError(res,400,"Envie uma imagem PNG, JPG ou WebP válida para "+label+".");
       }
-      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,profile_banner_url=$3,bio=$4,profile_fields=COALESCE($5::jsonb,profile_fields),profile_complete=true WHERE id=$6 RETURNING id,display_name,employee_name,profile_photo_url,profile_banner_url,bio,profile_fields,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,profileBanner||null,bio,customFields===null?null:JSON.stringify(customFields),req.user.id]);
+      const result=await db.query("UPDATE anitos_users SET display_name=$1,profile_photo_url=$2,profile_banner_url=$3,bio=$4,profile_fields=COALESCE($5::jsonb,profile_fields),profile_complete=true,role=COALESCE($7,role) WHERE id=$6 RETURNING id,display_name,employee_name,profile_photo_url,profile_banner_url,bio,profile_fields,motivation,profile_complete,username,public_code,role,is_premium,is_dev,recovery_salt,recovery_hash,recovery_code_salt,recovery_code_hash",[displayName,profilePhoto||null,profileBanner||null,bio,customFields===null?null:JSON.stringify(customFields),req.user.id,requestedRole]);
       if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0])});
     }catch(err){console.error("[auth] Falha ao salvar perfil:",err.message);return sendError(res,500,"Não foi possível salvar o perfil.");}
