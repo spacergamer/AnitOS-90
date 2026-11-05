@@ -474,22 +474,17 @@ const dailyPhrases=[
 "Não leve a vida tão a sério. Você nunca vai sair vivo dela.",
 "O cérebro é maravilhoso. Começa a funcionar quando você acorda e não para até chegar no trabalho."
 ];
-function updateDailyPhrase(){
+async function updateDailyPhrase(){
   const now=new Date();
-  const dayKey=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-  const accountKey=String(currentUser?.username||"guest").toLowerCase();
-  const storageKey="anitos-daily-phrase-"+accountKey+"-"+dayKey;
-  let index;
+  const day=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
   try{
-    const saved=localStorage.getItem(storageKey);
-    if(saved!==null&&Number.isInteger(Number(saved))&&Number(saved)>=0&&Number(saved)<dailyPhrases.length)index=Number(saved);
-    else{index=Math.floor(Math.random()*dailyPhrases.length);localStorage.setItem(storageKey,String(index));}
-  }catch{
-    let hash=0;const seed=accountKey+"|"+dayKey;
-    for(let i=0;i<seed.length;i++)hash=(Math.imul(hash,31)+seed.charCodeAt(i))|0;
-    index=(hash>>>0)%dailyPhrases.length;
+    const result=await api("/api/profile/daily-phrase?day="+encodeURIComponent(day)+"&count="+dailyPhrases.length);
+    if(!Number.isInteger(result.index)||result.index<0||result.index>=dailyPhrases.length)throw new Error("Índice de frase inválido.");
+    $("dailyPhrase").textContent=dailyPhrases[result.index];
+  }catch(err){
+    console.error("[profile] Não foi possível carregar a frase diária:",err);
+    $("dailyPhrase").textContent="Não foi possível carregar a frase do dia.";
   }
-  $("dailyPhrase").textContent=dailyPhrases[index];
 }
 function setProfilePreview(){
   $("profileCover").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
