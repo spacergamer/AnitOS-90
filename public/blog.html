@@ -193,6 +193,12 @@ button:disabled{opacity:.6;cursor:wait}
 .friend-message-count{font-size:17px;color:#444;line-height:1.05;margin-top:3px}
 @media(max-width:760px){.friend-list-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.friend-list-grid{grid-template-columns:1fr}}
+.site-footer{margin:22px 0 28px;padding:9px 12px;background:var(--win);border:3px solid;border-color:var(--light) var(--black) var(--black) var(--light);box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light);display:flex;align-items:center;justify-content:center;gap:7px 13px;flex-wrap:wrap;text-align:center;font-size:19px;line-height:1.2}
+.site-footer .footer-brand{font-weight:bold;color:#111}
+.site-footer a{color:var(--blue);white-space:nowrap}
+.site-footer .footer-separator{color:#555}
+@media(max-width:760px){.site-footer{margin:18px 0 20px;padding:9px 7px;gap:6px 9px;font-size:18px}}
+
 </style>
 </head>
 <body>
@@ -299,6 +305,21 @@ button:disabled{opacity:.6;cursor:wait}
     </div>
   </div>
   <div id="dashboardNotice" class="dashboard-notice" role="status" aria-live="polite"></div>
+  <footer class="site-footer" aria-label="Links institucionais">
+    <span class="footer-brand">AnitOS '90</span>
+    <span class="footer-separator">|</span>
+    <a href="/about.html">sobre o AnitOS</a>
+    <span class="footer-separator">|</span>
+    <a href="/updates.html">atualizações</a>
+    <span class="footer-separator">|</span>
+    <a href="/terms.html">termos</a>
+    <span class="footer-separator">|</span>
+    <a href="/privacy.html">privacidade</a>
+    <span class="footer-separator">|</span>
+    <a href="/help.html">ajuda</a>
+    <span class="footer-separator">|</span>
+    <a href="/support.html">suporte</a>
+  </footer>
   <section class="orkut-box clock-window" id="clockWindow" hidden aria-label="Relógio de teste">
     <div class="orkut-box-title">CLOCK6 <button type="button" class="clock-close" id="closeClock" aria-label="Fechar relógio">X</button></div>
     <div class="orkut-box-content">
