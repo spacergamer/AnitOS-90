@@ -260,9 +260,20 @@ function setProfilePreview(){
   $("profileAvatar").src=currentUser?.profilePhoto||"";
   $("profileDisplayName").textContent=currentUser?.displayName||"Usuário";
   $("profileHandle").textContent=currentUser?.username||"";
-  const hour=new Date().getHours();
-  const greeting=hour<12?"Bom dia":hour<18?"Boa tarde":"Boa noite";
-  $("summaryGreeting").textContent=greeting+", "+(currentUser?.displayName||"usuário")+"!";
+  const now=new Date();
+  const minutes=now.getHours()*60+now.getMinutes();
+  const greeting=minutes>=270&&minutes<720?"Bom dia":minutes>=720&&minutes<1110?"Boa tarde":"Boa noite";
+  const userName=currentUser?.displayName||"usuário";
+  let needsSleep=false;
+  if(minutes>=120&&minutes<240){
+    const dayKey="anitos-sleep-message-"+now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+    try{
+      let dailyRoll=localStorage.getItem(dayKey);
+      if(dailyRoll===null){dailyRoll=Math.random()<1/9?"yes":"no";localStorage.setItem(dayKey,dailyRoll);}
+      needsSleep=dailyRoll==="yes";
+    }catch{needsSleep=Math.random()<1/9;}
+  }
+  $("summaryGreeting").textContent=needsSleep?"Você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
   $("memberSince").textContent=currentUser?.createdAt?new Date(currentUser.createdAt).toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"}):"Data indisponível";
   editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
   renderProfileFieldEditor();
