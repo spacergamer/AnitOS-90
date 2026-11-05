@@ -325,6 +325,7 @@ button:disabled{opacity:.6;cursor:wait}
           <small class="profile-image-hint">Clique na foto para alterá-la.</small>
         </div>
         <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
+        <div class="wide"><label for="profileRoleInput">Tipo de perfil</label><select id="profileRoleInput"><option value="player">Jogador</option><option value="master">Mestre</option></select><small>Você pode alternar entre Jogador e Mestre quando quiser.</small></div>
         <div class="wide"><label for="profileBioInput">Biografia</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
         <div class="wide">
           <label>Bandeira</label>
@@ -520,6 +521,7 @@ function setProfilePreview(){
   $("memberSince").textContent=currentUser?.createdAt?formatMemberSince(currentUser.createdAt):"Data indisponível";
   $("profileNameInput").value=currentUser?.displayName||"";
   $("profileBioInput").value=currentUser?.bio||"";
+  $("profileRoleInput").value=currentUser?.role==="master"?"master":"player";
   $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
   loadBannerForEditor(currentUser?.profileBanner||"");
 }
@@ -719,7 +721,7 @@ $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
   try{
     pendingProfileBanner=await exportBannerCrop();
-    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value})});
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,role:$("profileRoleInput").value})});
     currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
     setProfilePreview();
     message("profileMessage","Perfil atualizado com sucesso.","success");
