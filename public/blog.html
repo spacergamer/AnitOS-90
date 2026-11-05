@@ -162,9 +162,9 @@ button:disabled{opacity:.6;cursor:wait}
   </div>
   <nav class="site-nav" aria-label="Navegação principal">
     <a class="site-tab" href="/home.html">Inicio</a>
-    <a class="site-tab active" href="/blog.html" aria-current="page">perfil</a>
+    <a class="site-tab active" href="/blog.html" aria-current="page">Perfil</a>
     <button class="site-tab" type="button" data-nav="friends">Amigos</button>
-    <button class="site-tab" type="button" data-nav="chat">bate-papo</button>
+    <button class="site-tab" type="button" data-nav="chat">Bate-papo</button>
     <a class="site-tab" href="/room.html">Salas Online</a>
     <a class="site-tab" href="/home.html?open=membership">Seja Membro</a>
     <button class="site-tab exit" type="button" id="navLogout">Sair</button>
@@ -174,14 +174,14 @@ button:disabled{opacity:.6;cursor:wait}
 <main>
   <div class="dashboard-grid">
     <aside class="profile-panel orkut-box">
-      <div class="orkut-box-title">perfil</div>
+      <div class="orkut-box-title">Painel Perfil</div>
       <div class="profile-panel-content">
         <div class="profile-cover" id="profileCover"></div>
         <div class="profile-panel-identity">
           <img class="profile-avatar" id="profileAvatar" alt="Foto de perfil">
           <div class="profile-display-name" id="profileDisplayName"></div>
           <div class="profile-handle" id="profileHandle"></div>
-          <button type="button" id="openProfileEditor" class="profile-edit-link">editar perfil</button>
+          <button type="button" id="openProfileEditor" class="profile-edit-link">Editar perfil</button>
         </div>
         <div class="profile-extra" id="profileExtra">Informações extras ainda não adicionadas.</div>
       </div>
@@ -197,9 +197,9 @@ button:disabled{opacity:.6;cursor:wait}
     </aside>
     <section class="dashboard-main">
       <section class="orkut-box summary-panel">
-        <div class="orkut-box-title">resumo</div>
+        <div class="orkut-box-title">Painel Resumo</div>
         <div class="orkut-box-content">
-          <h1 class="summary-greeting" id="summaryGreeting">bom dia!</h1>
+          <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
           <div class="summary-counters">
             <div><strong>recados</strong><span>—</span></div>
             <div><strong>postagens</strong><span>—</span></div>
@@ -207,21 +207,21 @@ button:disabled{opacity:.6;cursor:wait}
             <div><strong>mensagens</strong><span>—</span></div>
           </div>
           <div class="summary-details">
-            <p><strong>membro desde:</strong> <span id="memberSince">carregando...</span></p>
-            <p><strong>resumo dos últimos 30 dias:</strong> <span class="unavailable-value">estatísticas sociais ainda não disponíveis.</span></p>
-            <p><strong>frase do dia:</strong> <span class="unavailable-value">aguardando a lista de frases.</span></p>
+            <p><strong>Membro desde:</strong> <span id="memberSince">carregando...</span></p>
+            <p><strong>Resumo dos últimos 30 dias:</strong> <span class="unavailable-value">estatísticas sociais ainda não disponíveis.</span></p>
+            <p><strong>Frase do dia:</strong> <span class="unavailable-value">aguardando a lista de frases.</span></p>
           </div>
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="requestsPanel">
-        <div class="orkut-box-title">pedidos</div>
+        <div class="orkut-box-title">Painel Pedidos</div>
         <div class="orkut-box-content">
-          <h2>novos pedidos de amizade (0)</h2>
+          <h2>Novos pedidos de amizade (0)</h2>
           <p class="empty-state">o sistema de amizades ainda não foi implementado.</p>
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="friendsPanel">
-        <div class="orkut-box-title">amigos</div>
+        <div class="orkut-box-title">Painel Amigos</div>
         <div class="orkut-box-content">
           <h2>meus amigos (0)</h2>
           <div class="social-placeholder">
@@ -232,7 +232,7 @@ button:disabled{opacity:.6;cursor:wait}
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="campaignsPanel">
-        <div class="orkut-box-title">campanhas</div>
+        <div class="orkut-box-title">Painel Campanhas</div>
         <div class="orkut-box-content">
           <h2>minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
           <div id="campaignList" class="campaign-list"><p class="empty-state">carregando campanhas...</p></div>
@@ -317,7 +317,7 @@ function setProfilePreview(){
 function updateTimeGreeting(){
   const now=new Date();
   const minutes=clockOverrideMinutes===null?now.getHours()*60+now.getMinutes():clockOverrideMinutes;
-  const greeting=minutes>=270&&minutes<720?"bom dia":minutes>=720&&minutes<1110?"boa tarde":"boa noite";
+  const greeting=minutes>=270&&minutes<720?"Bom dia":minutes>=720&&minutes<1110?"Boa tarde":"Boa noite";
   const userName=currentUser?.displayName||"usuário";
   let needsSleep=forceSleepMessage;
   if(!needsSleep&&minutes>=120&&minutes<240){
@@ -328,7 +328,7 @@ function updateTimeGreeting(){
       needsSleep=dailyRoll==="yes";
     }catch{needsSleep=Math.random()<1/9;}
   }
-  $("summaryGreeting").textContent=needsSleep?"você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
+  $("summaryGreeting").textContent=needsSleep?"Você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
   if(!$("clockWindow").hidden){
     $("clockDisplay").textContent=String(Math.floor(minutes/60)).padStart(2,"0")+":"+String(minutes%60).padStart(2,"0");
     $("clockStatus").textContent=clockOverrideMinutes===null?"Exibindo a hora real do dispositivo.":"Horário simulado ativo; a saudação foi atualizada.";
