@@ -72,11 +72,11 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10001}
 .profile-editor-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;z-index:10002;margin:0;box-shadow:4px 4px 0 #000}
 [hidden]{display:none!important}
-.profile-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.profile-editor .wide{grid-column:1/-1}
+.profile-editor{display:grid;grid-template-columns:1fr;gap:10px}
+.profile-editor .wide{grid-column:auto}
 .profile-editor textarea{min-height:90px}
 .profile-preview-banner{height:74px;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
-.profile-preview-photo{display:block;width:66px;height:66px;margin-top:7px;object-fit:cover;border:2px inset var(--dark);background:#eee}
+.profile-preview-photo{display:block;width:180px;height:180px;max-width:100%;margin:8px auto;object-fit:cover;border:3px solid #fff;box-shadow:1px 1px 2px #000;background:#eee;aspect-ratio:1/1}
 .profile-message{display:inline-block;margin-left:8px}
 .error{color:#8b0000}.success{color:#005b20}
 .profile-side-note{font-size:19px;color:#333;line-height:1.2}
@@ -301,22 +301,25 @@ button:disabled{opacity:.6;cursor:wait}
       <p class="clock-hint" id="clockStatus">Relógio de teste. A alteração afeta apenas esta página.</p>
     </div>
   </section>
+
+</main>
   <div id="profileEditorBackdrop" class="profile-editor-backdrop" hidden></div>
   <section class="orkut-box profile-editor-modal" id="profileEditorWindow" hidden>
     <div class="orkut-box-title">Editar perfil</div>
     <div class="orkut-box-content">
-      <p class="muted">Personalize sua página. Seu nome de usuário não pode ser alterado.</p>
       <form id="profileForm" class="profile-editor">
+        <div class="wide">
+          <label for="profilePhotoInput">Foto</label>
+          <img id="profilePhotoPreview" class="profile-preview-photo" alt="Prévia da foto">
+          <input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp">
+        </div>
         <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
-        <div><label for="profilePhotoInput">Foto de perfil</label><input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp"><img id="profilePhotoPreview" class="profile-preview-photo" alt="Prévia da foto"></div>
-        <div><label for="profileBannerInput">Banner</label><input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="profileBannerPreview" class="profile-preview-banner"></div></div>
-        <div class="wide"><label for="profileBioInput">Bio</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
-        <div class="wide"><label>Informações personalizadas</label><p class="muted">Crie campos como “Relacionamento” e “Solteiro”.</p><div id="profileFieldEditor" class="profile-field-editor"></div><button type="button" id="addProfileField">Adicionar informação</button></div>
+        <div class="wide"><label for="profileBioInput">Biografia</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
+        <div class="wide"><label for="profileBannerInput">Banner</label><input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="profileBannerPreview" class="profile-preview-banner"></div></div>
         <div class="wide"><button type="submit" id="saveProfile" class="primary-button">Salvar alterações</button> <button type="button" id="cancelProfileEdit">Cancelar</button><span id="profileMessage" class="muted profile-message" aria-live="polite"></span></div>
       </form>
     </div>
   </section>
-</main>
 <script>
 const $ = id => document.getElementById(id);
 let currentUser = null;
@@ -397,7 +400,6 @@ $("cancelProfileEdit").addEventListener("click",closeProfileEditor);
 $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 let pendingProfilePhoto=null,pendingProfileBanner=null;
-let editableProfileFields=[];
 const memberMonths=["Jan.","Fev.","Mar.","Abr.","Mai.","Jun.","Jul.","Ago.","Set.","Out.","Nov.","Dez."];
 function formatMemberSince(value){
   const date=new Date(value);
@@ -495,8 +497,6 @@ function setProfilePreview(){
   updateDailyPhrase();
 
   $("memberSince").textContent=currentUser?.createdAt?formatMemberSince(currentUser.createdAt):"Data indisponível";
-  editableProfileFields=(currentUser?.customFields||[]).map(field=>({...field}));
-  renderProfileFieldEditor();
   $("profileNameInput").value=currentUser?.displayName||"";
   $("profileBioInput").value=currentUser?.bio||"";
   $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
@@ -571,24 +571,6 @@ document.addEventListener("keydown",event=>{
   clockShortcutBuffer=(clockShortcutBuffer+event.key.toUpperCase()).slice(-6);
   if(clockShortcutBuffer==="CLOCK6"){clockShortcutBuffer="";openClock();}
 });
-function renderProfileFieldEditor(){
-  const root=$("profileFieldEditor");root.replaceChildren();
-  editableProfileFields.forEach((field,index)=>{
-    const row=document.createElement("div");row.className="profile-field-row";
-    const label=document.createElement("input");label.maxLength=32;label.placeholder="Nome (ex.: Relacionamento)";label.value=field.label;label.setAttribute("aria-label","Nome da informação");
-    const value=document.createElement("input");value.maxLength=120;value.placeholder="Valor (ex.: Solteiro)";value.value=field.value;value.setAttribute("aria-label","Valor da informação");
-    const remove=document.createElement("button");remove.type="button";remove.textContent="Remover";
-    label.addEventListener("input",()=>editableProfileFields[index].label=label.value);
-    value.addEventListener("input",()=>editableProfileFields[index].value=value.value);
-    remove.addEventListener("click",()=>{editableProfileFields.splice(index,1);renderProfileFieldEditor();});
-    row.append(label,value,remove);root.append(row);
-  });
-}
-$("addProfileField").addEventListener("click",()=>{
-  if(editableProfileFields.length>=30){message("profileMessage","Limite de 30 informações atingido.","error");return;}
-  editableProfileFields.push({label:"",value:""});renderProfileFieldEditor();
-  $("profileFieldEditor").lastElementChild?.querySelector("input")?.focus();
-});
 
 
 
@@ -634,7 +616,7 @@ $("profileBannerInput").addEventListener("change",async()=>{try{pendingProfileBa
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
   try{
-    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,customFields:editableProfileFields})});
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value})});
     currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
     setProfilePreview();
     message("profileMessage","Perfil atualizado com sucesso.","success");
