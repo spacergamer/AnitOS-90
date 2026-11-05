@@ -109,6 +109,13 @@ async function initializeAuthSchema(db) {
       expires_at timestamptz NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS anitos_daily_phrases (
+      user_id text NOT NULL REFERENCES anitos_users(id) ON DELETE CASCADE,
+      phrase_date date NOT NULL,
+      phrase_index integer NOT NULL CHECK (phrase_index >= 0),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (user_id, phrase_date)
+    );
     CREATE INDEX IF NOT EXISTS anitos_sessions_user_idx ON anitos_sessions(user_id);
     CREATE TABLE IF NOT EXISTS anitos_campaigns (
       id text PRIMARY KEY,
@@ -356,6 +363,31 @@ function registerAuthRoutes(app, express, db) {
       if(!result.rows[0])return sendError(res,404,"Conta não encontrada.");
       return res.json({ok:true,user:safeUser(result.rows[0])});
     }catch(err){console.error("[auth] Falha ao salvar perfil:",err.message);return sendError(res,500,"Não foi possível salvar o perfil.");}
+  });
+
+
+  app.get("/api/profile/daily-phrase",databaseRequired,requireAuth,async(req,res)=>{
+    const day=String(req.query?.day||"");
+    const count=Number(req.query?.count);
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)||!Number.isInteger(count)||count<1||count>500){
+      return sendError(res,400,"Data ou quantidade de frases inválida.");
+    }
+    try{
+      const result=await db.query(
+        "INSERT INTO anitos_daily_phrases(user_id,phrase_date,phrase_index) VALUES($1,$2::date,floor(random()*$3)::int) ON CONFLICT(user_id,phrase_date) DO NOTHING RETURNING phrase_index",
+        [req.user.id,day,count]
+      );
+      if(result.rows[0])return res.json({ok:true,index:result.rows[0].phrase_index});
+      const saved=await db.query(
+        "SELECT phrase_index AS index FROM anitos_daily_phrases WHERE user_id=$1 AND phrase_date=$2::date",
+        [req.user.id,day]
+      );
+      if(!saved.rows[0])return sendError(res,500,"Não foi possível recuperar a frase do dia.");
+      return res.json({ok:true,index:saved.rows[0].index});
+    }catch(err){
+      console.error("[profile] Falha ao obter frase diária:",err.message);
+      return sendError(res,500,"Não foi possível carregar a frase do dia.");
+    }
   });
 
   app.get("/api/auth/me", requireAuth, (req, res) => res.json({user: req.user}));
