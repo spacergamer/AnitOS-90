@@ -19,7 +19,7 @@ body::after{z-index:9999}
 button,input,textarea{font:inherit}
 a{color:var(--blue);text-decoration:none}
 a:hover{text-decoration:underline}
-main{width:min(1120px,100%);margin:0 auto;position:relative;z-index:1}
+main{width:min(1600px,100%);margin:0 auto;position:relative;z-index:1}
 .site-window{background:var(--win);border-top:3px solid var(--light);border-left:3px solid var(--light);border-right:3px solid var(--black);border-bottom:3px solid var(--black);box-shadow:inset -1px -1px var(--dark),inset 1px 1px var(--light);padding:4px;margin-bottom:16px}
 .site-header{display:flex;align-items:center;gap:12px;padding:5px 7px;background:linear-gradient(90deg,var(--blue),#1084d0);color:#fff}
 .brand-logo{display:block;width:48px;height:48px;object-fit:contain;background:#fff;border:2px inset var(--dark);padding:2px;flex:0 0 48px}
@@ -84,6 +84,23 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:460px){.site-header{align-items:center}.brand-logo{width:42px;height:42px;flex-basis:42px}.brand-title{font-size:28px}.brand-subtitle{font-size:16px}.profile-sidebar{grid-template-columns:1fr}.profile-field-row{grid-template-columns:1fr}.site-nav{gap:3px;padding:5px}.site-tab{font-size:20px;flex:1 1 42%}}
 
 .dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+.dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);grid-template-areas:"summary friends" "requests campaigns";gap:12px;align-items:start}
+.summary-panel{grid-area:summary;margin:0}
+#requestsPanel{grid-area:requests}
+#friendsPanel{grid-area:friends}
+#campaignsPanel{grid-area:campaigns}
+.dashboard-widget .orkut-box-content{min-height:145px}
+.dashboard-widget h2{font-size:23px;color:var(--blue);margin:0 0 9px;line-height:1.1}
+.widget-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:8px;border-top:1px solid #aaa}
+.widget-actions button,.widget-actions a{font:18px 'VT323',monospace;color:var(--blue);text-decoration:underline;background:none;border:0;padding:0;cursor:pointer}
+.social-placeholder{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.social-placeholder p{flex:1 1 100%;margin:4px 0}
+.social-avatar-placeholder{width:52px;height:52px;display:grid;place-items:center;background:#e5e5e5;border:2px inset var(--dark);color:#555;font-size:28px}
+.social-person{min-width:90px;max-width:130px;text-align:center;font-size:18px;overflow-wrap:anywhere}
+.social-person .social-avatar-placeholder{margin:0 auto 4px}
+.profile-menu-item{text-transform:none}
+.summary-greeting{text-transform:none}
+.dashboard-widget .orkut-box-title,.summary-panel .orkut-box-title,.profile-panel>.orkut-box-title{text-transform:none}
 .profile-panel,.dashboard-main{min-width:0}
 .profile-panel{padding:4px}
 .profile-panel-content{background:#fff;border:2px inset var(--dark);margin-top:4px;padding:8px}
@@ -108,7 +125,7 @@ button:disabled{opacity:.6;cursor:wait}
 .summary-details{border-top:1px solid #aaa;padding-top:7px}
 .summary-details p{margin:5px 0;line-height:1.2}
 .unavailable-value{color:#555}
-.dashboard-widgets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+.dashboard-widgets{display:contents}
 .dashboard-widget{min-width:0;margin:0}
 .dashboard-widget .orkut-box-content{height:100%;min-height:160px}
 .dashboard-widget h2{font-size:23px;color:var(--blue);margin:0 0 9px;line-height:1.1}
@@ -122,8 +139,8 @@ button:disabled{opacity:.6;cursor:wait}
 .campaign-item small{display:block}
 .dashboard-notice{display:none;margin-top:10px;padding:7px;background:#111;color:var(--cyan);border:2px inset var(--dark)}
 .dashboard-notice.visible{display:block}
-@media(max-width:900px){.dashboard-grid{grid-template-columns:220px minmax(0,1fr)}.dashboard-widgets{grid-template-columns:1fr 1fr}.dashboard-widget:last-child{grid-column:1/-1}}
-@media(max-width:650px){.dashboard-grid{grid-template-columns:1fr}.profile-panel{max-width:none}.profile-panel-content{display:grid;grid-template-columns:1fr}.dashboard-widgets{grid-template-columns:1fr}.dashboard-widget:last-child{grid-column:auto}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1100px){.dashboard-grid{grid-template-columns:220px minmax(0,1fr)}.dashboard-main{grid-template-columns:minmax(0,1fr) minmax(250px,.8fr)}}
+@media(max-width:760px){.dashboard-grid{grid-template-columns:1fr}.profile-panel{max-width:none}.profile-panel-content{display:grid;grid-template-columns:1fr}.dashboard-main{grid-template-columns:1fr;grid-template-areas:"summary" "requests" "friends" "campaigns"}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .clock-window{position:fixed;right:18px;bottom:18px;width:min(340px,calc(100vw - 24px));z-index:10003;margin:0;box-shadow:4px 4px 0 #000}
 .clock-display{background:#080808;color:var(--cyan);border:3px inset var(--dark);padding:12px;text-align:center;font-size:54px;line-height:1.1;text-shadow:0 0 8px rgba(5,255,161,.55);font-variant-numeric:tabular-nums}
 .clock-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
@@ -145,9 +162,9 @@ button:disabled{opacity:.6;cursor:wait}
   </div>
   <nav class="site-nav" aria-label="Navegação principal">
     <a class="site-tab" href="/home.html">Inicio</a>
-    <a class="site-tab active" href="/blog.html" aria-current="page">Perfil</a>
+    <a class="site-tab active" href="/blog.html" aria-current="page">perfil</a>
     <button class="site-tab" type="button" data-nav="friends">Amigos</button>
-    <button class="site-tab" type="button" data-nav="chat">Bate-papo</button>
+    <button class="site-tab" type="button" data-nav="chat">bate-papo</button>
     <a class="site-tab" href="/room.html">Salas Online</a>
     <a class="site-tab" href="/home.html?open=membership">Seja Membro</a>
     <button class="site-tab exit" type="button" id="navLogout">Sair</button>
@@ -157,7 +174,7 @@ button:disabled{opacity:.6;cursor:wait}
 <main>
   <div class="dashboard-grid">
     <aside class="profile-panel orkut-box">
-      <div class="orkut-box-title">Perfil</div>
+      <div class="orkut-box-title">perfil</div>
       <div class="profile-panel-content">
         <div class="profile-cover" id="profileCover"></div>
         <div class="profile-panel-identity">
@@ -170,57 +187,58 @@ button:disabled{opacity:.6;cursor:wait}
       </div>
       <nav class="profile-menu" aria-label="Menu do perfil">
         <a class="profile-menu-item active" href="/blog.html">Perfil</a>
-        <button class="profile-menu-item" type="button" data-panel-nav="Correio">Correio</button>
-        <a class="profile-menu-item" href="#campaignsPanel">Campanhas</a>
+        <button class="profile-menu-item" type="button" data-panel-nav="Correio">correio</button>
+        <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
         <button class="profile-menu-item" type="button" data-panel-nav="Bate-papo">Bate-papo</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="Postagens">Postagens</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="Comunidade">Comunidade</button>
-        <button class="profile-menu-item" type="button" data-panel-nav="Configurações">Configurações</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Postagens">postagens</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Comunidade">comunidade</button>
+        <button class="profile-menu-item" type="button" data-panel-nav="Configurações">configurações</button>
       </nav>
     </aside>
     <section class="dashboard-main">
       <section class="orkut-box summary-panel">
-        <div class="orkut-box-title">Resumo</div>
+        <div class="orkut-box-title">resumo</div>
         <div class="orkut-box-content">
-          <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
+          <h1 class="summary-greeting" id="summaryGreeting">bom dia!</h1>
           <div class="summary-counters">
-            <div><strong>Recados</strong><span>—</span></div>
-            <div><strong>Postagens</strong><span>—</span></div>
-            <div><strong>Mesas</strong><span>—</span></div>
-            <div><strong>Mensagens</strong><span>—</span></div>
+            <div><strong>recados</strong><span>—</span></div>
+            <div><strong>postagens</strong><span>—</span></div>
+            <div><strong>mesas</strong><span>—</span></div>
+            <div><strong>mensagens</strong><span>—</span></div>
           </div>
           <div class="summary-details">
-            <p><strong>Membro desde:</strong> <span id="memberSince">Carregando...</span></p>
-            <p><strong>Resumo dos últimos 30 dias:</strong> <span class="unavailable-value">Estatísticas sociais ainda não disponíveis.</span></p>
-            <p><strong>Frase do dia:</strong> <span class="unavailable-value">Aguardando a lista de frases.</span></p>
+            <p><strong>membro desde:</strong> <span id="memberSince">carregando...</span></p>
+            <p><strong>resumo dos últimos 30 dias:</strong> <span class="unavailable-value">estatísticas sociais ainda não disponíveis.</span></p>
+            <p><strong>frase do dia:</strong> <span class="unavailable-value">aguardando a lista de frases.</span></p>
           </div>
         </div>
       </section>
-      <div class="dashboard-widgets">
-        <section class="orkut-box dashboard-widget" id="requestsPanel">
-          <div class="orkut-box-title">Pedidos</div>
-          <div class="orkut-box-content">
-            <h2>Novos pedidos de amizade <span class="count-label">(indisponível)</span></h2>
-            <p class="empty-state">O sistema de amizades ainda não foi implementado.</p>
+      <section class="orkut-box dashboard-widget" id="requestsPanel">
+        <div class="orkut-box-title">pedidos</div>
+        <div class="orkut-box-content">
+          <h2>novos pedidos de amizade (0)</h2>
+          <p class="empty-state">o sistema de amizades ainda não foi implementado.</p>
+        </div>
+      </section>
+      <section class="orkut-box dashboard-widget" id="friendsPanel">
+        <div class="orkut-box-title">amigos</div>
+        <div class="orkut-box-content">
+          <h2>meus amigos (0)</h2>
+          <div class="social-placeholder">
+            <div class="social-avatar-placeholder" aria-hidden="true">?</div>
+            <p class="empty-state">sua lista de amigos aparecerá aqui quando o sistema estiver disponível.</p>
           </div>
-        </section>
-        <section class="orkut-box dashboard-widget" id="friendsPanel">
-          <div class="orkut-box-title">Amigos</div>
-          <div class="orkut-box-content">
-            <h2>Meus amigos <span class="count-label">(indisponível)</span></h2>
-            <p class="empty-state">Sua lista de amigos aparecerá aqui quando o sistema estiver disponível.</p>
-            <div class="widget-actions"><button type="button" data-panel-nav="Amigos">ver todos</button><button type="button" data-panel-nav="Gerenciar amigos">gerenciar</button></div>
-          </div>
-        </section>
-        <section class="orkut-box dashboard-widget" id="campaignsPanel">
-          <div class="orkut-box-title">Campanhas</div>
-          <div class="orkut-box-content">
-            <h2>Minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
-            <div id="campaignList" class="campaign-list"><p class="empty-state">Carregando campanhas...</p></div>
-            <div class="widget-actions"><a href="/home.html">ver todas</a></div>
-          </div>
-        </section>
-      </div>
+          <div class="widget-actions"><button type="button" data-panel-nav="amigos">ver todos</button><button type="button" data-panel-nav="gerenciar amigos">gerenciar</button></div>
+        </div>
+      </section>
+      <section class="orkut-box dashboard-widget" id="campaignsPanel">
+        <div class="orkut-box-title">campanhas</div>
+        <div class="orkut-box-content">
+          <h2>minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
+          <div id="campaignList" class="campaign-list"><p class="empty-state">carregando campanhas...</p></div>
+          <div class="widget-actions"><a href="/home.html">ver todas</a><button type="button" data-panel-nav="gerenciar campanhas">gerenciar</button></div>
+        </div>
+      </section>
     </section>
   </div>
   <div id="dashboardNotice" class="dashboard-notice" role="status" aria-live="polite"></div>
@@ -299,7 +317,7 @@ function setProfilePreview(){
 function updateTimeGreeting(){
   const now=new Date();
   const minutes=clockOverrideMinutes===null?now.getHours()*60+now.getMinutes():clockOverrideMinutes;
-  const greeting=minutes>=270&&minutes<720?"Bom dia":minutes>=720&&minutes<1110?"Boa tarde":"Boa noite";
+  const greeting=minutes>=270&&minutes<720?"bom dia":minutes>=720&&minutes<1110?"boa tarde":"boa noite";
   const userName=currentUser?.displayName||"usuário";
   let needsSleep=forceSleepMessage;
   if(!needsSleep&&minutes>=120&&minutes<240){
@@ -310,7 +328,7 @@ function updateTimeGreeting(){
       needsSleep=dailyRoll==="yes";
     }catch{needsSleep=Math.random()<1/9;}
   }
-  $("summaryGreeting").textContent=needsSleep?"Você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
+  $("summaryGreeting").textContent=needsSleep?"você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
   if(!$("clockWindow").hidden){
     $("clockDisplay").textContent=String(Math.floor(minutes/60)).padStart(2,"0")+":"+String(minutes%60).padStart(2,"0");
     $("clockStatus").textContent=clockOverrideMinutes===null?"Exibindo a hora real do dispositivo.":"Horário simulado ativo; a saudação foi atualizada.";
@@ -432,7 +450,7 @@ $("profileForm").addEventListener("submit",async event=>{
     const campaigns=Array.isArray(result.campaigns)?result.campaigns:[];
     $("campaignCount").textContent="("+campaigns.length+")";
     const list=$("campaignList");list.replaceChildren();
-    if(!campaigns.length){const empty=document.createElement("p");empty.className="empty-state";empty.textContent="Você ainda não participa de campanhas.";list.append(empty);return;}
+    if(!campaigns.length){const empty=document.createElement("p");empty.className="empty-state";empty.textContent="você ainda não participa de campanhas.";list.append(empty);return;}
     campaigns.slice(0,4).forEach(campaign=>{
       const item=document.createElement("div");item.className="campaign-item";
       const link=document.createElement("a");link.href="/home.html";link.textContent=campaign.title||"Campanha";
@@ -440,7 +458,7 @@ $("profileForm").addEventListener("submit",async event=>{
       item.append(link,meta);list.append(item);
     });
   }catch{
-    $("campaignList").textContent="Não foi possível carregar suas campanhas.";
+    $("campaignList").textContent="não foi possível carregar suas campanhas.";
   }
 })();
 (async function bootBlog(){try{const result=await api("/api/auth/me");currentUser=result.user;pendingProfilePhoto=currentUser?.profilePhoto||null;pendingProfileBanner=currentUser?.profileBanner||null;setProfilePreview();}catch{window.location.replace("/login.html?reason=session");}})();
