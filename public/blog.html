@@ -89,7 +89,7 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-banner-controls input{grid-column:2;max-width:100%}
 .profile-image-hint{display:block;text-align:center;color:#555;font-size:18px}
 .profile-preview-photo{display:block;width:180px;height:180px;max-width:100%;margin:8px auto;object-fit:cover;border:3px solid #fff;box-shadow:1px 1px 2px #000;background:#eee;aspect-ratio:1/1}
-.profile-message{display:inline-block;margin-left:8px}
+.profile-message{display:block;margin:7px 0 0}
 .error{color:#8b0000}.success{color:#005b20}
 .profile-side-note{font-size:19px;color:#333;line-height:1.2}
 @media(max-width:760px){body{padding:0}.profile-layout{grid-template-columns:1fr}.profile-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profile-sidebar .orkut-box{margin:0}.profile-editor{grid-template-columns:1fr}.profile-editor .wide{grid-column:auto}.site-tab{min-width:0;flex:1 1 30%;padding:6px 5px}}
@@ -729,7 +729,7 @@ $("profileForm").addEventListener("submit",async event=>{
     const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,role:$("profileRoleInput").value})});
     currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
     setProfilePreview();
-    message("profileMessage","Perfil atualizado com sucesso.","success");
+    message("profileMessage","Perfil atualizado","success");
   }catch(error){message("profileMessage",error.message,"error");}
   finally{button.disabled=false;}
 });
