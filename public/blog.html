@@ -84,9 +84,10 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:460px){.site-header{align-items:center}.brand-logo{width:42px;height:42px;flex-basis:42px}.brand-title{font-size:28px}.brand-subtitle{font-size:16px}.profile-sidebar{grid-template-columns:1fr}.profile-field-row{grid-template-columns:1fr}.site-nav{gap:3px;padding:5px}.site-tab{font-size:20px;flex:1 1 42%}}
 
 .dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-areas:"profile summary";gap:14px;align-items:start}
-.profile-banner-panel{grid-area:banner;margin:0;min-width:0}
+.profile-sidebar{grid-area:profile;display:grid;gap:12px;align-content:start;min-width:0}
+.profile-banner-panel{margin:0;min-width:0}
 .profile-banner-panel .profile-cover{height:170px;width:100%;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
-.profile-panel{grid-area:profile}
+.profile-panel{grid-area:auto}
 .dashboard-main{grid-area:summary}
 .dashboard-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);grid-template-areas:"summary friends" "requests campaigns";gap:12px;align-items:start}.summary-panel{grid-area:summary}.requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}#friendsPanel{grid-area:friends}#campaignsPanel{grid-area:campaigns}
 .summary-panel{margin:0}
@@ -197,7 +198,14 @@ button:disabled{opacity:.6;cursor:wait}
 </header>
 <main>
   <div class="dashboard-grid">
-    <aside class="profile-panel orkut-box">
+    <div class="profile-sidebar">
+      <section class="orkut-box profile-banner-panel" aria-label="Bandeira">
+        <div class="orkut-box-title">Bandeira</div>
+        <div class="orkut-box-content">
+          <div class="profile-cover" id="profileCover"></div>
+        </div>
+      </section>
+      <aside class="profile-panel orkut-box">
       <div class="orkut-box-title">Perfil</div>
       <div class="profile-panel-content">
         <div class="profile-panel-identity">
@@ -219,7 +227,8 @@ button:disabled{opacity:.6;cursor:wait}
         <button class="profile-menu-item" type="button" data-panel-nav="Comunidade">comunidade</button>
         <button class="profile-menu-item" type="button" data-panel-nav="Configurações">configurações</button>
       </nav>
-    </aside>
+      </aside>
+    </div>
     <section class="dashboard-main">
       <section class="orkut-box summary-panel">
         <div class="orkut-box-title">Resumo</div>
@@ -245,9 +254,6 @@ button:disabled{opacity:.6;cursor:wait}
           <h2>Novos pedidos de amizade (<span id="friendRequestCount">0</span>)</h2>
           <div id="friendRequestList"><p class="empty-state">Você ainda não recebeu pedidos de amizade.</p></div>
         </div>
-      </section>
-      <section class="orkut-box profile-banner-panel" aria-label="Banner do perfil">
-        <div class="profile-cover" id="profileCover"></div>
       </section>
       </div>
       <section class="orkut-box dashboard-widget" id="friendsPanel">
