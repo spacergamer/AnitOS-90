@@ -174,7 +174,7 @@ button:disabled{opacity:.6;cursor:wait}
 <main>
   <div class="dashboard-grid">
     <aside class="profile-panel orkut-box">
-      <div class="orkut-box-title">Painel Perfil</div>
+      <div class="orkut-box-title">Perfil</div>
       <div class="profile-panel-content">
         <div class="profile-cover" id="profileCover"></div>
         <div class="profile-panel-identity">
@@ -197,7 +197,7 @@ button:disabled{opacity:.6;cursor:wait}
     </aside>
     <section class="dashboard-main">
       <section class="orkut-box summary-panel">
-        <div class="orkut-box-title">Painel Resumo</div>
+        <div class="orkut-box-title">Resumo</div>
         <div class="orkut-box-content">
           <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
           <div class="summary-counters">
@@ -214,25 +214,22 @@ button:disabled{opacity:.6;cursor:wait}
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="requestsPanel">
-        <div class="orkut-box-title">Painel Pedidos</div>
+        <div class="orkut-box-title">Pedidos</div>
         <div class="orkut-box-content">
-          <h2>Novos pedidos de amizade (0)</h2>
-          <p class="empty-state">o sistema de amizades ainda não foi implementado.</p>
+          <h2>Novos pedidos de amizade (<span id="friendRequestCount">0</span>)</h2>
+          <div id="friendRequestList"><p class="empty-state">Você ainda não recebeu pedidos de amizade.</p></div>
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="friendsPanel">
-        <div class="orkut-box-title">Painel Amigos</div>
+        <div class="orkut-box-title">Amigos</div>
         <div class="orkut-box-content">
-          <h2>meus amigos (0)</h2>
-          <div class="social-placeholder">
-            <div class="social-avatar-placeholder" aria-hidden="true">?</div>
-            <p class="empty-state">sua lista de amigos aparecerá aqui quando o sistema estiver disponível.</p>
-          </div>
-          <div class="widget-actions"><button type="button" data-panel-nav="amigos">ver todos</button><button type="button" data-panel-nav="gerenciar amigos">gerenciar</button></div>
+          <h2>Meus amigos (<span id="friendCount">0</span>)</h2>
+          <div id="friendList"><p class="empty-state">Sua lista de amigos aparecerá aqui.</p></div>
+          <div class="widget-actions"><button type="button" data-panel-nav="amigos">Ver todos</button><button type="button" data-panel-nav="gerenciar amigos">Gerenciar</button></div>
         </div>
       </section>
       <section class="orkut-box dashboard-widget" id="campaignsPanel">
-        <div class="orkut-box-title">Painel Campanhas</div>
+        <div class="orkut-box-title">Campanhas</div>
         <div class="orkut-box-content">
           <h2>minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
           <div id="campaignList" class="campaign-list"><p class="empty-state">carregando campanhas...</p></div>
@@ -277,6 +274,44 @@ const $ = id => document.getElementById(id);
 let currentUser = null;
 let clockOverrideMinutes = null;
 let forceSleepMessage = false;
+
+// Dados temporários de demonstração: não são salvos no servidor.
+let demoFriendRequests=[];
+let demoFriends=[];
+let demoCampaigns=[];
+window.loadedCampaigns=[];
+function showDemoNotice(text){const n=$("dashboardNotice");n.textContent=text;n.classList.add("visible");}
+function renderDemoFriends(){
+  $("friendRequestCount").textContent=String(demoFriendRequests.length);
+  $("friendCount").textContent=String(demoFriends.length);
+  const requests=$("friendRequestList");requests.replaceChildren();
+  if(!demoFriendRequests.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Você ainda não recebeu pedidos de amizade.";requests.append(p);}
+  demoFriendRequests.forEach(person=>{
+    const item=document.createElement("div");item.className="campaign-item";
+    const name=document.createElement("strong");name.textContent=person.name;
+    const handle=document.createElement("small");handle.textContent="@"+person.username+" · Pedido de amizade";
+    const accept=document.createElement("button");accept.type="button";accept.className="primary-button";accept.textContent="Aceitar";
+    accept.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);demoFriends.push(person);renderDemoFriends();showDemoNotice(person.name+" agora está na sua lista de amigos.");});
+    item.append(name,handle,accept);requests.append(item);
+  });
+  const friends=$("friendList");friends.replaceChildren();
+  if(!demoFriends.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Sua lista de amigos aparecerá aqui.";friends.append(p);}
+  demoFriends.forEach(person=>{const item=document.createElement("div");item.className="campaign-item";const name=document.createElement("strong");name.textContent=person.name;const handle=document.createElement("small");handle.textContent="@"+person.username;item.append(name,handle);friends.append(item);});
+}
+function addDemoFriendRequest(){
+  if(!demoFriendRequests.length&&!demoFriends.some(x=>x.username==="teste_amigo"))demoFriendRequests.push({id:"friend-demo-1",name:"Alex Morgan",username:"teste_amigo"});
+  renderDemoFriends();showDemoNotice("FRIEND7: pedido de amizade de Alex Morgan adicionado. Clique em Aceitar para testar o painel Amigos.");
+}
+function renderCampaignList(campaigns){
+  const all=[...demoCampaigns,...campaigns];$("campaignCount").textContent="("+all.length+")";
+  const list=$("campaignList");list.replaceChildren();
+  if(!all.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Você ainda não participa de campanhas.";list.append(p);return;}
+  all.slice(0,4).forEach(campaign=>{const item=document.createElement("div");item.className="campaign-item";const link=document.createElement("a");link.href=campaign.demo?"#":"/home.html";link.textContent=campaign.title||"Campanha";if(campaign.demo)link.addEventListener("click",e=>e.preventDefault());const meta=document.createElement("small");meta.textContent=campaign.demo?"Demonstração local · Mestre":campaign.is_owner?"Você é o Mestre":"Participante";item.append(link,meta);list.append(item);});
+}
+function addDemoCampaign(){
+  if(!demoCampaigns.length)demoCampaigns.push({title:"Projeto Anitope — Campanha de Teste",is_owner:true,demo:true});
+  renderCampaignList(window.loadedCampaigns);showDemoNotice("CAMP9: campanha de teste adicionada ao painel Campanhas.");
+}
 async function api(url, options = {}) {
  const response = await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
  const payload = await response.json().catch(()=>({}));
@@ -365,6 +400,16 @@ $("resetClockTime").addEventListener("click",()=>{
   updateTimeGreeting();
 });
 let clockShortcutBuffer="";
+let socialShortcutBuffer="";
+document.addEventListener("keydown",event=>{
+  if(event.ctrlKey||event.altKey||event.metaKey)return;
+  const target=event.target;
+  if(target&&(["INPUT","TEXTAREA","SELECT"].includes(target.tagName)||target.isContentEditable))return;
+  if(event.key.length!==1)return;
+  socialShortcutBuffer=(socialShortcutBuffer+event.key.toUpperCase()).slice(-7);
+  if(socialShortcutBuffer==="FRIEND7"){socialShortcutBuffer="";addDemoFriendRequest();return;}
+  if(socialShortcutBuffer==="CAMP9"){socialShortcutBuffer="";addDemoCampaign();return;}
+});
 document.addEventListener("keydown",event=>{
   if(event.ctrlKey||event.altKey||event.metaKey)return;
   const target=event.target;
@@ -448,19 +493,13 @@ $("profileForm").addEventListener("submit",async event=>{
   try{
     const result=await api("/api/campaigns");
     const campaigns=Array.isArray(result.campaigns)?result.campaigns:[];
-    $("campaignCount").textContent="("+campaigns.length+")";
-    const list=$("campaignList");list.replaceChildren();
-    if(!campaigns.length){const empty=document.createElement("p");empty.className="empty-state";empty.textContent="você ainda não participa de campanhas.";list.append(empty);return;}
-    campaigns.slice(0,4).forEach(campaign=>{
-      const item=document.createElement("div");item.className="campaign-item";
-      const link=document.createElement("a");link.href="/home.html";link.textContent=campaign.title||"Campanha";
-      const meta=document.createElement("small");meta.textContent=campaign.is_owner?"Você é o Mestre":"Participante";
-      item.append(link,meta);list.append(item);
-    });
+    window.loadedCampaigns=campaigns;
+    renderCampaignList(campaigns);
   }catch{
     $("campaignList").textContent="não foi possível carregar suas campanhas.";
   }
 })();
+renderDemoFriends();
 (async function bootBlog(){try{const result=await api("/api/auth/me");currentUser=result.user;pendingProfilePhoto=currentUser?.profilePhoto||null;pendingProfileBanner=currentUser?.profileBanner||null;setProfilePreview();}catch{window.location.replace("/login.html?reason=session");}})();
 </script>
 </body>
