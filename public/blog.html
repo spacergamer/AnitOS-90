@@ -75,7 +75,16 @@ button:disabled{opacity:.6;cursor:wait}
 .profile-editor{display:grid;grid-template-columns:1fr;gap:10px}
 .profile-editor .wide{grid-column:auto}
 .profile-editor textarea{min-height:90px}
-.profile-preview-banner{height:74px;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
+.profile-preview-banner{height:150px;position:relative;overflow:hidden;background:linear-gradient(120deg,#008080,#000080);border:2px inset var(--dark);cursor:grab;touch-action:none}
+.profile-preview-banner:active{cursor:grabbing}
+.profile-preview-banner img{position:absolute;max-width:none;max-height:none;user-select:none;pointer-events:none}
+.profile-photo-pick{display:block;width:180px;height:180px;max-width:100%;margin:8px auto;border:0;padding:0;background:transparent;cursor:pointer}
+.profile-photo-pick:hover{background:transparent;filter:brightness(.88)}
+.profile-photo-pick img{display:block;width:100%;height:100%;object-fit:cover;border:3px solid #fff;box-shadow:1px 1px 2px #000;background:#eee;aspect-ratio:1/1}
+.profile-banner-controls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 10px;align-items:center;margin-top:8px}
+.profile-banner-controls label{margin:0}
+.profile-banner-controls input{grid-column:2;max-width:100%}
+.profile-image-hint{display:block;text-align:center;color:#555;font-size:18px}
 .profile-preview-photo{display:block;width:180px;height:180px;max-width:100%;margin:8px auto;object-fit:cover;border:3px solid #fff;box-shadow:1px 1px 2px #000;background:#eee;aspect-ratio:1/1}
 .profile-message{display:inline-block;margin-left:8px}
 .error{color:#8b0000}.success{color:#005b20}
@@ -309,13 +318,20 @@ button:disabled{opacity:.6;cursor:wait}
     <div class="orkut-box-content">
       <form id="profileForm" class="profile-editor">
         <div class="wide">
-          <label for="profilePhotoInput">Foto</label>
-          <img id="profilePhotoPreview" class="profile-preview-photo" alt="Prévia da foto">
-          <input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp">
+          <label>Foto</label>
+          <button type="button" class="profile-photo-pick" id="profilePhotoPick" aria-label="Alterar foto de perfil"><img id="profilePhotoPreview" alt="Clique para alterar sua foto"></button>
+          <input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          <small class="profile-image-hint">Clique na foto para alterá-la.</small>
         </div>
         <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
         <div class="wide"><label for="profileBioInput">Biografia</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
-        <div class="wide"><label for="profileBannerInput">Banner</label><input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="profileBannerPreview" class="profile-preview-banner"></div></div>
+        <div class="wide">
+          <label>Bandeira</label>
+          <input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          <div id="profileBannerPreview" class="profile-preview-banner" role="button" tabindex="0" aria-label="Clique para escolher e ajustar sua bandeira"></div>
+          <small class="profile-image-hint">Clique na bandeira para escolher uma imagem. Arraste para ajustar o enquadramento.</small>
+          <div class="profile-banner-controls"><label for="profileBannerZoom">Zoom</label><input id="profileBannerZoom" type="range" min="1" max="2.5" step="0.05" value="1"></div>
+        </div>
         <div class="wide"><button type="submit" id="saveProfile" class="primary-button">Salvar alterações</button> <button type="button" id="cancelProfileEdit">Cancelar</button><span id="profileMessage" class="muted profile-message" aria-live="polite"></span></div>
       </form>
     </div>
@@ -400,6 +416,7 @@ $("cancelProfileEdit").addEventListener("click",closeProfileEditor);
 $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
 let pendingProfilePhoto=null,pendingProfileBanner=null;
+let bannerSourceImage=null,bannerOffsetX=0,bannerOffsetY=0,bannerZoom=1,bannerDrag=null;
 const memberMonths=["Jan.","Fev.","Mar.","Abr.","Mai.","Jun.","Jul.","Ago.","Set.","Out.","Nov.","Dez."];
 function formatMemberSince(value){
   const date=new Date(value);
@@ -500,7 +517,7 @@ function setProfilePreview(){
   $("profileNameInput").value=currentUser?.displayName||"";
   $("profileBioInput").value=currentUser?.bio||"";
   $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
-  $("profileBannerPreview").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
+  loadBannerForEditor(currentUser?.profileBanner||"");
 }
 function updateTimeGreeting(){
   const now=new Date();
@@ -601,21 +618,77 @@ function readProfileImage(file,kind){
       const img=new Image();
       img.onerror=()=>reject(new Error("Imagem inválida."));
       img.onload=()=>{
-        const max=kind==="banner"?1400:600,scale=Math.min(1,max/Math.max(img.width,img.height));
+        const max=kind==="banner"?2400:600,scale=Math.min(1,max/Math.max(img.width,img.height));
         const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
         canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL("image/jpeg",kind==="banner"?.78:.76));
+        resolve(canvas.toDataURL("image/jpeg",kind==="banner"?.88:.76));
       };
       img.src=reader.result;
     };
     reader.readAsDataURL(file);
   });
 }
-$("profilePhotoInput").addEventListener("change",async()=>{try{pendingProfilePhoto=await readProfileImage($("profilePhotoInput").files[0],"photo");$("profilePhotoPreview").src=pendingProfilePhoto||"";}catch(e){message("profileMessage",e.message,"error");}});
-$("profileBannerInput").addEventListener("change",async()=>{try{pendingProfileBanner=await readProfileImage($("profileBannerInput").files[0],"banner");$("profileBannerPreview").style.backgroundImage=pendingProfileBanner?"url("+JSON.stringify(pendingProfileBanner)+")":"";}catch(e){message("profileMessage",e.message,"error");}});
+function loadBannerForEditor(source){
+  const preview=$("profileBannerPreview");
+  preview.replaceChildren();
+  bannerSourceImage=null;bannerOffsetX=0;bannerOffsetY=0;bannerZoom=1;
+  $("profileBannerZoom").value="1";
+  if(!source)return;
+  const image=new Image();
+  image.onload=()=>{bannerSourceImage=image;preview.append(image);layoutBannerCrop();};
+  image.onerror=()=>message("profileMessage","Não foi possível carregar a bandeira atual.","error");
+  image.src=source;
+}
+function layoutBannerCrop(){
+  if(!bannerSourceImage)return;
+  const area=$("profileBannerPreview"),image=bannerSourceImage;
+  const width=area.clientWidth,height=area.clientHeight;
+  if(!width||!height)return;
+  const scale=Math.max(width/image.naturalWidth,height/image.naturalHeight)*bannerZoom;
+  const imageWidth=image.naturalWidth*scale,imageHeight=image.naturalHeight*scale;
+  const maxX=Math.max(0,(imageWidth-width)/2),maxY=Math.max(0,(imageHeight-height)/2);
+  bannerOffsetX=Math.max(-maxX,Math.min(maxX,bannerOffsetX));
+  bannerOffsetY=Math.max(-maxY,Math.min(maxY,bannerOffsetY));
+  image.style.width=imageWidth+"px";image.style.height=imageHeight+"px";
+  image.style.left=((width-imageWidth)/2+bannerOffsetX)+"px";
+  image.style.top=((height-imageHeight)/2+bannerOffsetY)+"px";
+}
+function exportBannerCrop(){
+  if(!bannerSourceImage)return Promise.resolve("");
+  const area=$("profileBannerPreview"),width=area.clientWidth,height=area.clientHeight;
+  const scale=Math.max(width/bannerSourceImage.naturalWidth,height/bannerSourceImage.naturalHeight)*bannerZoom;
+  const left=(width-bannerSourceImage.naturalWidth*scale)/2+bannerOffsetX;
+  const top=(height-bannerSourceImage.naturalHeight*scale)/2+bannerOffsetY;
+  const sx=Math.max(0,-left/scale),sy=Math.max(0,-top/scale);
+  const sw=width/scale,sh=height/scale;
+  const canvas=document.createElement("canvas");canvas.width=1400;canvas.height=Math.round(1400*height/width);
+  canvas.getContext("2d").drawImage(bannerSourceImage,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  return Promise.resolve(canvas.toDataURL("image/jpeg",.86));
+}
+$("profilePhotoPick").addEventListener("click",()=>$("profilePhotoInput").click());
+$("profileBannerPreview").addEventListener("click",()=>$("profileBannerInput").click());
+$("profileBannerPreview").addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();$("profileBannerInput").click();}});
+$("profilePhotoInput").addEventListener("change",async()=>{try{const file=$("profilePhotoInput").files[0];if(!file)return;pendingProfilePhoto=await readProfileImage(file,"photo");$("profilePhotoPreview").src=pendingProfilePhoto;}catch(e){message("profileMessage",e.message,"error");}});
+$("profileBannerInput").addEventListener("change",async()=>{try{const file=$("profileBannerInput").files[0];if(!file)return;const source=await readProfileImage(file,"banner");loadBannerForEditor(source);}catch(e){message("profileMessage",e.message,"error");}});
+$("profileBannerZoom").addEventListener("input",()=>{bannerZoom=Number($("profileBannerZoom").value);layoutBannerCrop();});
+$("profileBannerPreview").addEventListener("pointerdown",event=>{
+  if(!bannerSourceImage||event.target.closest("button"))return;
+  bannerDrag={x:event.clientX,y:event.clientY,offsetX:bannerOffsetX,offsetY:bannerOffsetY};
+  $("profileBannerPreview").setPointerCapture(event.pointerId);
+});
+$("profileBannerPreview").addEventListener("pointermove",event=>{
+  if(!bannerDrag)return;
+  bannerOffsetX=bannerDrag.offsetX+(event.clientX-bannerDrag.x);
+  bannerOffsetY=bannerDrag.offsetY+(event.clientY-bannerDrag.y);
+  layoutBannerCrop();
+});
+$("profileBannerPreview").addEventListener("pointerup",()=>bannerDrag=null);
+$("profileBannerPreview").addEventListener("pointercancel",()=>bannerDrag=null);
+window.addEventListener("resize",layoutBannerCrop);
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
   try{
+    pendingProfileBanner=await exportBannerCrop();
     const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value})});
     currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
     setProfilePreview();
