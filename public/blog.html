@@ -83,7 +83,7 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:760px){body{padding:0}.profile-layout{grid-template-columns:1fr}.profile-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profile-sidebar .orkut-box{margin:0}.profile-editor{grid-template-columns:1fr}.profile-editor .wide{grid-column:auto}.site-tab{min-width:0;flex:1 1 30%;padding:6px 5px}}
 @media(max-width:460px){.site-header{align-items:center}.brand-logo{width:42px;height:42px;flex-basis:42px}.brand-title{font-size:28px}.brand-subtitle{font-size:16px}.profile-sidebar{grid-template-columns:1fr}.profile-field-row{grid-template-columns:1fr}.site-nav{gap:3px;padding:5px}.site-tab{font-size:20px;flex:1 1 42%}}
 
-.dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1.7fr) minmax(260px,1fr);grid-template-areas:"profile summary banner" "profile requests friends" "profile requests campaigns";gap:14px;align-items:start}
+.dashboard-grid{display:grid;grid-template-columns:260px minmax(0,1.7fr) minmax(260px,1fr);grid-template-areas:"profile summary social" "profile requests social";gap:14px;align-items:start}
 .profile-sidebar{grid-area:profile;display:grid;gap:12px;align-content:start;min-width:0}
 .profile-banner-panel{grid-area:banner;margin:0;min-width:0}
 .profile-banner-panel .profile-cover{height:170px;width:100%;background:linear-gradient(120deg,#008080,#000080);background-size:cover;background-position:center;border:2px inset var(--dark)}
@@ -91,10 +91,10 @@ button:disabled{opacity:.6;cursor:wait}
 .dashboard-main{display:contents}
 .summary-panel{grid-area:summary}
 .requests-stack{grid-area:requests;display:grid;gap:12px;align-content:start;min-width:0}
-.social-side-stack{display:contents}
+.social-side-stack{grid-area:social;display:grid;gap:12px;align-content:start;min-width:0}
 #friendsPanel{grid-area:friends}
 #campaignsPanel{grid-area:campaigns}
-.social-side-stack>.orkut-box{margin-bottom:0}
+.social-side-stack>.orkut-box{margin:0}
 .summary-panel{margin:0}
 #requestsPanel{grid-area:auto}
 
@@ -151,7 +151,7 @@ button:disabled{opacity:.6;cursor:wait}
 .dashboard-notice{display:none;margin-top:10px;padding:7px;background:#111;color:var(--cyan);border:2px inset var(--dark)}
 .dashboard-notice.visible{display:block}
 @media(max-width:1100px){.dashboard-grid{grid-template-columns:220px minmax(0,1.5fr) minmax(220px,1fr)}}
-@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary" "requests" "banner" "friends" "campaigns"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.requests-stack{display:grid}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){main{padding:0 10px 10px}.dashboard-grid{grid-template-columns:1fr;grid-template-areas:"profile" "summary" "requests" "social"}.profile-panel{max-width:none}.profile-banner-panel .profile-cover{height:100px}.profile-panel-content{display:grid;grid-template-columns:1fr}.profile-avatar{width:75%;max-width:230px}.requests-stack{display:grid}.summary-counters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .clock-window{position:fixed;right:18px;bottom:18px;width:min(340px,calc(100vw - 24px));z-index:10003;margin:0;box-shadow:4px 4px 0 #000}
 .clock-display{background:#080808;color:var(--cyan);border:3px inset var(--dark);padding:12px;text-align:center;font-size:54px;line-height:1.1;text-shadow:0 0 8px rgba(5,255,161,.55);font-variant-numeric:tabular-nums}
 .clock-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
