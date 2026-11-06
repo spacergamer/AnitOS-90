@@ -240,6 +240,7 @@ button:disabled{opacity:.6;cursor:wait}
         </div>
         <div class="profile-menu-section">
           <a class="profile-menu-item active" href="/blog.html">perfil</a>
+          <button class="profile-menu-item" type="button" id="aboutMeButton">sobre mim</button>
           <button class="profile-menu-item" type="button" data-panel-nav="correio">correio</button>
           <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
         </div>
@@ -443,6 +444,7 @@ function closeProfileEditor(){
   $("profileEditorBackdrop").hidden=true;
 }
 $("openProfileEditor").addEventListener("click",openProfileEditor);
+  $("aboutMeButton").addEventListener("click",()=>{$("profileExtra").scrollIntoView({behavior:"smooth",block:"center"});});
 $("cancelProfileEdit").addEventListener("click",closeProfileEditor);
 $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
