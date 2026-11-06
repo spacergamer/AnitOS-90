@@ -199,3 +199,602 @@ button:disabled{opacity:.6;cursor:wait}
 .site-footer .footer-separator{color:#555}
 @media(max-width:760px){.site-footer{margin:18px 0 20px;padding:9px 7px;gap:6px 9px;font-size:18px}}
 
+
+/* Tipografia bitmap: pixels visíveis, sem aparência vetorial */
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter:wght@800;900&display=swap');
+:root{
+  --font-interface:"Silkscreen",monospace;
+  --font-text:"Silkscreen",monospace;
+  --font-technical:"Silkscreen",monospace;
+}
+html,body,button,input,textarea,select{
+  -webkit-font-smoothing:none;
+  -moz-osx-font-smoothing:unset;
+  text-rendering:geometricPrecision;
+}
+body,button,input,textarea,select,.site-tab,.profile-menu-item,
+.profile-edit-link,.profile-scrap-table,.profile-role-field select,
+.widget-actions button,.widget-actions a{
+  font-family:var(--font-interface);
+}
+.brand-title{
+  font-family:Inter,Arial,sans-serif;
+  font-weight:800;
+  letter-spacing:-.045em;
+  -webkit-font-smoothing:none;
+}
+.brand-subtitle,.profile-bio,.profile-extra,.summary-details,.empty-state,
+.campaign-item,.friend-request-copy,.friend-list-card,.clock-hint,
+.profile-side-note,.orkut-box-content p,.site-footer,.clock-display{
+  font-family:var(--font-text);
+}
+</style>
+</head>
+<body>
+<header class="site-window">
+  <div class="site-header">
+    <img class="brand-logo" src="/anitopeboard/img/as.png" alt="Anitope Science">
+    <div class="brand-copy"><div class="brand-title">ANITOPE NETWORK</div><div class="brand-subtitle">A Ciência Salvando Vidas desde 1972.</div></div>
+  </div>
+  <nav class="site-nav" aria-label="Navegação principal">
+    <a class="site-tab" href="/home.html">Inicio</a>
+    <a class="site-tab active" href="/blog.html" aria-current="page">Perfil</a>
+    <button class="site-tab" type="button" data-nav="friends">Amigos</button>
+    <button class="site-tab" type="button" data-nav="chat">Bate-papo</button>
+    <a class="site-tab" href="/room.html">Salas Online</a>
+    <a class="site-tab" href="/home.html?open=membership">Seja Membro</a>
+    <button class="site-tab exit" type="button" id="navLogout">Sair</button>
+  </nav>
+  <div id="navMessage" class="nav-message" role="status" aria-live="polite"></div>
+</header>
+<main>
+  <div class="dashboard-grid">
+    <div class="profile-sidebar">
+      <aside class="profile-panel orkut-box">
+      <div class="orkut-box-title">Perfil</div>
+      <div class="profile-panel-content">
+        <div class="profile-panel-identity">
+          <img class="profile-avatar" id="profileAvatar" alt="Foto de perfil">
+          <section class="profile-name-section" aria-label="Identificação do usuário">
+            <div class="profile-display-name" id="profileDisplayName"></div>
+            <div class="profile-handle" id="profileHandle"></div>
+          </section>
+        </div>
+        <div class="profile-extra" id="profileExtra">Informações extras ainda não adicionadas.</div>
+      </div>
+      <nav class="profile-menu" aria-label="Menu do perfil">
+        <div class="profile-menu-section">
+          <button class="profile-menu-item" type="button" id="openProfileEditor">editar perfil</button>
+        </div>
+        <div class="profile-menu-section">
+          <a class="profile-menu-item active" href="/blog.html">perfil</a>
+          <button class="profile-menu-item" type="button" data-panel-nav="correio">correio</button>
+          <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
+        </div>
+        <div class="profile-menu-section">
+          <button class="profile-menu-item" type="button" data-panel-nav="bate-papo">bate-papo</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="postagens">postagens</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="comunidade">comunidade</button>
+          <button class="profile-menu-item" type="button" data-panel-nav="configurações">configurações</button>
+        </div>
+      </nav>
+      </aside>
+    </div>
+    <section class="dashboard-main">
+      <section class="orkut-box summary-panel">
+        <div class="orkut-box-title">Resumo</div>
+        <div class="orkut-box-content">
+          <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
+          <div class="summary-counters">
+            <div><strong>recados</strong><span>—</span></div>
+            <div><strong>postagens</strong><span>—</span></div>
+            <div><strong>mesas</strong><span>—</span></div>
+            <div><strong>mensagens</strong><span>—</span></div>
+          </div>
+          <div class="summary-details">
+            <p><strong>Membro desde:</strong> <span id="memberSince">carregando...</span></p>
+            <p><strong>Resumo dos últimos 30 dias:</strong> <span id="monthlySummary">0 curtidas, 0 respostas e 0 reações</span></p>
+            <p><strong>Frase do dia:</strong> <span id="dailyPhrase"></span></p>
+          </div>
+        </div>
+      </section>
+      <div class="requests-stack">
+      <section class="orkut-box dashboard-widget" id="requestsPanel">
+        <div class="orkut-box-title">Pedidos</div>
+        <div class="orkut-box-content">
+          <h2>Novos pedidos de amizade (<span id="friendRequestCount">0</span>)</h2>
+          <div id="friendRequestList"><p class="empty-state">Você ainda não recebeu pedidos de amizade.</p></div>
+        </div>
+      </section>
+      </div>
+    </section>
+    <div class="social-side-stack">
+      <section class="orkut-box profile-banner-panel" id="bannerPanel" aria-label="Bandeira">
+        <div class="orkut-box-title">Bandeira</div>
+        <div class="orkut-box-content">
+          <div class="profile-cover" id="profileCover"></div>
+        </div>
+      </section>
+      <section class="orkut-box dashboard-widget" id="friendsPanel">
+        <div class="orkut-box-title">Amigos</div>
+        <div class="orkut-box-content">
+          <h2>Meus amigos (<span id="friendCount">0</span>)</h2>
+          <div id="friendList"><p class="empty-state">Sua lista de amigos aparecerá aqui.</p></div>
+          <div class="widget-actions"><button type="button" data-panel-nav="amigos">Ver todos</button><button type="button" data-panel-nav="gerenciar amigos">Gerenciar</button></div>
+        </div>
+      </section>
+      <section class="orkut-box dashboard-widget" id="campaignsPanel">
+        <div class="orkut-box-title">Campanhas</div>
+        <div class="orkut-box-content">
+          <h2>minhas campanhas <span class="count-label" id="campaignCount">(0)</span></h2>
+          <div id="campaignList" class="campaign-list"><p class="empty-state">carregando campanhas...</p></div>
+          <div class="widget-actions"><a href="/home.html">ver todas</a><button type="button" data-panel-nav="gerenciar campanhas">gerenciar</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="dashboardNotice" class="dashboard-notice" role="status" aria-live="polite"></div>
+  <footer class="site-footer" aria-label="Links institucionais">
+    <span class="footer-brand">AnitOS '90</span>
+    <span class="footer-separator">|</span>
+    <a href="/about.html">sobre o AnitOS</a>
+    <span class="footer-separator">|</span>
+    <a href="/updates.html">atualizações</a>
+    <span class="footer-separator">|</span>
+    <a href="/terms.html">termos</a>
+    <span class="footer-separator">|</span>
+    <a href="/privacy.html">privacidade</a>
+    <span class="footer-separator">|</span>
+    <a href="/help.html">ajuda</a>
+    <span class="footer-separator">|</span>
+    <a href="/support.html">suporte</a>
+  </footer>
+  <section class="orkut-box clock-window" id="clockWindow" hidden aria-label="Relógio de teste">
+    <div class="orkut-box-title">CLOCK6 <button type="button" class="clock-close" id="closeClock" aria-label="Fechar relógio">X</button></div>
+    <div class="orkut-box-content">
+      <div class="clock-display" id="clockDisplay">00:00</div>
+      <div class="clock-controls">
+        <label for="clockTimeInput">Ajustar horário</label>
+        <input type="time" id="clockTimeInput" value="12:00">
+        <button type="button" class="primary-button" id="applyClockTime">Aplicar</button>
+        <button type="button" id="resetClockTime">Hora real</button>
+        <label class="clock-test-option"><input type="checkbox" id="forceSleepMessage"> Forçar aviso de sono (teste)</label>
+      </div>
+      <p class="clock-hint" id="clockStatus">Relógio de teste. A alteração afeta apenas esta página.</p>
+    </div>
+  </section>
+
+</main>
+  <div id="profileEditorBackdrop" class="profile-editor-backdrop" hidden></div>
+  <section class="orkut-box profile-editor-modal" id="profileEditorWindow" hidden>
+    <div class="orkut-box-title">Editar perfil</div>
+    <div class="orkut-box-content">
+      <form id="profileForm" class="profile-editor">
+        <div class="wide">
+          <label>Foto</label>
+          <button type="button" class="profile-photo-pick" id="profilePhotoPick" aria-label="Alterar foto de perfil"><img id="profilePhotoPreview" alt="Clique para alterar sua foto"></button>
+          <input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+        <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
+        <div class="wide"><label for="profileBioInput">Biografia</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
+        <div class="wide">
+          <label>Bandeira</label>
+          <input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          <div id="profileBannerPreview" class="profile-preview-banner" aria-label="Prévia e área de ajuste da bandeira"></div>
+          <button type="button" id="profileBannerPick">Trocar bandeira</button>
+          <small class="profile-image-hint">Arraste a imagem para ajustar o enquadramento. Use o zoom para aproximar ou afastar.</small>
+          <div class="profile-banner-controls"><label for="profileBannerZoom">Zoom</label><input id="profileBannerZoom" type="range" min="1" max="2.5" step="0.05" value="1"></div>
+        </div>
+        <div class="wide profile-role-field">
+          <label for="profileRoleInput">Perfil</label>
+          <select id="profileRoleInput"><option value="player">Jogador</option><option value="master">Mestre</option></select>
+        </div>
+        <div class="wide"><button type="submit" id="saveProfile" class="primary-button">Salvar alterações</button> <button type="button" id="cancelProfileEdit">Cancelar</button><span id="profileMessage" class="muted profile-message" aria-live="polite"></span></div>
+      </form>
+    </div>
+  </section>
+<script>
+const $ = id => document.getElementById(id);
+let currentUser = null;
+let clockOverrideMinutes = null;
+let forceSleepMessage = false;
+
+// Dados temporários de demonstração: não são salvos no servidor.
+let demoFriendRequests=[];
+let demoFriends=[];
+let demoCampaigns=[];
+window.loadedCampaigns=[];
+function showDemoNotice(text){const n=$("dashboardNotice");n.textContent=text;n.classList.add("visible");}
+function demoPhoto(initials){
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" fill="#008080"/><rect x="7" y="7" width="82" height="82" fill="#c0c0c0" stroke="#fff" stroke-width="3"/><circle cx="48" cy="35" r="16" fill="#000080"/><path d="M19 80c2-18 14-27 29-27s27 9 29 27" fill="#000080"/><text x="48" y="91" text-anchor="middle" font-family="monospace" font-size="9" fill="#fff">'+initials+'</text></svg>';
+  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
+function renderDemoFriends(){
+  $("friendRequestCount").textContent=String(demoFriendRequests.length);
+  $("friendCount").textContent=String(demoFriends.length);
+  const requests=$("friendRequestList");requests.replaceChildren();
+  if(!demoFriendRequests.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Você ainda não recebeu pedidos de amizade.";requests.append(p);}
+  demoFriendRequests.forEach(person=>{
+    const card=document.createElement("div");card.className="friend-request-card";
+    const photo=document.createElement("img");photo.className="friend-demo-photo";photo.src=person.photo;photo.alt="Foto de "+person.name;
+    const copy=document.createElement("div");copy.className="friend-request-copy";
+    const name=document.createElement("div");name.className="friend-request-name";name.textContent=person.name;
+    const question=document.createElement("p");question.className="friend-request-question";question.textContent=person.name+" é seu(sua) amigo(a)?";
+    const actions=document.createElement("div");actions.className="friend-request-actions";
+    const yes=document.createElement("button");yes.type="button";yes.className="primary-button";yes.textContent="Sim";
+    yes.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);demoFriends.push({...person,messages:3});renderDemoFriends();showDemoNotice(person.name+" foi adicionado(a) aos seus amigos.");});
+    const no=document.createElement("button");no.type="button";no.textContent="Não";
+    no.addEventListener("click",()=>{demoFriendRequests=demoFriendRequests.filter(x=>x.id!==person.id);renderDemoFriends();showDemoNotice("Pedido de "+person.name+" recusado na demonstração.");});
+    actions.append(yes,no);copy.append(name,question,actions);card.append(photo,copy);requests.append(card);
+  });
+  const friends=$("friendList");friends.replaceChildren();friends.className="friend-list-grid";
+  if(!demoFriends.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Sua lista de amigos aparecerá aqui.";friends.append(p);}
+  demoFriends.forEach(person=>{
+    const card=document.createElement("div");card.className="friend-list-card";
+    const photo=document.createElement("img");photo.className="friend-demo-photo";photo.src=person.photo;photo.alt="Foto de "+person.name;
+    const copy=document.createElement("div");copy.className="friend-list-copy";
+    const name=document.createElement("div");name.className="friend-list-name";name.textContent=person.name;
+    const messages=document.createElement("div");messages.className="friend-message-count";messages.textContent="("+person.messages+" mensagens para você)";
+    copy.append(name,messages);card.append(photo,copy);friends.append(card);
+  });
+}
+function addDemoFriendRequest(){
+  if(!demoFriendRequests.length&&!demoFriends.some(x=>x.username==="teste_amigo"))demoFriendRequests.push({id:"friend-demo-1",name:"Alex Morgan",username:"teste_amigo",photo:demoPhoto("AM")});
+  renderDemoFriends();showDemoNotice("FRIEND7: pedido de amizade de Alex Morgan adicionado. Clique em Aceitar para testar o painel Amigos.");
+}
+function renderCampaignList(campaigns){
+  const all=[...demoCampaigns,...campaigns];$("campaignCount").textContent="("+all.length+")";
+  const list=$("campaignList");list.replaceChildren();
+  if(!all.length){const p=document.createElement("p");p.className="empty-state";p.textContent="Você ainda não participa de campanhas.";list.append(p);return;}
+  all.slice(0,4).forEach(campaign=>{const item=document.createElement("div");item.className="campaign-item";const link=document.createElement("a");link.href=campaign.demo?"#":"/home.html";link.textContent=campaign.title||"Campanha";if(campaign.demo)link.addEventListener("click",e=>e.preventDefault());const meta=document.createElement("small");meta.textContent=campaign.demo?"Demonstração local · Mestre":campaign.is_owner?"Você é o Mestre":"Participante";item.append(link,meta);list.append(item);});
+}
+function addDemoCampaign(){
+  if(!demoCampaigns.length)demoCampaigns.push({title:"Projeto Anitope — Campanha de Teste",is_owner:true,demo:true});
+  renderCampaignList(window.loadedCampaigns);showDemoNotice("CAMP9: campanha de teste adicionada ao painel Campanhas.");
+}
+async function api(url, options = {}) {
+ const response = await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+ const payload = await response.json().catch(()=>({}));
+ if(!response.ok) throw new Error(payload.error||"O servidor não conseguiu concluir a operação.");
+ return payload;
+}
+
+function openProfileEditor(){
+  $("profileEditorBackdrop").hidden=false;
+  $("profileEditorWindow").hidden=false;
+  loadBannerForEditor(currentUser?.profileBanner||"");
+  requestAnimationFrame(()=>{syncBannerPreviewRatio();layoutBannerCrop();});
+  $("profileNameInput").focus();
+}
+function closeProfileEditor(){
+  $("profileEditorWindow").hidden=true;
+  $("profileEditorBackdrop").hidden=true;
+}
+$("openProfileEditor").addEventListener("click",openProfileEditor);
+$("cancelProfileEdit").addEventListener("click",closeProfileEditor);
+$("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
+function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
+let pendingProfilePhoto=null,pendingProfileBanner=null;
+let bannerSourceImage=null,bannerOffsetX=0,bannerOffsetY=0,bannerZoom=1,bannerDrag=null;
+const memberMonths=["Jan.","Fev.","Mar.","Abr.","Mai.","Jun.","Jul.","Ago.","Set.","Out.","Nov.","Dez."];
+function formatMemberSince(value){
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return "Data indisponível";
+  return date.getDate()+" de "+memberMonths[date.getMonth()]+" de "+date.getFullYear();
+}
+const dailyPhrases=[
+"O livre arbítrio custa caro.",
+"Toda arte se origina da criatividade humana com objetivo de transmitir uma mensagem, ideia ou sentimento.",
+"Que meu sangue escorra para que o seu circule em ti.",
+"A vida, não é sobre desistir, a vida, não é sobre levantar a cada queda, mas, sobre continuar de pé, resistindo a balas e facas.",
+"O momento em que um indivíduo é capaz de compreender a diferença entre o bem e o mal, poderá responder por e contra suas ações.",
+"Ninguém te conhece tão bem, quanto você mesmo. Até mesmo quando você percebe que não sabe nada sobre si.",
+"Conquiste o mundo pisando nele, deixem pisar em ti para que conquistem o mundo, proteja mundos de que sejam pisados.",
+"Você não pode escolher quem quer ser, o que quer, onde, e quando será. Ainda sim, tenta ser essa pessoa.",
+"Permita que te odeiem, mas não odeies de volta. Nem a eles, e nem a ti.",
+"Eu queria que até aqueles que não tem dentes pudessem sorrir.",
+"Se a ideia não é nova, ela não funciona, mas ainda nem todos conhecem ideias passadas.",
+"Dividir teus bens com o próximo, mas não dividir a ti com o mundo; se quieres amar, deverá amar a ti primeiro, pois sem teu corpo, sua capacidade de amar será nula.",
+"Diante de um mundo de causas simples, uma sociedade busca causas maiores.",
+"Em um mundo de grandes causas, uma sociedade busca causas menores.",
+"Isto é a vida real? ou é apenas fantasia?",
+"Não se amoldem ao padrão deste mundo, mas transformem-se pela renovação da sua mente.",
+"O que as suas mãos tiverem que fazer, que o façam com toda a sua força, pois na sepultura, para onde você vai, não há atividade nem planejamento, não há conhecimento nem sabedoria.",
+"Desejar algo maior pra sua vida não significa que você está insatisfeito com o que tem.",
+"Só tenho a agradecer a cada um dos desafios que me trouxeram até aqui.",
+"Não espere pelo momento perfeito, comece hoje, com o que tem.",
+"Se seus sonhos não dão um frio na barriga, talvez ainda não sejam grandes o bastante.",
+"A autoconfiança é o primeiro passo para grandes feitos.",
+"Cada pequeno passo deve ser celebrado.",
+"A persistência não é apenas continuar, mas também saber começar de novo.",
+"A flexibilidade é um superpoder, ajuste-se para seguir em frente.",
+"Os erros são degraus para o sucesso.",
+"O agora é o único momento que você realmente tem.",
+"Indev!",
+"Esta mensagem nunca aparecerá no seu perfil, estranho não é?",
+"Experimente também o Horror way!",
+"Leia mais livros!",
+"Yanny ou Laurel?",
+"Site foda pra caralho, por Spacer Gamer456",
+"Hatsune Miku deve ser sua maior inspiração.",
+"Mulheres são reais (isso é oficial)",
+"Aerospace Team pra sempre!",
+"Eu penso, logo existo.",
+"Seja a mudança que você quer ver no mundo.",
+"Só sei que nada sei.",
+"A vida é o que acontece enquanto você está ocupado fazendo outros planos.",
+"John Lennon uma vez disse: \"Eu sou John Lennon\".",
+"bob.",
+"Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.",
+"Grandes poderes trazem grandes responsabilidades.",
+"Que a Força esteja com você.",
+"A imaginação é mais importante que o conhecimento.",
+"Ao o infinito... e além!",
+"Amigo, estou aqui...",
+"Faça ou não faça. Tentativa não há.",
+"O que não me mata, me fortalece.",
+"Viver é a coisa mais rara do mundo, e a maioria das pessoas apenas existe.",
+"No fim, nós vamos lembrar não das palavras dos nossos inimigos, mas do silêncio dos nossos amigos.",
+"O amor é a única força capaz de transformar um inimigo em amigo.",
+"A felicidade só é real quando compartilhada.",
+"A vida é como uma caixa de chocolates.",
+"Hakuna Matata",
+"O essencial é invisível aos olhos.",
+"Tudo vai ficar bem no final. Se não ficou bem, é porque ainda não é o final.",
+"Eu trabalho duro para que meu gato tenha uma vida melhor.",
+"Se a vida te der limões, peça sal e tequila.",
+"Sempre quis ser alguém, mas agora percebo que deveria ter sido mais específico.",
+"A vida é curta. Sorria enquanto você ainda tem dentes.",
+"Levo semanas para me preparar bem para o improviso",
+"Eu queria concordar com você, mas aí seríamos dois errados.",
+"Eu não falhei. Apenas descobri 10 mil maneiras que não funcionam.",
+"A preguiça é a mãe de todos os vícios, mas uma mãe tem que trabalhar, né?",
+"Não leve a vida tão a sério. Você nunca vai sair vivo dela.",
+"O cérebro é maravilhoso. Começa a funcionar quando você acorda e não para até chegar no trabalho."
+];
+async function updateDailyPhrase(){
+  const now=new Date();
+  const day=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  try{
+    const result=await api("/api/profile/daily-phrase?day="+encodeURIComponent(day)+"&count="+dailyPhrases.length);
+    if(!Number.isInteger(result.index)||result.index<0||result.index>=dailyPhrases.length)throw new Error("Índice de frase inválido.");
+    $("dailyPhrase").textContent=dailyPhrases[result.index];
+  }catch(err){
+    console.error("[profile] Não foi possível carregar a frase diária:",err);
+    $("dailyPhrase").textContent="Não foi possível carregar a frase do dia.";
+  }
+}
+function setProfilePreview(){
+  $("profileCover").style.backgroundImage=currentUser?.profileBanner?"url("+JSON.stringify(currentUser.profileBanner)+")":"";
+  $("profileAvatar").src=currentUser?.profilePhoto||"";
+  $("profileDisplayName").textContent=currentUser?.displayName||"Usuário";
+  $("profileHandle").textContent=(currentUser?.username?"@"+currentUser.username:"")+(currentUser?.publicCode?"  #"+currentUser.publicCode:"");
+  updateTimeGreeting();
+  updateDailyPhrase();
+
+  $("memberSince").textContent=currentUser?.createdAt?formatMemberSince(currentUser.createdAt):"Data indisponível";
+  $("profileNameInput").value=currentUser?.displayName||"";
+  $("profileBioInput").value=currentUser?.bio||"";
+  $("profileRoleInput").value=currentUser?.role==="master"?"master":"player";
+  $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
+  loadBannerForEditor(currentUser?.profileBanner||"");
+}
+function updateTimeGreeting(){
+  const now=new Date();
+  const minutes=clockOverrideMinutes===null?now.getHours()*60+now.getMinutes():clockOverrideMinutes;
+  const greeting=minutes>=270&&minutes<720?"Bom dia":minutes>=720&&minutes<1110?"Boa tarde":"Boa noite";
+  const userName=currentUser?.displayName||"usuário";
+  let needsSleep=forceSleepMessage;
+  if(!needsSleep&&minutes>=120&&minutes<240){
+    const dayKey="anitos-sleep-message-"+now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+    try{
+      let dailyRoll=localStorage.getItem(dayKey);
+      if(dailyRoll===null){dailyRoll=Math.random()<1/9?"yes":"no";localStorage.setItem(dayKey,dailyRoll);}
+      needsSleep=dailyRoll==="yes";
+    }catch{needsSleep=Math.random()<1/9;}
+  }
+  $("summaryGreeting").textContent=needsSleep?"Você precisa dormir, "+userName+"!":greeting+", "+userName+"!";
+  if(!$("clockWindow").hidden){
+    $("clockDisplay").textContent=String(Math.floor(minutes/60)).padStart(2,"0")+":"+String(minutes%60).padStart(2,"0");
+    $("clockStatus").textContent=clockOverrideMinutes===null?"Exibindo a hora real do dispositivo.":"Horário simulado ativo; a saudação foi atualizada.";
+  }
+}
+function openClock(){
+  $("clockWindow").hidden=false;
+  const now=new Date();
+  const minutes=clockOverrideMinutes===null?now.getHours()*60+now.getMinutes():clockOverrideMinutes;
+  $("clockTimeInput").value=String(Math.floor(minutes/60)).padStart(2,"0")+":"+String(minutes%60).padStart(2,"0");
+  $("forceSleepMessage").checked=forceSleepMessage;
+  updateTimeGreeting();
+}
+function closeClock(){$("clockWindow").hidden=true;}
+$("closeClock").addEventListener("click",closeClock);
+$("applyClockTime").addEventListener("click",()=>{
+  const value=$("clockTimeInput").value;
+  if(!value)return;
+  const [hours,minutes]=value.split(":").map(Number);
+  clockOverrideMinutes=hours*60+minutes;
+  forceSleepMessage=$("forceSleepMessage").checked;
+  updateTimeGreeting();
+});
+$("forceSleepMessage").addEventListener("change",()=>{
+  forceSleepMessage=$("forceSleepMessage").checked;
+  updateTimeGreeting();
+});
+$("resetClockTime").addEventListener("click",()=>{
+  clockOverrideMinutes=null;
+  forceSleepMessage=false;
+  $("forceSleepMessage").checked=false;
+  const now=new Date();
+  $("clockTimeInput").value=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+  updateTimeGreeting();
+});
+let clockShortcutBuffer="";
+let socialShortcutBuffer="";
+document.addEventListener("keydown",event=>{
+  if(event.ctrlKey||event.altKey||event.metaKey)return;
+  const target=event.target;
+  if(target&&(["INPUT","TEXTAREA","SELECT"].includes(target.tagName)||target.isContentEditable))return;
+  if(event.key.length!==1)return;
+  socialShortcutBuffer=(socialShortcutBuffer+event.key.toUpperCase()).slice(-7);
+  if(socialShortcutBuffer==="FRIEND7"){socialShortcutBuffer="";addDemoFriendRequest();return;}
+  if(socialShortcutBuffer==="CAMP9"){socialShortcutBuffer="";addDemoCampaign();return;}
+});
+document.addEventListener("keydown",event=>{
+  if(event.ctrlKey||event.altKey||event.metaKey)return;
+  const target=event.target;
+  if(target&&(["INPUT","TEXTAREA","SELECT"].includes(target.tagName)||target.isContentEditable))return;
+  if(event.key.length!==1)return;
+  clockShortcutBuffer=(clockShortcutBuffer+event.key.toUpperCase()).slice(-6);
+  if(clockShortcutBuffer==="CLOCK6"){clockShortcutBuffer="";openClock();}
+});
+
+
+
+document.querySelectorAll("[data-panel-nav]").forEach(button=>button.addEventListener("click",()=>{
+  const notice=$("dashboardNotice");
+  notice.textContent=button.dataset.panelNav+" ainda não está disponível. Esta área será adicionada futuramente.";
+  notice.classList.add("visible");
+}));
+document.querySelectorAll("[data-nav]").forEach(button=>button.addEventListener("click",()=>{
+  const feature=button.dataset.nav==="friends"?"Amigos":"Bate-papo";
+  const notice=$("navMessage");
+  notice.textContent=feature+" ainda não está disponível. Esta área será adicionada futuramente.";
+  notice.classList.add("visible");
+}));
+$("navLogout").addEventListener("click",async()=>{
+  const button=$("navLogout");button.disabled=true;
+  try{await api("/api/auth/logout",{method:"POST",body:"{}"});}catch{}
+  currentUser=null;window.location.replace("/login.html");
+});
+
+function readProfileImage(file,kind){
+  return new Promise((resolve,reject)=>{
+    if(!file)return resolve(null);
+    if(!["image/png","image/jpeg","image/webp"].includes(file.type))return reject(new Error("Use PNG, JPG ou WebP."));
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Não foi possível ler a imagem."));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("Imagem inválida."));
+      img.onload=()=>{
+        const max=kind==="banner"?2400:600,scale=Math.min(1,max/Math.max(img.width,img.height));
+        const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",kind==="banner"?.88:.76));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function loadBannerForEditor(source){
+  const preview=$("profileBannerPreview");
+  preview.replaceChildren();
+  bannerSourceImage=null;bannerOffsetX=0;bannerOffsetY=0;bannerZoom=1;
+  $("profileBannerZoom").value="1";
+  if(!source)return;
+  const image=new Image();
+  image.onload=()=>{bannerSourceImage=image;preview.append(image);layoutBannerCrop();};
+  image.onerror=()=>message("profileMessage","Não foi possível carregar a bandeira atual.","error");
+  image.src=source;
+}
+function syncBannerPreviewRatio(){
+  const target=$("profileCover");
+  const preview=$("profileBannerPreview");
+  const width=target.clientWidth,height=target.clientHeight;
+  if(width>0&&height>0){
+    preview.style.aspectRatio=width+" / "+height;
+    preview.style.height="auto";
+  }
+}
+function layoutBannerCrop(){
+  syncBannerPreviewRatio();
+  if(!bannerSourceImage)return;
+  const area=$("profileBannerPreview"),image=bannerSourceImage;
+  const width=area.clientWidth,height=area.clientHeight;
+  if(!width||!height)return;
+  const scale=Math.max(width/image.naturalWidth,height/image.naturalHeight)*bannerZoom;
+  const imageWidth=image.naturalWidth*scale,imageHeight=image.naturalHeight*scale;
+  const maxX=Math.max(0,(imageWidth-width)/2),maxY=Math.max(0,(imageHeight-height)/2);
+  bannerOffsetX=Math.max(-maxX,Math.min(maxX,bannerOffsetX));
+  bannerOffsetY=Math.max(-maxY,Math.min(maxY,bannerOffsetY));
+  image.style.width=imageWidth+"px";image.style.height=imageHeight+"px";
+  image.style.left=((width-imageWidth)/2+bannerOffsetX)+"px";
+  image.style.top=((height-imageHeight)/2+bannerOffsetY)+"px";
+}
+function exportBannerCrop(){
+  if(!bannerSourceImage)return Promise.resolve("");
+  const area=$("profileBannerPreview"),width=area.clientWidth,height=area.clientHeight;
+  const scale=Math.max(width/bannerSourceImage.naturalWidth,height/bannerSourceImage.naturalHeight)*bannerZoom;
+  const left=(width-bannerSourceImage.naturalWidth*scale)/2+bannerOffsetX;
+  const top=(height-bannerSourceImage.naturalHeight*scale)/2+bannerOffsetY;
+  const sx=Math.max(0,-left/scale),sy=Math.max(0,-top/scale);
+  const sw=width/scale,sh=height/scale;
+  const outputScale=Math.min(1,1200/width,500/height);
+  const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(width*outputScale));canvas.height=Math.max(1,Math.round(height*outputScale));
+  canvas.getContext("2d").drawImage(bannerSourceImage,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  return Promise.resolve(canvas.toDataURL("image/jpeg",.78));
+}
+$("profilePhotoPick").addEventListener("click",()=>$("profilePhotoInput").click());
+$("profileBannerPick").addEventListener("click",()=>$("profileBannerInput").click());
+$("profilePhotoInput").addEventListener("change",async()=>{try{const file=$("profilePhotoInput").files[0];if(!file)return;pendingProfilePhoto=await readProfileImage(file,"photo");$("profilePhotoPreview").src=pendingProfilePhoto;}catch(e){message("profileMessage",e.message,"error");}});
+$("profileBannerInput").addEventListener("change",async()=>{
+  const input=$("profileBannerInput");
+  const file=input.files[0];
+  if(!file)return;
+  try{
+    const source=await readProfileImage(file,"banner");
+    loadBannerForEditor(source);
+    message("profileMessage","Nova bandeira carregada. Ajuste o enquadramento antes de salvar.");
+  }catch(e){
+    message("profileMessage",e.message,"error");
+  }finally{
+    input.value="";
+  }
+});
+$("profileBannerZoom").addEventListener("input",()=>{bannerZoom=Number($("profileBannerZoom").value);layoutBannerCrop();});
+$("profileBannerPreview").addEventListener("pointerdown",event=>{
+  if(!bannerSourceImage||event.target.closest("button"))return;
+  bannerDrag={x:event.clientX,y:event.clientY,offsetX:bannerOffsetX,offsetY:bannerOffsetY};
+  $("profileBannerPreview").setPointerCapture(event.pointerId);
+});
+$("profileBannerPreview").addEventListener("pointermove",event=>{
+  if(!bannerDrag)return;
+  const deltaX=event.clientX-bannerDrag.x,deltaY=event.clientY-bannerDrag.y;
+  bannerOffsetX=bannerDrag.offsetX+deltaX;
+  bannerOffsetY=bannerDrag.offsetY+deltaY;
+  layoutBannerCrop();
+});
+$("profileBannerPreview").addEventListener("pointerup",()=>{
+  bannerDrag=null;
+});
+$("profileBannerPreview").addEventListener("pointercancel",()=>{bannerDrag=null;});
+window.addEventListener("resize",()=>{syncBannerPreviewRatio();layoutBannerCrop();});
+$("profileForm").addEventListener("submit",async event=>{
+  event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
+  try{
+    pendingProfileBanner=await exportBannerCrop();
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,role:$("profileRoleInput").value})});
+    currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
+    setProfilePreview();
+    message("profileMessage","Perfil atualizado","success");
+  }catch(error){message("profileMessage",error.message,"error");}
+  finally{button.disabled=false;}
+});
+
+(async function loadCampaigns(){
+  try{
+    const result=await api("/api/campaigns");
+    const campaigns=Array.isArray(result.campaigns)?result.campaigns:[];
+    window.loadedCampaigns=campaigns;
+    renderCampaignList(campaigns);
+  }catch{
+    $("campaignList").textContent="não foi possível carregar suas campanhas.";
+  }
+})();
+renderDemoFriends();
+(async function bootBlog(){try{const result=await api("/api/auth/me");currentUser=result.user;pendingProfilePhoto=currentUser?.profilePhoto||null;pendingProfileBanner=currentUser?.profileBanner||null;setProfilePreview();}catch{window.location.replace("/login.html?reason=session");}})();
+</script>
+</body>
+</html>
