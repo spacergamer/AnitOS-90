@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Anitope Blog</title>
 <link rel="icon" href="/anitopeboard/img/as.ico">
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{--win:#c0c0c0;--light:#fff;--dark:#808080;--black:#000;--blue:#000080;--cyan:#05ffa1;--teal:#008080}
 *{box-sizing:border-box}
@@ -200,34 +199,8 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:760px){.site-footer{margin:18px 0 20px;padding:9px 7px;gap:6px 9px;font-size:18px}}
 
 
-/* Tipografia bitmap: pixels visíveis, sem aparência vetorial */
-@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter:wght@800;900&display=swap');
-:root{
-  --font-interface:"Silkscreen",monospace;
-  --font-text:"Silkscreen",monospace;
-  --font-technical:"Silkscreen",monospace;
-}
-html,body,button,input,textarea,select{
-  -webkit-font-smoothing:none;
-  -moz-osx-font-smoothing:unset;
-  text-rendering:geometricPrecision;
-}
-body,button,input,textarea,select,.site-tab,.profile-menu-item,
-.profile-edit-link,.profile-scrap-table,.profile-role-field select,
-.widget-actions button,.widget-actions a{
-  font-family:var(--font-interface);
-}
-.brand-title{
-  font-family:Inter,Arial,sans-serif;
-  font-weight:800;
-  letter-spacing:-.045em;
-  -webkit-font-smoothing:none;
-}
-.brand-subtitle,.profile-bio,.profile-extra,.summary-details,.empty-state,
-.campaign-item,.friend-request-copy,.friend-list-card,.clock-hint,
-.profile-side-note,.orkut-box-content p,.site-footer,.clock-display{
-  font-family:var(--font-text);
-}
+/* Tipografia padrão do navegador: Times New Roman */
+*{font-family:"Times New Roman",serif!important;}
 </style>
 </head>
 <body>
