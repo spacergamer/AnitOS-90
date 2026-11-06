@@ -93,14 +93,37 @@ async function initializeAuthSchema(db) {
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_hash text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_salt text;
     ALTER TABLE anitos_users ADD COLUMN IF NOT EXISTS recovery_code_hash text;
-    DROP INDEX IF EXISTS anitos_users_public_code_idx;
     UPDATE anitos_users SET username=lower(left(regexp_replace(coalesce(nullif(trim(username),''),nullif(trim(display_name),''),'user_'||substr(id,1,6)),'[^A-Za-z0-9_.-]+','_','g'),32)) WHERE username IS NULL OR trim(username)='';
     UPDATE anitos_users SET username=lower(left(regexp_replace(trim(username),'[^A-Za-z0-9_.-]+','_','g'),32));
     UPDATE anitos_users SET username='user_'||substr(id,1,8) WHERE length(username)<2;
     WITH duplicates AS (SELECT id,row_number() OVER(PARTITION BY lower(username) ORDER BY created_at,id) AS duplicate_rank FROM anitos_users WHERE username IS NOT NULL)
     UPDATE anitos_users u SET username=left(u.username,23)||'_'||substr(u.id,1,8) FROM duplicates d WHERE u.id=d.id AND d.duplicate_rank>1;
     UPDATE anitos_users SET public_code=lpad(floor(random()*10000)::int::text,4,'0') WHERE public_code IS NULL OR public_code !~ '^\d{4}$';
-    UPDATE anitos_users SET employee_name=coalesce(nullif(trim(employee_name),''),display_name,username) WHERE employee_name IS NULL OR trim(employee_name)='';
+    DO $$
+    DECLARE
+      user_record RECORD;
+      candidate_code text;
+    BEGIN
+      FOR user_record IN
+        SELECT id
+        FROM (
+          SELECT id, public_code,
+                 row_number() OVER (PARTITION BY public_code ORDER BY created_at,id) AS code_rank
+          FROM anitos_users
+        ) ranked
+        WHERE public_code IS NULL OR public_code !~ '^[0-9]{4}$' OR code_rank > 1
+      LOOP
+        LOOP
+          candidate_code := lpad(floor(random()*10000)::int::text,4,'0');
+          EXIT WHEN NOT EXISTS (
+            SELECT 1 FROM anitos_users
+            WHERE public_code = candidate_code AND id <> user_record.id
+          );
+        END LOOP;
+        UPDATE anitos_users SET public_code=candidate_code WHERE id=user_record.id;
+      END LOOP;
+    END $$;
+    CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_public_code_unique_idx ON anitos_users(public_code);
     DROP INDEX IF EXISTS anitos_users_username_code_idx;
     CREATE UNIQUE INDEX IF NOT EXISTS anitos_users_username_unique_idx ON anitos_users(lower(username));
     CREATE TABLE IF NOT EXISTS anitos_sessions (
