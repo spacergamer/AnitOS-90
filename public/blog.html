@@ -104,12 +104,11 @@ button:disabled{opacity:.6;cursor:wait}
 .summary-panel{margin:0}
 .requests-stack{display:grid;gap:0;align-content:start;min-width:0}
 .about-view{display:grid;gap:14px;align-content:start}.about-view[hidden]{display:none}
-.about-fields{width:100%;border-collapse:collapse;font:20px 'VT323',monospace}
-.about-fields td{padding:3px 7px;vertical-align:top;line-height:1.15}
+.about-fields{width:100%;border-collapse:collapse;font:20px 'VT323',monospace;text-align:left}
+.about-fields td{padding:3px 7px;vertical-align:top;line-height:1.15;text-align:left}
 .about-fields tr:nth-child(odd){background:#b0b0b0}
 .about-fields tr:nth-child(even){background:#dedede}
-.about-fields td:first-child{width:auto;color:#222}
-.about-fields td:last-child{font-weight:bold;color:#111}
+.about-fields strong{font-weight:bold;color:#111}
 .about-empty{color:#555;margin:4px 0}
 .social-side-stack{grid-area:social;display:grid;gap:12px;align-content:start;min-width:0}
 #friendsPanel{grid-area:auto}
@@ -768,7 +767,7 @@ window.addEventListener("resize",()=>{syncBannerPreviewRatio();layoutBannerCrop(
 function renderAboutMe(){
   const fields=Array.isArray(currentUser?.customFields)?currentUser.customFields:[],host=$("aboutFields");host.replaceChildren();
   if(!fields.length){const p=document.createElement("p");p.className="about-empty";p.textContent="Nenhuma informação adicionada ainda.";host.append(p);}
-  else{const table=document.createElement("table");table.className="about-fields";fields.forEach(field=>{const row=table.insertRow();row.insertCell().textContent=field.label+":";const value=row.insertCell();value.textContent=field.value;});host.append(table);}
+  else{const table=document.createElement("table");table.className="about-fields";fields.forEach(field=>{const row=table.insertRow(),cell=row.insertCell();cell.append(document.createTextNode(field.label+": "));const value=document.createElement("strong");value.textContent=field.value;cell.append(value);});host.append(table);}
   $("aboutBio").textContent=currentUser?.bio||"Nenhuma biografia adicionada.";
 }
 function addCustomProfileFieldRow(field={label:"",value:""}){
