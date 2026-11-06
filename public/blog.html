@@ -103,6 +103,11 @@ button:disabled{opacity:.6;cursor:wait}
 .dashboard-main{grid-area:center;display:grid;gap:14px;align-content:start;min-width:0}
 .summary-panel{margin:0}
 .requests-stack{display:grid;gap:0;align-content:start;min-width:0}
+.about-view{display:grid;gap:14px;align-content:start}.about-view[hidden]{display:none}
+.about-fields{width:100%;border-collapse:collapse;font:20px 'VT323',monospace}
+.about-fields td{padding:8px;border-bottom:1px solid #aaa;vertical-align:top}
+.about-fields tr:last-child td{border-bottom:0}.about-fields td:first-child{width:32%;font-weight:bold;color:var(--blue)}
+.about-empty{color:#555;margin:4px 0}
 .social-side-stack{grid-area:social;display:grid;gap:12px;align-content:start;min-width:0}
 #friendsPanel{grid-area:auto}
 #campaignsPanel{grid-area:auto}
@@ -239,7 +244,7 @@ button:disabled{opacity:.6;cursor:wait}
           <button class="profile-menu-item" type="button" id="openProfileEditor">editar perfil</button>
         </div>
         <div class="profile-menu-section">
-          <a class="profile-menu-item active" href="/blog.html">perfil</a>
+          <a class="profile-menu-item active" href="/blog.html" id="profileHomeButton">perfil</a>
           <button class="profile-menu-item" type="button" id="aboutMeButton">sobre mim</button>
           <button class="profile-menu-item" type="button" data-panel-nav="correio">correio</button>
           <a class="profile-menu-item" href="#campaignsPanel">campanhas</a>
@@ -254,7 +259,7 @@ button:disabled{opacity:.6;cursor:wait}
       </aside>
     </div>
     <section class="dashboard-main">
-      <section class="orkut-box summary-panel">
+      <section class="orkut-box summary-panel" id="summaryPanel">
         <div class="orkut-box-title">Resumo</div>
         <div class="orkut-box-content">
           <h1 class="summary-greeting" id="summaryGreeting">Bom dia!</h1>
@@ -271,7 +276,7 @@ button:disabled{opacity:.6;cursor:wait}
           </div>
         </div>
       </section>
-      <div class="requests-stack">
+      <div class="requests-stack" id="requestsStack">
       <section class="orkut-box dashboard-widget" id="requestsPanel">
         <div class="orkut-box-title">Pedidos</div>
         <div class="orkut-box-content">
@@ -279,6 +284,10 @@ button:disabled{opacity:.6;cursor:wait}
           <div id="friendRequestList"><p class="empty-state">Você ainda não recebeu pedidos de amizade.</p></div>
         </div>
       </section>
+      </div>
+      <div class="about-view" id="aboutView" hidden>
+        <section class="orkut-box"><div class="orkut-box-title">Sobre mim</div><div class="orkut-box-content"><div id="aboutFields"><p class="about-empty">Nenhuma informação adicionada ainda.</p></div></div></section>
+        <section class="orkut-box"><div class="orkut-box-title">Biografia</div><div class="orkut-box-content"><div class="profile-bio" id="aboutBio">Nenhuma biografia adicionada.</div></div></section>
       </div>
     </section>
     <div class="social-side-stack">
@@ -350,6 +359,7 @@ button:disabled{opacity:.6;cursor:wait}
         </div>
         <div class="wide"><label for="profileNameInput">Nome de exibição</label><input id="profileNameInput" maxlength="48" minlength="2" required></div>
         <div class="wide"><label for="profileBioInput">Biografia</label><textarea id="profileBioInput" maxlength="280" placeholder="Conte um pouco sobre você..."></textarea><small>Até 280 caracteres.</small></div>
+        <div class="wide"><label>Sobre mim — informações</label><div id="customProfileFields" class="profile-field-editor"></div><button type="button" id="addCustomProfileField">Adicionar informação</button><small>Ex.: Relacionamento — Solteiro. Até 30 informações.</small></div>
         <div class="wide">
           <label>Bandeira</label>
           <input id="profileBannerInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
@@ -444,7 +454,13 @@ function closeProfileEditor(){
   $("profileEditorBackdrop").hidden=true;
 }
 $("openProfileEditor").addEventListener("click",openProfileEditor);
-  $("aboutMeButton").addEventListener("click",()=>{$("profileExtra").scrollIntoView({behavior:"smooth",block:"center"});});
+  function showDashboardView(view){
+    const about=view==="about";
+    $("summaryPanel").hidden=about;$("requestsStack").hidden=about;$("aboutView").hidden=!about;
+    $("aboutMeButton").classList.toggle("active",about);$("profileHomeButton").classList.toggle("active",!about);
+  }
+  $("aboutMeButton").addEventListener("click",()=>showDashboardView("about"));
+  $("profileHomeButton").addEventListener("click",event=>{event.preventDefault();showDashboardView("profile");});
 $("cancelProfileEdit").addEventListener("click",closeProfileEditor);
 $("profileEditorBackdrop").addEventListener("click",closeProfileEditor);
 function message(id,text,type=""){const node=$(id);node.textContent=text;node.className=type||"muted";}
@@ -549,6 +565,7 @@ function setProfilePreview(){
   $("memberSince").textContent=currentUser?.createdAt?formatMemberSince(currentUser.createdAt):"Data indisponível";
   $("profileNameInput").value=currentUser?.displayName||"";
   $("profileBioInput").value=currentUser?.bio||"";
+  renderCustomProfileFieldEditor(currentUser?.customFields||[]);renderAboutMe();
   $("profileRoleInput").value=currentUser?.role==="master"?"master":"player";
   $("profilePhotoPreview").src=currentUser?.profilePhoto||"";
   loadBannerForEditor(currentUser?.profileBanner||"");
@@ -745,11 +762,27 @@ $("profileBannerPreview").addEventListener("pointerup",()=>{
 });
 $("profileBannerPreview").addEventListener("pointercancel",()=>{bannerDrag=null;});
 window.addEventListener("resize",()=>{syncBannerPreviewRatio();layoutBannerCrop();});
+function renderAboutMe(){
+  const fields=Array.isArray(currentUser?.customFields)?currentUser.customFields:[],host=$("aboutFields");host.replaceChildren();
+  if(!fields.length){const p=document.createElement("p");p.className="about-empty";p.textContent="Nenhuma informação adicionada ainda.";host.append(p);}
+  else{const table=document.createElement("table");table.className="about-fields";fields.forEach(field=>{const row=table.insertRow();row.insertCell().textContent=field.label;row.insertCell().textContent=field.value;});host.append(table);}
+  $("aboutBio").textContent=currentUser?.bio||"Nenhuma biografia adicionada.";
+}
+function addCustomProfileFieldRow(field={label:"",value:""}){
+  const row=document.createElement("div");row.className="profile-field-row";
+  const label=document.createElement("input");label.maxLength=32;label.placeholder="Informação";label.setAttribute("aria-label","Nome da informação");label.value=field.label||"";
+  const value=document.createElement("input");value.maxLength=120;value.placeholder="Valor";value.setAttribute("aria-label","Valor da informação");value.value=field.value||"";
+  const remove=document.createElement("button");remove.type="button";remove.textContent="Remover";remove.addEventListener("click",()=>row.remove());
+  row.append(label,value,remove);$("customProfileFields").append(row);
+}
+function renderCustomProfileFieldEditor(fields){$("customProfileFields").replaceChildren();(Array.isArray(fields)?fields:[]).forEach(addCustomProfileFieldRow);}
+$("addCustomProfileField").addEventListener("click",()=>{if($("customProfileFields").children.length>=30)return message("profileMessage","Você pode adicionar até 30 informações.","error");addCustomProfileFieldRow();});
+function collectCustomProfileFields(){return [...$("customProfileFields").children].map(row=>({label:row.children[0].value.trim(),value:row.children[1].value.trim()})).filter(field=>field.label&&field.value);}
 $("profileForm").addEventListener("submit",async event=>{
   event.preventDefault();const button=$("saveProfile");button.disabled=true;message("profileMessage","Salvando perfil...");
   try{
     pendingProfileBanner=await exportBannerCrop();
-    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,role:$("profileRoleInput").value})});
+    const result=await api("/api/auth/profile",{method:"POST",body:JSON.stringify({displayName:$("profileNameInput").value,profilePhoto:pendingProfilePhoto||"",profileBanner:pendingProfileBanner||"",bio:$("profileBioInput").value,customFields:collectCustomProfileFields(),role:$("profileRoleInput").value})});
     currentUser=result.user;pendingProfilePhoto=currentUser.profilePhoto;pendingProfileBanner=currentUser.profileBanner;
     setProfilePreview();
     message("profileMessage","Perfil atualizado","success");
