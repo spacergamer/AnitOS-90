@@ -55,7 +55,7 @@ async function main() {
       assert.equal(payload.user.credentialsReady, true, "new account must receive recovery credentials");
       assert.equal(payload.userTag, payload.user.username);
       assert.match(payload.recoveryCode, /^[A-Z2-9]{16}$/);
-      assert.equal(payload.user.publicCode, undefined);
+      assert.equal(payload.user.publicCode, null, "missing public code must be normalized to null");
     }
     const shortResponse = await register("Ab1!sho", "short");
     assert.equal(shortResponse.status, 400, "passwords shorter than eight characters must be rejected");
