@@ -200,19 +200,21 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:760px){.site-footer{margin:18px 0 20px;padding:9px 7px;gap:6px 9px;font-size:18px}}
 
 
-/* Tipografia Windows 95 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800;900&display=swap');
+/* Tipografia pixelada inspirada na interface clássica de Half-Life */
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Inter:wght@800;900&display=swap');
 :root{
-  --font-interface:"MS Sans Serif",Tahoma,sans-serif;
-  --font-text:Tahoma,Inter,sans-serif;
-  --font-technical:Fixedsys,"Lucida Console",monospace;
+  --font-interface:"Pixelify Sans",monospace;
+  --font-text:"Pixelify Sans",monospace;
+  --font-technical:"Pixelify Sans",monospace;
 }
 html,body,button,input,textarea,select{
   -webkit-font-smoothing:none;
-  -moz-osx-font-smoothing:auto;
-  text-rendering:auto;
+  -moz-osx-font-smoothing:unset;
+  text-rendering:geometricPrecision;
 }
-body,button,input,textarea,select,.site-tab,.profile-menu-item{
+body,button,input,textarea,select,.site-tab,.profile-menu-item,
+.profile-edit-link,.profile-scrap-table,.profile-role-field select,
+.widget-actions button,.widget-actions a{
   font-family:var(--font-interface);
 }
 .brand-title{
@@ -223,14 +225,9 @@ body,button,input,textarea,select,.site-tab,.profile-menu-item{
 }
 .brand-subtitle,.profile-bio,.profile-extra,.summary-details,.empty-state,
 .campaign-item,.friend-request-copy,.friend-list-card,.clock-hint,
-.profile-side-note,.orkut-box-content p,.site-footer{
+.profile-side-note,.orkut-box-content p,.site-footer,.clock-display{
   font-family:var(--font-text);
 }
-.clock-display{
-  font-family:var(--font-technical);
-  -webkit-font-smoothing:none;
-}
-
 </style>
 </head>
 <body>
