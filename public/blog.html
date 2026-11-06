@@ -199,6 +199,38 @@ button:disabled{opacity:.6;cursor:wait}
 .site-footer .footer-separator{color:#555}
 @media(max-width:760px){.site-footer{margin:18px 0 20px;padding:9px 7px;gap:6px 9px;font-size:18px}}
 
+
+/* Tipografia Windows 95 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800;900&display=swap');
+:root{
+  --font-interface:"MS Sans Serif",Tahoma,sans-serif;
+  --font-text:Tahoma,Inter,sans-serif;
+  --font-technical:Fixedsys,"Lucida Console",monospace;
+}
+html,body,button,input,textarea,select{
+  -webkit-font-smoothing:none;
+  -moz-osx-font-smoothing:auto;
+  text-rendering:auto;
+}
+body,button,input,textarea,select,.site-tab,.profile-menu-item{
+  font-family:var(--font-interface);
+}
+.brand-title{
+  font-family:Inter,Arial,sans-serif;
+  font-weight:800;
+  letter-spacing:-.045em;
+  -webkit-font-smoothing:none;
+}
+.brand-subtitle,.profile-bio,.profile-extra,.summary-details,.empty-state,
+.campaign-item,.friend-request-copy,.friend-list-card,.clock-hint,
+.profile-side-note,.orkut-box-content p,.site-footer{
+  font-family:var(--font-text);
+}
+.clock-display{
+  font-family:var(--font-technical);
+  -webkit-font-smoothing:none;
+}
+
 </style>
 </head>
 <body>
